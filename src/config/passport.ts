@@ -1,6 +1,6 @@
 import passport, { Profile } from "passport";
-import { StrategyOptions } from "passport-facebook";
-import { Strategy, VerifyCallback } from "passport-google-oauth20";
+import { Strategy as FacebookStrategy, StrategyOptions } from "passport-facebook";
+import { Strategy as GoogleStrategy, VerifyCallback } from "passport-google-oauth20";
 import { User } from "../modules/user/user.model";
 
 const facebookOptions: StrategyOptions = {
@@ -11,7 +11,7 @@ const facebookOptions: StrategyOptions = {
 };
 
 passport.use(
-  new Strategy(
+  new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
@@ -62,7 +62,7 @@ passport.use(
 );
 
 passport.use(
-  new Strategy(
+  new FacebookStrategy(
     facebookOptions,
     async (
       accessToken: string,
