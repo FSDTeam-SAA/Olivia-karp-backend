@@ -6,9 +6,9 @@ import { User } from "../modules/user/user.model";
 passport.use(
   new Strategy(
     {
-      clientID: config.google.clientId as string,
-      clientSecret: config.google.clientSecret as string,
-      callbackURL: config.google.callbackURL as string,
+      clientID: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL as string,
     },
     async (
       accessToken: string,
@@ -19,24 +19,33 @@ passport.use(
       try {
         const email = profile.emails?.[0].value;
         if (!email) {
-          return done(null, false, { message: "Email not found" });
+          return done(null, false, {
+            message: "No account found with this email address.",
+          });
         }
 
         const user = await User.findOne({ email });
         if (user) {
-          return done(null, user, { message: "User already exists" });
+          return done(null, user, {
+            message: "An account with this email address already exists.",
+          });
         }
 
         const newUser = await User.create({
           email,
           firstName: profile.displayName,
           lastName: profile.displayName,
-          image: profile.photos?.[0].value,
-          role: "user",
+          image: {
+            public_id: "",
+            url: profile.photos?.[0].value,
+          },
+          role: "non-member",
           isVerified: true,
-          auths: [{ provider: "google", providerId: profile.id }],
+          auth: [{ provider: "google", providerId: profile.id }],
         });
-        return done(null, newUser, { message: "User created successfully" });
+        return done(null, newUser, {
+          message: "User account created successfully.",
+        });
       } catch (error) {
         console.log("google strategy error", error);
         return done(error);

@@ -1,14 +1,13 @@
 import cookieParser from "cookie-parser";
 import express, { Application } from "express";
+import expressSession from "express-session";
+import passport from "passport";
+import "./config/passport";
 import globalErrorHandler from "./middleware/globalErrorHandler";
 import notFound from "./middleware/notFound";
-import passport from "passport";
-import expressSession from "express-session";
 import { applySecurity } from "./middleware/security";
 import router from "./router";
-
 const app: Application = express();
-
 
 app.use(
   expressSession({
@@ -31,7 +30,9 @@ applySecurity(app);
 app.use("/api/v1", router);
 
 app.get("/", (_req, res) => {
-  res.send("Hey there! Welcome to our API.");
+  res.send(
+    "Hey there! Welcome to our API. Please refer to the documentation for more details.",
+  );
 });
 
 app.use(notFound);
