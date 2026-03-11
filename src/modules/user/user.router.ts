@@ -1,49 +1,54 @@
 import { Router } from "express";
-import userController from "./user.controller";
-import validateRequest from "../../middleware/validateRequest";
-import { userValidation } from "./user.validation";
 import auth from "../../middleware/auth";
-import { USER_ROLE } from "./user.constant";
 import { upload } from "../../middleware/multer.middleware";
+import validateRequest from "../../middleware/validateRequest";
+import { USER_ROLE } from "./user.constant";
+import userController from "./user.controller";
+import { userValidation } from "./user.validation";
 
 const router = Router();
 
 router.post(
   "/register",
   validateRequest(userValidation.userValidationSchema),
-  userController.registerUser
+  userController.registerUser,
 );
 
 router.post(
   "/verify-email",
-  auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  userController.verifyEmail
+  auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+
+  userController.verifyEmail,
 );
 
 router.post(
   "/resend-otp",
-  auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  userController.resendOtpCode
+  auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+
+  userController.resendOtpCode,
 );
 
-router.get("/all-users", userController.getAllUsers);
+router.get("/all-users", auth(USER_ROLE.ADMIN), userController.getAllUsers);
 router.get(
   "/my-profile",
-  auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  userController.getMyProfile
+  auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+
+  userController.getMyProfile,
 );
 
 router.put(
   "/update-profile",
   upload.single("image"),
-  auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  userController.updateUserProfile
+  auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+
+  userController.updateUserProfile,
 );
 
 router.get(
   "/admin_id",
-  auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  userController.getAdminId
+  auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+
+  userController.getAdminId,
 );
 
 const userRouter = router;

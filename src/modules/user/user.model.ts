@@ -55,6 +55,18 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    auth: [
+      {
+        provider: {
+          type: String,
+          enum: ["google", "facebook", "linkedin", "apple", "credentials"],
+          default: "credentials",
+        },
+        providerId: {
+          type: String,
+        },
+      },
+    ],
     otp: { type: String, default: null },
     otpExpires: { type: Date, default: null },
     resetPasswordOtp: { type: String, default: null },
@@ -63,7 +75,7 @@ const userSchema = new Schema<IUser>(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 userSchema.pre("save", async function (next) {

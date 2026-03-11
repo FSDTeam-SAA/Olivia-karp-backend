@@ -2,11 +2,24 @@ import cookieParser from "cookie-parser";
 import express, { Application } from "express";
 import globalErrorHandler from "./middleware/globalErrorHandler";
 import notFound from "./middleware/notFound";
-
+import passport from "passport";
+import expressSession from "express-session";
 import { applySecurity } from "./middleware/security";
 import router from "./router";
 
 const app: Application = express();
+
+
+app.use(
+  expressSession({
+    secret: "keyboard cat",
+    resave: false,
+    saveUninitialized: false,
+  }),
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(express.static("public"));
 
