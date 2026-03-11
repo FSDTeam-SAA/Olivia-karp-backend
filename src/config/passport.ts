@@ -1,6 +1,5 @@
 import passport, { Profile } from "passport";
 import { Strategy, VerifyCallback } from "passport-google-oauth20";
-import config from ".";
 import { User } from "../modules/user/user.model";
 
 passport.use(
