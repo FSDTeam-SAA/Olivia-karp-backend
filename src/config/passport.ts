@@ -4,9 +4,9 @@ import { Strategy, VerifyCallback } from "passport-google-oauth20";
 import { User } from "../modules/user/user.model";
 
 const facebookOptions: StrategyOptions = {
-  clientID: process.env.FACEBOOK_APP_ID!,
-  clientSecret: process.env.FACEBOOK_APP_SECRET!,
-  callbackURL: process.env.FACEBOOK_CALLBACK_URL!,
+  clientID: process.env.FACEBOOK_APP_ID as string,
+  clientSecret: process.env.FACEBOOK_APP_SECRET as string,
+  callbackURL: process.env.FACEBOOK_APP_CALLBACK_URL as string,
   profileFields: ["emails", "name", "photos"],
 };
 
