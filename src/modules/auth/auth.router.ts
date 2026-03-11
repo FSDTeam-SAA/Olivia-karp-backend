@@ -56,6 +56,11 @@ router.get(
 );
 
 router.get(
+  "/facebook",
+  passport.authenticate("facebook", { scope: ["email", "public_profile"] }),
+);
+
+router.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
   authController.googleCallback,
