@@ -33,4 +33,12 @@ export default {
     AES_KEY: process.env.AES_KEY,
     AES_IV: process.env.AES_IV,
   },
+
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
+  },
+  frontendUrl: process.env.FRONTEND_URL,
+  expressSessionSecret: process.env.EXPRESS_SESSION_SECRET,
 };

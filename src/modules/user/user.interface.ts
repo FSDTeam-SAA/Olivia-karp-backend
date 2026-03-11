@@ -1,6 +1,12 @@
 import { Model } from "mongoose";
 import { USER_ROLE } from "./user.constant";
 
+
+export interface IAuthInterface {
+  provider: "google" | "facebook" | "linkedin" | "apple" | "credentials";
+  providerId: string;
+}
+
 export interface IUser {
   _id: string;
   firstName: string;
@@ -17,6 +23,7 @@ export interface IUser {
     public_id: string;
     url: string;
   };
+  auth: IAuthInterface[];
   isVerified: boolean;
   otp?: string | null;
   otpExpires?: Date | null;
