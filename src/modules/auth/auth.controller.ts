@@ -173,6 +173,81 @@ const googleCallback = catchAsync(async (req, res) => {
   });
 });
 
+const facebookCallBack = catchAsync(async (req, res) => {
+  // Step 1: safe parse state
+  let redirectUrl = "";
+  try {
+    if (req.query.state && (req.query.state as string).startsWith("{")) {
+      const parsedState = JSON.parse(req.query.state as string);
+      redirectUrl = parsedState?.redirect || "";
+    } else if (typeof req.query.state === "string") {
+      redirectUrl = req.query.state;
+    }
+  } catch (err) {
+    redirectUrl = "";
+  }
+
+  // Step 2: remove leading "/"
+  if (redirectUrl.startsWith("/")) {
+    redirectUrl = redirectUrl.slice(1);
+  }
+
+  const user = req.user as {
+    _id: string;
+    email: string;
+    role: string;
+  };
+
+  if (!user) {
+    throw new AppError("User not found", StatusCodes.NOT_FOUND);
+  }
+
+  const tokenPayload = {
+    id: user._id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const accessToken = createToken(
+    tokenPayload,
+    config.JWT_SECRET as string,
+    config.JWT_EXPIRES_IN as string,
+  );
+
+  const refreshToken = createToken(
+    tokenPayload,
+    config.refreshTokenSecret as string,
+    config.jwtRefreshTokenExpiresIn as string,
+  );
+
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: config.NODE_ENV === "production",
+    sameSite: config.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 15 * 60 * 1000,
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: config.NODE_ENV === "production",
+    sameSite: config.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  // Step 3: safe redirect
+  const finalRedirect = redirectUrl
+    ? `${config.frontendUrl}/${redirectUrl}`
+    : config.frontendUrl;
+  res.redirect(finalRedirect as string);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "You have logged in successfully.",
+    data: { accessToken },
+  });
+});
+
 const authController = {
   login,
   refreshToken,
@@ -182,6 +257,7 @@ const authController = {
   resetPassword,
   changePassword,
   googleCallback,
+  facebookCallBack,
 };
 
 export default authController;
