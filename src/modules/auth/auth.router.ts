@@ -66,5 +66,14 @@ router.get(
   authController.googleCallback,
 );
 
+router.get(
+  "/facebook/callback",
+  passport.authenticate("facebook", {
+    session: false,
+    failureRedirect: "/login",
+  }),
+  authController.facebookCallBack,
+);
+
 const authRouter = router;
 export default authRouter;
