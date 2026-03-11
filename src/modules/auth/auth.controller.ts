@@ -50,7 +50,7 @@ const forgotPassword = catchAsync(async (req, res) => {
 });
 
 const resendForgotOtpCode = catchAsync(async (req, res) => {
-  const { email } = req.user;
+  const email = req.user!.email;
   await authService.resendForgotOtpCode(email);
 
   sendResponse(res, {
@@ -63,7 +63,7 @@ const resendForgotOtpCode = catchAsync(async (req, res) => {
 
 const verifyOtp = catchAsync(async (req, res) => {
   const { otp } = req.body;
-  const { email } = req.user;
+  const email = req.user!.email;
   const result = await authService.verifyOtp(email, otp);
 
   sendResponse(res, {
@@ -75,7 +75,7 @@ const verifyOtp = catchAsync(async (req, res) => {
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  const { email } = req.user;
+  const email = req.user!.email;
   const result = await authService.resetPassword(req.body, email);
 
   sendResponse(res, {
@@ -87,7 +87,7 @@ const resetPassword = catchAsync(async (req, res) => {
 });
 
 const changePassword = catchAsync(async (req, res) => {
-  const { email } = req.user;
+  const email = req.user!.email;
   const result = await authService.changePassword(req.body, email);
 
   sendResponse(res, {
@@ -139,14 +139,11 @@ const googleCallback = catchAsync(async (req, res) => {
     config.JWT_EXPIRES_IN as string,
   );
 
-
-
   const refreshToken = createToken(
     tokenPayload,
     config.refreshTokenSecret as string,
     config.jwtRefreshTokenExpiresIn as string,
   );
-
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
@@ -174,7 +171,7 @@ const googleCallback = catchAsync(async (req, res) => {
     message: "You have logged in successfully.",
     data: { accessToken },
   });
-}); 
+});
 
 const authController = {
   login,

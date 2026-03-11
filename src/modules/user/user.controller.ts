@@ -1,8 +1,8 @@
 import { StatusCodes } from "http-status-codes";
+import config from "../../config";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import userService from "./user.service";
-import config from "../../config";
 
 const registerUser = catchAsync(async (req, res) => {
   const result = await userService.registerUser(req.body);
@@ -27,7 +27,7 @@ const registerUser = catchAsync(async (req, res) => {
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
-  const { email } = req.user;
+  const email = req.user!.email;
   const result = await userService.verifyEmail(email, req.body);
 
   sendResponse(res, {
@@ -39,7 +39,7 @@ const verifyEmail = catchAsync(async (req, res) => {
 });
 
 const resendOtpCode = catchAsync(async (req, res) => {
-  const { email } = req.user;
+  const email = req.user!.email;
   const result = await userService.resendOtpCode(email);
 
   sendResponse(res, {
@@ -73,7 +73,7 @@ const getAdminId = catchAsync(async (req, res) => {
 });
 
 const getMyProfile = catchAsync(async (req, res) => {
-  const { email } = req.user;
+  const email = req.user!.email;
 
   const result = await userService.getMyProfile(email);
   sendResponse(res, {
@@ -85,7 +85,7 @@ const getMyProfile = catchAsync(async (req, res) => {
 });
 
 const updateUserProfile = catchAsync(async (req, res) => {
-  const { email } = req.user;
+  const email = req.user!.email;
   const result = await userService.updateUserProfile(req.body, email, req.file);
 
   sendResponse(res, {
