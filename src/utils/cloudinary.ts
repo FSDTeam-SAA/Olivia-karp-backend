@@ -13,6 +13,7 @@ cloudinary.config({
 // upload file
 export const uploadToCloudinary = async (filePath: string, folder: string) => {
   try {
+    console.log("Attempting Cloudinary upload for:", filePath);
     const result = await cloudinary.uploader.upload(filePath, {
       folder,
       resource_type: "auto",
@@ -26,6 +27,7 @@ export const uploadToCloudinary = async (filePath: string, folder: string) => {
     };
   } catch (error: any) {
     logger.error("Cloudinary upload error:", error);
+    console.error("CLOUDINARY_INTERNAL_ERROR:", error);
     throw new Error("Failed to upload file to Cloudinary");
   }
 };

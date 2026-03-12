@@ -4,6 +4,7 @@ import authRouter from "../modules/auth/auth.router";
 import contactRouter from "../modules/contact/contact.router";
 import { EventRoutes } from "../modules/event/event.routes";
 import { MediaRoutes } from "../modules/media/media.routes";
+import { BlogRoutes } from "../modules/blog/blog.routes";
 
 const router = Router();
 
@@ -28,6 +29,10 @@ const moduleRoutes = [
     path: "/media",
     route: MediaRoutes,
   },
+  {
+    path: "/blog",
+    route: BlogRoutes,
+  }
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
