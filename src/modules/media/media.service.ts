@@ -8,33 +8,27 @@ import AppError from '../../errors/AppError';
  * Logic: Handles automatic thumbnailing for YouTube and source consistency.
  */
 const createMediaIntoDB = async (payload: IMedia): Promise<IMedia> => {
-    // Logic 1: Robust YouTube Thumbnail Extraction
-    const youtubeRegex = /(?:youtube\.com\/(?:[^]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\s]{11})/i;
+    // Logic 1: YouTube Extraction
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\s]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\s]{11})/i;
 
-    if (payload.sourceType === 'URL') {
-        const match = payload.contentUrl.match(youtubeRegex);
-        const videoId = match ? match[1] : null; // Group 1 is the ID because of non-capturing groups (?:)
+    // We only have 'URL' now, so we check contentUrl directly
+    const match = payload.contentUrl.match(youtubeRegex);
+    const videoId = match ? match[1] : null;
 
-        if (videoId && !payload.thumbnailImage) {
-            payload.thumbnailImage = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        }
+    if (videoId && !payload.thumbnailImage) {
+        payload.thumbnailImage = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     }
 
-    // Logic 2: Source Consistency Validation
-    // if (payload.sourceType === 'FILE' && !payload.contentUrl.startsWith('http')) {
-    //     throw new AppError(
-    //         'A valid cloud storage URL is required for FILE source types.',
-    //         httpStatus.BAD_REQUEST,
-    //     );
-    // }
+    // Logic 2: Mandatory Fallback 
+    // If it's not YouTube and no thumbnail provided, we need a default to prevent frontend breakage
+    if (!payload.thumbnailImage) {
+        payload.thumbnailImage = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/defaults/placeholder.png';
+    }
 
-    // Logic 3: Duplicate Title Check
+    // Logic 3: Duplicate Check
     const isExist = await Media.findOne({ title: payload.title });
     if (isExist) {
-        throw new AppError(
-            'A media post with this title already exists.',
-            httpStatus.CONFLICT,
-        );
+        throw new AppError('A media post with this title already exists.', httpStatus.CONFLICT);
     }
 
     const result = await Media.create(payload);

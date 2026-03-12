@@ -13,7 +13,7 @@ export type TMediaType =
     | 'blog'
     | 'resource';
 
-export type TSourceType = 'URL' ;
+export type TSourceType = 'URL';
 
 export interface IMedia extends Document {
     title: string;
