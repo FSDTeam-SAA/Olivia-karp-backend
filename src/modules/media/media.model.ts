@@ -23,7 +23,7 @@ const mediaSchema = new Schema<IMedia>(
         },
         sourceType: {
             type: String,
-            enum: ['URL', 'FILE'],
+            enum: ['URL'],
             default: 'URL'
         },
         contentUrl: {

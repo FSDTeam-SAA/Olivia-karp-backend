@@ -12,7 +12,7 @@ const createMediaValidationSchema = z.object({
             'blog',
             'resource'
         ]),
-        sourceType: z.enum(['URL', 'FILE']),
+        sourceType: z.enum(['URL']),
         contentUrl: z.string({ required_error: 'Content URL is required' }),
         description: z.string({ required_error: 'Description is required' }),
         thumbnailImage: z.string().optional(), // Optional because our service handles YouTube auto-gen
@@ -25,15 +25,10 @@ const updateMediaValidationSchema = z.object({
     body: z.object({
         title: z.string().optional(),
         mediaType: z.enum([
-            'video',
-            'podcast',
-            'event-recording',
-            'expert-interview',
-            'insight',
-            'blog',
-            'resource'
+            'video', 'podcast', 'event-recording',
+            'expert-interview', 'insight', 'blog', 'resource'
         ]).optional(),
-        sourceType: z.enum(['URL', 'FILE']).optional(),
+        sourceType: z.enum(['URL']).optional(), // Restricted to URL
         contentUrl: z.string().optional(),
         description: z.string().optional(),
         thumbnailImage: z.string().optional(),
