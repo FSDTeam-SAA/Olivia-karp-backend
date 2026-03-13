@@ -5,6 +5,7 @@ import contactRouter from "../modules/contact/contact.router";
 import { EventRoutes } from "../modules/event/event.routes";
 import { MediaRoutes } from "../modules/media/media.routes";
 import { BlogRoutes } from "../modules/blog/blog.routes";
+import { CourseIdeaRoutes } from "../modules/course/course.routes";
 
 const router = Router();
 
@@ -32,6 +33,10 @@ const moduleRoutes = [
   {
     path: "/blog",
     route: BlogRoutes,
+  },
+  {
+    path: "/course",
+    route: CourseIdeaRoutes,
   }
 ];
 
