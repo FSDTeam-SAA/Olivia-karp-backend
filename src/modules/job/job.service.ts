@@ -1,8 +1,11 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errors/AppError";
+import {
+  uploadToCloudinary,
+  uploadVideoToCloudinary,
+} from "../../utils/cloudinary";
 import { User } from "../user/user.model";
 import Job from "./job.model";
-import { uploadToCloudinary, uploadVideoToCloudinary } from "../../utils/cloudinary";
 
 interface ICreateJobPayload {
   images?: Express.Multer.File[];
@@ -10,7 +13,6 @@ interface ICreateJobPayload {
   companyLogo?: Express.Multer.File;
   [key: string]: any;
 }
-
 
 const createNewJob = async (payload: ICreateJobPayload, email: string) => {
   const user = await User.findOne({ email });
@@ -76,9 +78,41 @@ const createNewJob = async (payload: ICreateJobPayload, email: string) => {
   return newJob;
 };
 
+const getAllJobs = async (query: Record<string, any>) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const search = query.search || "";
+
+  const skip = (page - 1) * limit;
+
+  const searchCondition = search
+    ? {
+        $or: ["title", "skill", "jobType", "companyName"].map((field) => ({
+          [field]: { $regex: search, $options: "i" },
+        })),
+      }
+    : {};
+
+  const [jobs, total] = await Promise.all([
+    Job.find(searchCondition).skip(skip).limit(limit).lean(), // faster read
+    Job.countDocuments(searchCondition),
+  ]);
+
+  return {
+    data: jobs,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+  };
+};
+
 
 const JobService = {
   createNewJob,
+  getAllJobs,
 };
 
 export default JobService;
