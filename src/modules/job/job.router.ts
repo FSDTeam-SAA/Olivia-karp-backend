@@ -18,6 +18,7 @@ router.post(
 );
 
 router.get("/all", JobController.getAllJobs);
+router.get("/single/:jobId", JobController.getSingleJob);
 
 const jobRouter = router;
 export default jobRouter;
