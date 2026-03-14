@@ -6,6 +6,7 @@ import { EventRoutes } from "../modules/event/event.routes";
 import { MediaRoutes } from "../modules/media/media.routes";
 import { BlogRoutes } from "../modules/blog/blog.routes";
 import { CourseIdeaRoutes } from "../modules/course/course.routes";
+import jobRouter from "../modules/job/job.router";
 
 const router = Router();
 
@@ -37,7 +38,11 @@ const moduleRoutes = [
   {
     path: "/course",
     route: CourseIdeaRoutes,
-  }
+  },
+  {
+    path: "/jobs",
+    route: jobRouter,
+  },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
