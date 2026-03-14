@@ -5,8 +5,7 @@ import contactRouter from "../modules/contact/contact.router";
 import { EventRoutes } from "../modules/event/event.routes";
 import { MediaRoutes } from "../modules/media/media.routes";
 import { BlogRoutes } from "../modules/blog/blog.routes";
-import { CourseIdeaRoutes } from "../modules/course/course.routes";
-import jobRouter from "../modules/job/job.router";
+import { CourseIdeaRoutes } from "../modules/courseIdea/courseIdea.routes";
 
 const router = Router();
 
@@ -36,7 +35,7 @@ const moduleRoutes = [
     route: BlogRoutes,
   },
   {
-    path: "/course",
+    path: "/courseIdea",
     route: CourseIdeaRoutes,
   },
   {
