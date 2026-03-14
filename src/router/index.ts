@@ -1,10 +1,13 @@
 import { Router } from "express";
-import userRouter from "../modules/user/user.router";
+import applyJobRouter from "../modules/applyJob/applyJob.router";
 import authRouter from "../modules/auth/auth.router";
-import contactRouter from "../modules/contact/contact.router";
-import { EventRoutes } from "../modules/event/event.routes";
-import { MediaRoutes } from "../modules/media/media.routes";
 import { BlogRoutes } from "../modules/blog/blog.routes";
+import contactRouter from "../modules/contact/contact.router";
+import { CourseIdeaRoutes } from "../modules/course/course.routes";
+import { EventRoutes } from "../modules/event/event.routes";
+import jobRouter from "../modules/job/job.router";
+import { MediaRoutes } from "../modules/media/media.routes";
+import userRouter from "../modules/user/user.router";
 import { CourseIdeaRoutes } from "../modules/courseIdea/courseIdea.routes";
 
 const router = Router();
@@ -41,6 +44,10 @@ const moduleRoutes = [
   {
     path: "/jobs",
     route: jobRouter,
+  },
+  {
+    path: "/apply-job",
+    route: applyJobRouter,
   },
 ];
 

@@ -4,7 +4,13 @@ import sendResponse from "../../utils/sendResponse";
 import ApplyJobService from "./applyJob.service";
 
 const applyForJob = catchAsync(async (req, res) => {
-  const result = await ApplyJobService.applyForJobService();
+  const { email } = req.user!;
+  const file = req.file as Express.Multer.File;
+  const result = await ApplyJobService.applyForJobService(
+    email,
+    file,
+    req.body,
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

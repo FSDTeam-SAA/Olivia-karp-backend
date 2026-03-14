@@ -20,7 +20,7 @@ const applyJobSchema = new Schema<IApplyJob>(
     linkedinUrl: String,
     status: {
       type: String,
-      enum: ["pending", "reviewing", "shortlisted", "rejected", "accepted"],
+      enum: ["pending", "shortlisted", "rejected", "accepted"],
       default: "pending",
     },
     appliedAt: {
