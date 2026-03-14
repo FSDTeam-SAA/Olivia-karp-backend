@@ -9,7 +9,7 @@ const router = Router();
 router.post(
   "/apply",
   upload.single("file"),
-  auth(USER_ROLE.NON_MEMBER),
+  auth(USER_ROLE.NON_MEMBER, USER_ROLE.MEMBER),
   ApplyJobController.applyForJob,
 );
 

@@ -1,10 +1,10 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errors/AppError";
+import { uploadToCloudinary } from "../../utils/cloudinary";
 import Job from "../job/job.model";
 import { User } from "../user/user.model";
 import { IApplyJob } from "./applyJob.interface";
 import ApplyJob from "./applyJob.model";
-import { uploadToCloudinary } from "../../utils/cloudinary";
 
 const applyForJobService = async (
   email: string,
@@ -85,9 +85,27 @@ const applyForJobService = async (
     appliedAt: new Date(),
   });
 
+  await Job.findByIdAndUpdate(
+    payload.jobId,
+    [
+      {
+        $set: {
+          hiredCount: { $add: ["$hiredCount", 1] },
+          status: {
+            $cond: [
+              { $gte: [{ $add: ["$hiredCount", 1] }, "$totalHiredCount"] },
+              "filled",
+              "$status",
+            ],
+          },
+        },
+      },
+    ],
+    { new: true },
+  );
+
   return application;
 };
-
 
 const ApplyJobService = {
   applyForJobService,
