@@ -107,8 +107,108 @@ const applyForJobService = async (
   return application;
 };
 
+const getAllAppliedJobs = async (query: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string[];
+}) => {
+  const page = parseInt(query.page as any) || 1;
+  const limit = parseInt(query.limit as any) || 10;
+  const skip = (page - 1) * limit;
+
+  const searchRegex = query.search ? new RegExp(query.search, "i") : null;
+  const statusFilter = query.status && query.status.length ? query.status : [];
+
+  const matchStage: any = {};
+
+  if (statusFilter.length) {
+    matchStage.status = { $in: statusFilter };
+  }
+
+  const pipeline: any[] = [
+    { $match: matchStage },
+    {
+      $lookup: {
+        from: "jobs",
+        localField: "jobId",
+        foreignField: "_id",
+        as: "job",
+      },
+    },
+    { $unwind: "$job" },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+  ];
+
+  // Add search filter
+  if (searchRegex) {
+    pipeline.push({
+      $match: {
+        $or: [
+          { "job.title": searchRegex },
+          { "job.category": searchRegex },
+          { "user.firstName": searchRegex },
+          { "user.lastName": searchRegex },
+        ],
+      },
+    });
+  }
+
+  // Project only required fields
+  pipeline.push({
+    $project: {
+      _id: 1,
+      coverLetter: 1,
+      portfolioUrl: 1,
+      linkedinUrl: 1,
+      status: 1,
+      appliedAt: 1,
+      jobId: {
+        _id: "$job._id",
+        title: "$job.title",
+        category: "$job.category",
+      },
+      userId: {
+        _id: "$user._id",
+        firstName: "$user.firstName",
+        lastName: "$user.lastName",
+        email: "$user.email",
+      },
+    },
+  });
+
+  // Count total
+  const countPipeline = [...pipeline, { $count: "total" }];
+  const totalResult = await ApplyJob.aggregate(countPipeline);
+  const total = totalResult[0]?.total || 0;
+
+  // Pagination
+  pipeline.push({ $skip: skip }, { $limit: limit });
+
+  const result = await ApplyJob.aggregate(pipeline);
+
+  return {
+    data: result,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPage: Math.ceil(total / limit),
+    },
+  };
+};
+
 const ApplyJobService = {
   applyForJobService,
+  getAllAppliedJobs,
 };
 
 export default ApplyJobService;
