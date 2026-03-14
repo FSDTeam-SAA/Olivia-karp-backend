@@ -13,7 +13,6 @@ cloudinary.config({
 // upload file
 export const uploadToCloudinary = async (filePath: string, folder: string) => {
   try {
-    console.log("Attempting Cloudinary upload for:", filePath);
     const result = await cloudinary.uploader.upload(filePath, {
       folder,
       resource_type: "auto",
@@ -27,15 +26,54 @@ export const uploadToCloudinary = async (filePath: string, folder: string) => {
     };
   } catch (error: any) {
     logger.error("Cloudinary upload error:", error);
-    console.error("CLOUDINARY_INTERNAL_ERROR:", error);
     throw new Error("Failed to upload file to Cloudinary");
   }
 };
 
-// delete file
-export const deleteFromCloudinary = async (publicId: string) => {
+// Upload video
+export const uploadVideoToCloudinary = async (
+  filePath: string,
+  folder: string,
+) => {
   try {
-    await cloudinary.uploader.destroy(publicId);
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder,
+      resource_type: "video",
+      chunk_size: 6000000, // helps with large video uploads (6MB chunks)
+    });
+
+    fs.unlinkSync(filePath);
+
+    return {
+      public_id: result.public_id,
+      secure_url: result.secure_url,
+      duration: result.duration,
+      format: result.format,
+    };
+  } catch (error: any) {
+    logger.error("Cloudinary video upload error:", error);
+    throw new Error("Failed to upload video to Cloudinary");
+  }
+};
+
+// // delete file
+// export const deleteFromCloudinary = async (publicId: string) => {
+//   try {
+//     await cloudinary.uploader.destroy(publicId);
+//   } catch (error) {
+//     throw new Error("Failed to delete file from Cloudinary");
+//   }
+// };
+
+// Delete file or video
+export const deleteFromCloudinary = async (
+  publicId: string,
+  resourceType: "image" | "video" | "raw" = "image",
+) => {
+  try {
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
   } catch (error) {
     throw new Error("Failed to delete file from Cloudinary");
   }
