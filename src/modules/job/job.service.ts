@@ -94,7 +94,7 @@ const getAllJobs = async (query: Record<string, any>) => {
     : {};
 
   const [jobs, total] = await Promise.all([
-    Job.find(searchCondition).skip(skip).limit(limit).lean(), // faster read
+    Job.find(searchCondition).skip(skip).limit(limit).lean(),
     Job.countDocuments(searchCondition),
   ]);
 
@@ -109,10 +109,19 @@ const getAllJobs = async (query: Record<string, any>) => {
   };
 };
 
+const getSingleJob = async (id: string) => {
+  const job = await Job.findById(id).lean();
+  if (!job) {
+    throw new AppError("Job Record not found", StatusCodes.NOT_FOUND);
+  }
+
+  return job;
+};
 
 const JobService = {
   createNewJob,
   getAllJobs,
+  getSingleJob,
 };
 
 export default JobService;
