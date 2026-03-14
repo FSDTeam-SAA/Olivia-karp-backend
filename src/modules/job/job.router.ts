@@ -20,5 +20,16 @@ router.post(
 router.get("/all", JobController.getAllJobs);
 router.get("/single/:jobId", JobController.getSingleJob);
 
+router.put(
+  "/update-job/:jobId",
+  // auth(USER_ROLE.ADMIN),
+  upload.fields([
+    { name: "companyLogo", maxCount: 1 },
+    { name: "images", maxCount: 5 },
+    { name: "videos", maxCount: 1 },
+  ]),
+  JobController.updateJob,
+);
+
 const jobRouter = router;
 export default jobRouter;

@@ -53,10 +53,34 @@ const getSingleJob = catchAsync(async (req, res) => {
   });
 });
 
+const updateJob = catchAsync(async (req, res) => {
+  const { jobId } = req.params;
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+  const images = files?.images || [];
+  const videos = files?.videos || [];
+  const companyLogo = files?.companyLogo?.[0];
+
+  const result = await JobService.updateJob(jobId, {
+    ...req.body,
+    images,
+    videos,
+    companyLogo,
+  });
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Job updated successfully",
+    data: result,
+  });
+});
+
 const JobController = {
   createNewJob,
   getAllJobs,
   getSingleJob,
+  updateJob,
 };
 
 export default JobController;

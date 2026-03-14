@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errors/AppError";
 import {
+  deleteFromCloudinary,
   uploadToCloudinary,
   uploadVideoToCloudinary,
 } from "../../utils/cloudinary";
@@ -118,10 +119,85 @@ const getSingleJob = async (id: string) => {
   return job;
 };
 
+const updateJob = async (
+  jobId: string,
+  payload: {
+    images?: Express.Multer.File[];
+    videos?: Express.Multer.File[];
+    companyLogo?: Express.Multer.File;
+    [key: string]: any;
+  },
+) => {
+  const job = await Job.findById(jobId);
+  if (!job) {
+    throw new AppError("Job not found", StatusCodes.NOT_FOUND);
+  }
+
+  const { images = [], videos = [], companyLogo, ...jobData } = payload;
+
+  const uploadedImages: { url: string; public_id: string }[] = [];
+  const uploadedVideos: { url: string; public_id: string }[] = [];
+
+  // Upload new images
+  if (images.length) {
+    for (const file of images) {
+      const result = await uploadToCloudinary(file.path, "jobs/images");
+
+      uploadedImages.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
+    }
+  }
+
+  // Upload new videos
+  if (videos.length) {
+    for (const file of videos) {
+      const result = await uploadVideoToCloudinary(file.path, "jobs/videos");
+
+      uploadedVideos.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
+    }
+  }
+
+  // Upload new company logo
+  let logoData = job.companyLogo;
+
+  if (companyLogo) {
+    // delete old logo if exists
+    if (job.companyLogo?.public_id) {
+      await deleteFromCloudinary(job.companyLogo.public_id);
+    }
+
+    const result = await uploadToCloudinary(companyLogo.path, "jobs/logo");
+
+    logoData = {
+      url: result.secure_url,
+      public_id: result.public_id,
+    };
+  }
+
+  const updatedJob = await Job.findByIdAndUpdate(
+    jobId,
+    {
+      ...jobData,
+      ...(uploadedImages.length && { "media.images": uploadedImages }),
+      ...(uploadedVideos.length && { "media.videos": uploadedVideos }),
+      ...(logoData && { companyLogo: logoData }),
+    },
+    { new: true, runValidators: true },
+  );
+
+  return updatedJob;
+};
+
 const JobService = {
   createNewJob,
   getAllJobs,
   getSingleJob,
+  updateJob,
 };
 
 export default JobService;
