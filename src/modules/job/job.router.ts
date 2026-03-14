@@ -22,7 +22,7 @@ router.get("/single/:jobId", JobController.getSingleJob);
 
 router.put(
   "/update-job/:jobId",
-  // auth(USER_ROLE.ADMIN),
+  auth(USER_ROLE.ADMIN),
   upload.fields([
     { name: "companyLogo", maxCount: 1 },
     { name: "images", maxCount: 5 },
