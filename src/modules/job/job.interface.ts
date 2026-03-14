@@ -17,9 +17,19 @@ export interface IJob {
     url: string;
     public_id: string;
   };
-  media?: {
-    images?: string[];
-    videos?: string[];
+  media: {
+    images: [
+      {
+        url: string;
+        public_id: string;
+      },
+    ];
+    videos: [
+      {
+        url: string;
+        public_id: string;
+      },
+    ];
   };
   deathLine: Date;
   postedDate: Date;

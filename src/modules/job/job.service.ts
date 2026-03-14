@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import AppError from "../../errors/AppError";
 import { User } from "../user/user.model";
 import Job from "./job.model";
+import { uploadToCloudinary, uploadVideoToCloudinary } from "../../utils/cloudinary";
 
 interface ICreateJobPayload {
   images?: Express.Multer.File[];
@@ -10,39 +11,54 @@ interface ICreateJobPayload {
   [key: string]: any;
 }
 
+
 const createNewJob = async (payload: ICreateJobPayload, email: string) => {
   const user = await User.findOne({ email });
-  if (!user)
+
+  if (!user) {
     throw new AppError(
       "No account found with the provided credentials.",
       StatusCodes.NOT_FOUND,
     );
+  }
 
   const { images = [], videos = [], companyLogo, ...jobData } = payload;
 
-  const imagePaths: string[] = [];
-  const videoPaths: string[] = [];
+  const uploadedImages: { url: string; public_id: string }[] = [];
+  const uploadedVideos: { url: string; public_id: string }[] = [];
 
-  // images
+  // Upload Images
   if (images.length) {
     for (const file of images) {
-      imagePaths.push(file.path);
+      const result = await uploadToCloudinary(file.path, "jobs/images");
+
+      uploadedImages.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
     }
   }
 
-  // videos
+  // Upload Videos
   if (videos.length) {
     for (const file of videos) {
-      videoPaths.push(file.path);
+      const result = await uploadVideoToCloudinary(file.path, "jobs/videos");
+
+      uploadedVideos.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
     }
   }
 
-  // company logo
+  // Upload Company Logo
   let logoData;
   if (companyLogo) {
+    const result = await uploadToCloudinary(companyLogo.path, "jobs/logo");
+
     logoData = {
-      url: companyLogo.path,
-      public_id: companyLogo.filename,
+      url: result.secure_url,
+      public_id: result.public_id,
     };
   }
 
@@ -51,14 +67,15 @@ const createNewJob = async (payload: ICreateJobPayload, email: string) => {
     userId: user._id,
     postedDate: new Date(),
     media: {
-      images: imagePaths,
-      videos: videoPaths,
+      images: uploadedImages,
+      videos: uploadedVideos,
     },
     companyLogo: logoData,
   });
 
   return newJob;
 };
+
 
 const JobService = {
   createNewJob,
