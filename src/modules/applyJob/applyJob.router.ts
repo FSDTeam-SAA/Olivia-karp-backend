@@ -13,5 +13,7 @@ router.post(
   ApplyJobController.applyForJob,
 );
 
+router.get("/all",  ApplyJobController.getAllAppliedJobs);
+
 const applyJobRouter = router;
 export default applyJobRouter;

@@ -24,3 +24,11 @@ export interface IApplyJob {
   appliedAt: Date;
   updatedAt?: Date;
 }
+
+
+export interface GetAppliedJobsOptions {
+  page: number;
+  limit: number;
+  search?: string;
+  status?: string[];
+}

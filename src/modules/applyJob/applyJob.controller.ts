@@ -20,8 +20,30 @@ const applyForJob = catchAsync(async (req, res) => {
   });
 });
 
+// Controller
+const getAllAppliedJobs = catchAsync(async (req, res) => {
+  const { page = 1, limit = 10, search, status } = req.query;
+
+  const result = await ApplyJobService.getAllAppliedJobs({
+    page: Number(page),
+    limit: Number(limit),
+    search: search as string,
+    status: status ? (status as string).split(",") : undefined,
+  });
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Applied jobs retrieved successfully.",
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
+
 const ApplyJobController = {
   applyForJob,
+  getAllAppliedJobs,
 };
 
 export default ApplyJobController;
