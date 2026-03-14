@@ -28,7 +28,7 @@ router.post(
   userController.resendOtpCode,
 );
 
-router.get("/all-users", auth(USER_ROLE.ADMIN), userController.getAllUsers);
+router.get("/all-users",  userController.getAllUsers);
 router.get(
   "/my-profile",
   auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
