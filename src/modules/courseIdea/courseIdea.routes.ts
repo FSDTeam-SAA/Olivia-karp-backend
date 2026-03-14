@@ -2,8 +2,8 @@ import express from 'express';
 import validateRequest from '../../middleware/validateRequest';
 import auth from '../../middleware/auth';
 import { USER_ROLE } from '../user/user.constant';
-import { CourseIdeaValidations } from './course.validation';
-import { CourseIdeaControllers } from './course.controller';
+import { CourseIdeaValidations } from './courseIdea.validation';
+import { CourseIdeaControllers } from './courseIdea.controller';
 
 const router = express.Router();
 
@@ -19,32 +19,28 @@ router.post(
 );
 
 router.get(
-    '/my-ideas',
+    '/course-ideas',
     auth(USER_ROLE.NON_MEMBER, USER_ROLE.ADMIN),
-    // CourseIdeaControllers
+    CourseIdeaControllers.getAllIdeas
 );
 
-/**
- * ADMIN ONLY ROUTES
- * Only Admins can see every submission and change their status
- */
 router.get(
-    '/all-ideas',
-    auth(USER_ROLE.ADMIN),
-    // CourseIdeaControllers.getAllIdeas
+    '/get-idea/:courseIdeaId', // Match this...
+    auth(USER_ROLE.NON_MEMBER, USER_ROLE.ADMIN),
+    CourseIdeaControllers.getSingleIdea
 );
 
 router.patch(
-    '/update-status/:courseId',
+    '/update-status/:courseIdeaId',
     auth(USER_ROLE.ADMIN),
     // validateRequest(CourseIdeaValidations.updateStatusValidationSchema),
-    // CourseIdeaControllers.updateIdeaStatus
+    CourseIdeaControllers.updateIdeaStatus
 );
 
 router.delete(
-    '/delete-idea/:courseId',
+    '/delete-idea/:courseIdeaId',
     auth(USER_ROLE.ADMIN),
-    // Course
+    CourseIdeaControllers.deleteCourseIdea
 )
 
 export const CourseIdeaRoutes = router;

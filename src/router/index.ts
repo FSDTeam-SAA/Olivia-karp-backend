@@ -8,6 +8,7 @@ import { EventRoutes } from "../modules/event/event.routes";
 import jobRouter from "../modules/job/job.router";
 import { MediaRoutes } from "../modules/media/media.routes";
 import userRouter from "../modules/user/user.router";
+import { CourseIdeaRoutes } from "../modules/courseIdea/courseIdea.routes";
 
 const router = Router();
 
@@ -37,7 +38,7 @@ const moduleRoutes = [
     route: BlogRoutes,
   },
   {
-    path: "/course",
+    path: "/courseIdea",
     route: CourseIdeaRoutes,
   },
   {
