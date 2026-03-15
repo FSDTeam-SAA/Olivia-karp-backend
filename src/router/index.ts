@@ -8,6 +8,7 @@ import { EventRoutes } from "../modules/event/event.routes";
 import jobRouter from "../modules/job/job.router";
 import { MediaRoutes } from "../modules/media/media.routes";
 import userRouter from "../modules/user/user.router";
+import { ReviewRoutes } from "../modules/review/review.routes";
 
 const router = Router();
 
@@ -48,6 +49,10 @@ const moduleRoutes = [
     path: "/apply-job",
     route: applyJobRouter,
   },
+  {
+    path: "/review",
+    route: ReviewRoutes,
+  }
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
