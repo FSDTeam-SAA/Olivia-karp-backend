@@ -13,7 +13,13 @@ router.post(
   ApplyJobController.applyForJob,
 );
 
-router.get("/all",  ApplyJobController.getAllAppliedJobs);
+router.get("/all", auth(USER_ROLE.ADMIN), ApplyJobController.getAllAppliedJobs);
+
+router.get(
+  "/:id",
+//   auth(USER_ROLE.ADMIN),
+  ApplyJobController.getSingleAppliedJob,
+);
 
 const applyJobRouter = router;
 export default applyJobRouter;
