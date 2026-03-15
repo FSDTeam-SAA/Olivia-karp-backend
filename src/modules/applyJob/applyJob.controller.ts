@@ -40,10 +40,22 @@ const getAllAppliedJobs = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleAppliedJob = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await ApplyJobService.getSingleAppliedJob(id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Applied job retrieved successfully.",
+    data: result,
+  });
+});
 
 const ApplyJobController = {
   applyForJob,
   getAllAppliedJobs,
+  getSingleAppliedJob,
 };
 
 export default ApplyJobController;

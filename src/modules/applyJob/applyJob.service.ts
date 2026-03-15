@@ -206,9 +206,25 @@ const getAllAppliedJobs = async (query: {
   };
 };
 
+const getSingleAppliedJob = async (id: string) => {
+  const result = await ApplyJob.findById(id)
+    .populate("jobId", "title category") // only include fields you want from Job
+    .populate(
+      "userId",
+      "-password -__v -created_at -updated_at, -otp -otpExpires -resetPasswordOtp -resetPasswordOtpExpires",
+    ); // exclude sensitive fields
+
+  if (!result) {
+    throw new AppError("Job apply record not found", StatusCodes.NOT_FOUND);
+  }
+
+  return result;
+};
+
 const ApplyJobService = {
   applyForJobService,
   getAllAppliedJobs,
+  getSingleAppliedJob,
 };
 
 export default ApplyJobService;
