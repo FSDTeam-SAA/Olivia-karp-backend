@@ -11,7 +11,7 @@ export interface IBlogAuthor {
     name: string;
     description: string;
     profileImage: {
-         url: string;
+        url: string;
         public_id: string;
     }
 }
