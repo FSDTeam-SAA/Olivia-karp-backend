@@ -9,6 +9,7 @@ import jobRouter from "../modules/job/job.router";
 import { MediaRoutes } from "../modules/media/media.routes";
 import userRouter from "../modules/user/user.router";
 import { ReviewRoutes } from "../modules/review/review.routes";
+import { ApplyBlogRoutes } from "../modules/applyBlog/applyBlog.routes";
 
 const router = Router();
 
@@ -52,7 +53,11 @@ const moduleRoutes = [
   {
     path: "/review",
     route: ReviewRoutes,
-  }
+  },
+  {
+    path: "/apply-blog",
+    route: ApplyBlogRoutes,
+  },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
