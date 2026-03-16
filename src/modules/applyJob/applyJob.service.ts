@@ -221,10 +221,26 @@ const getSingleAppliedJob = async (id: string) => {
   return result;
 };
 
+const updateStatus = async (id: string, payload: any) => {
+  const { status } = payload;
+  const isExist = await ApplyJob.findById(id);
+  if (!isExist) {
+    throw new AppError("Job apply record not found", StatusCodes.NOT_FOUND);
+  }
+
+  const result = await ApplyJob.findOneAndUpdate(
+    { _id: id },
+    { status },
+    { new: true },
+  );
+  return result;
+};
+
 const ApplyJobService = {
   applyForJobService,
   getAllAppliedJobs,
   getSingleAppliedJob,
+  updateStatus,
 };
 
 export default ApplyJobService;

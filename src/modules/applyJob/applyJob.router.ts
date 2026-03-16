@@ -17,8 +17,14 @@ router.get("/all", auth(USER_ROLE.ADMIN), ApplyJobController.getAllAppliedJobs);
 
 router.get(
   "/:id",
-//   auth(USER_ROLE.ADMIN),
+  //   auth(USER_ROLE.ADMIN),
   ApplyJobController.getSingleAppliedJob,
+);
+
+router.put(
+  "/update/:id",
+  // auth(USER_ROLE.ADMIN),
+  ApplyJobController.updateStatus,
 );
 
 const applyJobRouter = router;

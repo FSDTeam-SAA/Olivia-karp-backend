@@ -52,10 +52,23 @@ const getSingleAppliedJob = catchAsync(async (req, res) => {
   });
 });
 
+const updateStatus = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await ApplyJobService.updateStatus(id, req.body);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Applied job status updated successfully.",
+    data: result,
+  });
+});
+
 const ApplyJobController = {
   applyForJob,
   getAllAppliedJobs,
   getSingleAppliedJob,
+  updateStatus,
 };
 
 export default ApplyJobController;
