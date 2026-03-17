@@ -1,23 +1,18 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errors/AppError";
 import { uploadToCloudinary } from "../../utils/cloudinary";
-import { IJoinMentorsAndCoach } from "./JoinMentorsAndCoach.interface";
 import JoinMentorCoach from "./JoinMentorsAndCoach.model";
 
 const createJoinMentorsAndCoachIntoDB = async (
   file: Express.Multer.File,
-  payload: any, // Record<string, any>
+  payload: any,
 ) => {
   const emailExists = await JoinMentorCoach.findOne({ email: payload.email });
   if (emailExists) {
     throw new AppError("This email already exists", StatusCodes.BAD_REQUEST);
   }
 
-  // ✅ No JSON.parse for indexed array fields
-  // skills, languages, support, experience already array
-
   if (file) {
-    // const imageName = `${payload.firstName}-${Date.now()}`;
     const imageData = await uploadToCloudinary(file.path, "mentors-coaches");
 
     payload.image = {

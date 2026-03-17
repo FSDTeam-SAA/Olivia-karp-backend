@@ -5,11 +5,9 @@ const imageSchema = new Schema(
   {
     url: {
       type: String,
-      //   required: true,
     },
     public_id: {
       type: String,
-      //   required: true,
     },
   },
   { _id: false },
