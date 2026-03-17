@@ -10,5 +10,7 @@ router.post(
   JoinMentorsAndCoachController.createJoinMentorsAndCoachIntoDB,
 );
 
+router.get("/all", JoinMentorsAndCoachController.getAllJoinMentorsAndCoaches);
+
 const joinMentorsAndCoachRouter = router;
 export default joinMentorsAndCoachRouter;

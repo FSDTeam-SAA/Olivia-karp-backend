@@ -28,8 +28,49 @@ const createJoinMentorsAndCoachIntoDB = async (
   return result;
 };
 
+const getAllJoinMentorsAndCoaches = async (query: any) => {
+  const { searchTerm, type, page = 1, limit = 10 } = query;
+
+  const filter: any = {};
+
+  // filter mentor / coach
+  if (type) {
+    filter.type = type;
+  }
+
+  // search
+  if (searchTerm) {
+    filter.$or = [
+      { firstName: { $regex: searchTerm, $options: "i" } },
+      { lastName: { $regex: searchTerm, $options: "i" } },
+      { skills: { $regex: searchTerm, $options: "i" } },
+    ];
+  }
+
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const result = await JoinMentorCoach.find(filter)
+    .skip(skip)
+    .limit(limitNumber)
+    .sort({ createdAt: -1 });
+
+  const total = await JoinMentorCoach.countDocuments(filter);
+
+  return {
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPage: Math.ceil(total / limitNumber),
+    },
+    data: result,
+  };
+};
 const JoinMentorsAndCoachService = {
   createJoinMentorsAndCoachIntoDB,
+  getAllJoinMentorsAndCoaches,
 };
 
 export default JoinMentorsAndCoachService;
