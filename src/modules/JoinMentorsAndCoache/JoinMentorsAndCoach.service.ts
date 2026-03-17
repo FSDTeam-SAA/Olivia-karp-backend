@@ -68,9 +68,23 @@ const getAllJoinMentorsAndCoaches = async (query: any) => {
     data: result,
   };
 };
+
+const getSingleJoinMentorsAndCoach = async (id: string) => {
+  const result = await JoinMentorCoach.findById(id);
+  if (!result) {
+    throw new AppError(
+      "Join mentors and coaches not found",
+      StatusCodes.NOT_FOUND,
+    );
+  }
+
+  return result;
+};
+
 const JoinMentorsAndCoachService = {
   createJoinMentorsAndCoachIntoDB,
   getAllJoinMentorsAndCoaches,
+  getSingleJoinMentorsAndCoach,
 };
 
 export default JoinMentorsAndCoachService;
