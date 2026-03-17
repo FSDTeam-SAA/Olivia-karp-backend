@@ -22,5 +22,10 @@ router.put(
   JoinMentorsAndCoachController.approvedJoinMentorsAndCoach,
 );
 
+router.put(
+  "/toggle/:joinMentorsAndCoachId",
+  JoinMentorsAndCoachController.toggleMentorAndCoachActive,
+);
+
 const joinMentorsAndCoachRouter = router;
 export default joinMentorsAndCoachRouter;
