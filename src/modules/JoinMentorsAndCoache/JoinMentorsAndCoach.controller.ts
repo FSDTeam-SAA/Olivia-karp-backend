@@ -34,9 +34,24 @@ const getAllJoinMentorsAndCoaches = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleJoinMentorsAndCoach = catchAsync(async (req, res) => {
+  const { joinMentorsAndCoachId } = req.params;
+  const result = await JoinMentorsAndCoachService.getSingleJoinMentorsAndCoach(
+    joinMentorsAndCoachId,
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Join mentors and coaches retrieved successfully",
+    data: result,
+  });
+});
+
 const JoinMentorsAndCoachController = {
   createJoinMentorsAndCoachIntoDB,
   getAllJoinMentorsAndCoaches,
+  getSingleJoinMentorsAndCoach,
 };
 
 export default JoinMentorsAndCoachController;
