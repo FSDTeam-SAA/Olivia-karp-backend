@@ -12,5 +12,7 @@ router.post(
 
 router.get("/all", courseController.getAllCourses);
 
+router.get("/:courseId", courseController.getSingleCourse);
+
 const courseRouter = router;
 export default courseRouter;
