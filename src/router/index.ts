@@ -10,6 +10,7 @@ import joinMentorsAndCoachRouter from "../modules/JoinMentorsAndCoache/JoinMento
 import { MediaRoutes } from "../modules/media/media.routes";
 import { ReviewRoutes } from "../modules/review/review.routes";
 import userRouter from "../modules/user/user.router";
+import { ApplyBlogRoutes } from "../modules/applyBlog/applyBlog.routes";
 
 const router = Router();
 
@@ -57,6 +58,10 @@ const moduleRoutes = [
   {
     path: "/mentors-coaches",
     route: joinMentorsAndCoachRouter,
+  },
+  {
+    path: "/apply-blog",
+    route: ApplyBlogRoutes,
   },
 ];
 
