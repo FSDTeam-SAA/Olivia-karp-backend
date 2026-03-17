@@ -3,6 +3,7 @@ export interface ILesson {
   duration: string;
   isLocked: boolean;
   level: string;
+  videoUrl: string;
 }
 
 export interface ICourse {
@@ -12,4 +13,8 @@ export interface ICourse {
   totalDuration: string;
   lessons: ILesson[];
   isLocked: boolean;
+  image: {
+    url: string;
+    public_id: string;
+  };
 }
