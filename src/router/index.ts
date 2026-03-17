@@ -6,9 +6,10 @@ import contactRouter from "../modules/contact/contact.router";
 import { CourseIdeaRoutes } from "../modules/courseIdea/courseIdea.routes";
 import { EventRoutes } from "../modules/event/event.routes";
 import jobRouter from "../modules/job/job.router";
+import joinMentorsAndCoachRouter from "../modules/JoinMentorsAndCoache/JoinMentorsAndCoach.router";
 import { MediaRoutes } from "../modules/media/media.routes";
-import userRouter from "../modules/user/user.router";
 import { ReviewRoutes } from "../modules/review/review.routes";
+import userRouter from "../modules/user/user.router";
 
 const router = Router();
 
@@ -52,7 +53,11 @@ const moduleRoutes = [
   {
     path: "/review",
     route: ReviewRoutes,
-  }
+  },
+  {
+    path: "/mentors-coaches",
+    route: joinMentorsAndCoachRouter,
+  },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

@@ -5,11 +5,11 @@ const imageSchema = new Schema(
   {
     url: {
       type: String,
-      required: true,
+      //   required: true,
     },
     public_id: {
       type: String,
-      required: true,
+      //   required: true,
     },
   },
   { _id: false },
@@ -84,11 +84,13 @@ const joinMentorCoachSchema = new Schema<IJoinMentorsAndCoach>(
     skills: {
       type: [String],
       required: true,
+      default: [],
     },
     support: {
       type: [supportSchema],
       default: [],
     },
+
     experience: {
       type: [experienceSchema],
       default: [],
@@ -96,6 +98,7 @@ const joinMentorCoachSchema = new Schema<IJoinMentorsAndCoach>(
     languages: {
       type: [String],
       required: true,
+      default: [],
     },
     experienceYears: {
       type: Number,
