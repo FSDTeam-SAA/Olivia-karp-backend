@@ -1,8 +1,10 @@
 import { Router } from "express";
+import { ApplyBlogRoutes } from "../modules/applyBlog/applyBlog.routes";
 import applyJobRouter from "../modules/applyJob/applyJob.router";
 import authRouter from "../modules/auth/auth.router";
 import { BlogRoutes } from "../modules/blog/blog.routes";
 import contactRouter from "../modules/contact/contact.router";
+import courseRouter from "../modules/course/course.router";
 import { CourseIdeaRoutes } from "../modules/courseIdea/courseIdea.routes";
 import { EventRoutes } from "../modules/event/event.routes";
 import jobRouter from "../modules/job/job.router";
@@ -10,7 +12,6 @@ import joinMentorsAndCoachRouter from "../modules/JoinMentorsAndCoache/JoinMento
 import { MediaRoutes } from "../modules/media/media.routes";
 import { ReviewRoutes } from "../modules/review/review.routes";
 import userRouter from "../modules/user/user.router";
-import { ApplyBlogRoutes } from "../modules/applyBlog/applyBlog.routes";
 
 const router = Router();
 
@@ -62,6 +63,10 @@ const moduleRoutes = [
   {
     path: "/apply-blog",
     route: ApplyBlogRoutes,
+  },
+  {
+    path: "/course",
+    route: courseRouter,
   },
 ];
 
