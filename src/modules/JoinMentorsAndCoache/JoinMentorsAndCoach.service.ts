@@ -81,10 +81,27 @@ const getSingleJoinMentorsAndCoach = async (id: string) => {
   return result;
 };
 
+const approvedJoinMentorsAndCoach = async (id: string) => {
+  const result = await JoinMentorCoach.findById(id);
+  if (!result) {
+    throw new AppError(
+      "Join mentors and coaches not found",
+      StatusCodes.NOT_FOUND,
+    );
+  }
+
+  await JoinMentorCoach.findByIdAndUpdate(
+    { _id: id },
+    { isApproved: true },
+    { new: true },
+  );
+};
+
 const JoinMentorsAndCoachService = {
   createJoinMentorsAndCoachIntoDB,
   getAllJoinMentorsAndCoaches,
   getSingleJoinMentorsAndCoach,
+  approvedJoinMentorsAndCoach,
 };
 
 export default JoinMentorsAndCoachService;

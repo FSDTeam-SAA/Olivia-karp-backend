@@ -17,5 +17,10 @@ router.get(
   JoinMentorsAndCoachController.getSingleJoinMentorsAndCoach,
 );
 
+router.put(
+  "/approved/:joinMentorsAndCoachId",
+  JoinMentorsAndCoachController.approvedJoinMentorsAndCoach,
+);
+
 const joinMentorsAndCoachRouter = router;
 export default joinMentorsAndCoachRouter;
