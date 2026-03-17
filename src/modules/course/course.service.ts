@@ -93,8 +93,18 @@ const getAllCourses = async (query: any) => {
   };
 };
 
+const getSingleCourse = async (id: string) => {
+  const result = await Course.findById(id);
+  if (!result) {
+    throw new Error("Course not found");
+  }
+
+  return result;
+};
+
 const courseService = {
   CreateNewCourse,
   getAllCourses,
+  getSingleCourse,
 };
 export default courseService;
