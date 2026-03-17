@@ -11,10 +11,9 @@ const LessonSchema = new Schema<ILesson>({
 
 const CourseSchema = new Schema<ICourse>(
   {
-    id: { type: Number, required: true, unique: true },
     title: { type: String, required: true },
-    lessonsCount: { type: Number, required: true },
-    totalDuration: { type: String, required: true },
+    lessonsCount: { type: Number },
+    totalDuration: { type: String },
     lessons: { type: [LessonSchema], default: [] },
     isLocked: { type: Boolean, default: false },
     image: {
