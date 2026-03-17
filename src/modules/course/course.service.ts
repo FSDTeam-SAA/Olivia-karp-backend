@@ -54,7 +54,47 @@ const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
   return result;
 };
 
+const getAllCourses = async (query: any) => {
+  const { page = 1, limit = 10, searchTerm } = query;
+
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const filter: any = {};
+
+  // search by title (case insensitive)
+  if (searchTerm && searchTerm.trim() !== "") {
+    filter.$or = [
+      {
+        title: {
+          $regex: searchTerm.trim(),
+          $options: "i", // makes search case-insensitive
+        },
+      },
+    ];
+  }
+
+  const data = await Course.find(filter)
+    .skip(skip)
+    .limit(limitNumber)
+    .sort({ createdAt: -1 });
+
+  const total = await Course.countDocuments(filter);
+
+  return {
+    data,
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPage: Math.ceil(total / limitNumber),
+    },
+  };
+};
+
 const courseService = {
   CreateNewCourse,
+  getAllCourses,
 };
 export default courseService;

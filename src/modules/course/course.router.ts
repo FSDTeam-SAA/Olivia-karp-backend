@@ -10,5 +10,7 @@ router.post(
   courseController.CreateNewCourse,
 );
 
+router.get("/all", courseController.getAllCourses);
+
 const courseRouter = router;
 export default courseRouter;
