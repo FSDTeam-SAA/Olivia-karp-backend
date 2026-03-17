@@ -31,7 +31,7 @@ const createJoinMentorsAndCoachIntoDB = async (
 const getAllJoinMentorsAndCoaches = async (query: any) => {
   const { searchTerm, type, page = 1, limit = 10 } = query;
 
-  const filter: any = {};
+  const filter: any = { isApproved: true, isActive: true };
 
   // filter mentor / coach
   if (type) {
@@ -81,10 +81,44 @@ const getSingleJoinMentorsAndCoach = async (id: string) => {
   return result;
 };
 
+const approvedJoinMentorsAndCoach = async (id: string) => {
+  const result = await JoinMentorCoach.findById(id);
+  if (!result) {
+    throw new AppError(
+      "Join mentors and coaches not found",
+      StatusCodes.NOT_FOUND,
+    );
+  }
+
+  await JoinMentorCoach.findByIdAndUpdate(
+    { _id: id },
+    { isApproved: true },
+    { new: true },
+  );
+};
+
+const toggleMentorAndCoachActive = async (id: string) => {
+  const result = await JoinMentorCoach.findById(id);
+  if (!result) {
+    throw new AppError(
+      "Join mentors and coaches not found",
+      StatusCodes.NOT_FOUND,
+    );
+  }
+
+  await JoinMentorCoach.findByIdAndUpdate(
+    { _id: id },
+    { isActive: !result.isActive },
+    { new: true },
+  );
+};
+
 const JoinMentorsAndCoachService = {
   createJoinMentorsAndCoachIntoDB,
   getAllJoinMentorsAndCoaches,
   getSingleJoinMentorsAndCoach,
+  approvedJoinMentorsAndCoach,
+  toggleMentorAndCoachActive,
 };
 
 export default JoinMentorsAndCoachService;
