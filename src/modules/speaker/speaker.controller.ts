@@ -5,7 +5,7 @@ import speakerService from "./speaker.service";
 
 const applyForSpeaker = catchAsync(async (req, res) => {
   const { email } = req.user!;
-  const result = await speakerService.applyForSpeaker(email);
+  const result = await speakerService.applyForSpeaker(email, req.body);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
