@@ -36,8 +36,54 @@ const applyForSpeaker = async (email: string, payload: ISpeaker) => {
   return result;
 };
 
+const getAllAppliedSpeakers = async (query: any) => {
+  const { page = 1, limit = 10, status, ...rest } = query;
+
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const filters: any = {};
+
+  // ✅ status filter (validated)
+  const validStatus = ["pending", "approved", "rejected"];
+  if (status && validStatus.includes(status)) {
+    filters.status = status;
+  }
+
+  // ✅ optional: other safe filters (eventId, userId)
+  if (rest.eventId) {
+    filters.eventId = rest.eventId;
+  }
+
+  if (rest.userId) {
+    filters.userId = rest.userId;
+  }
+
+  // run queries in parallel
+  const [data, total] = await Promise.all([
+    Speaker.find(filters)
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 })
+      .lean(),
+    Speaker.countDocuments(filters),
+  ]);
+
+  return {
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPage: Math.ceil(total / limitNumber),
+    },
+    data,
+  };
+};
+
 const speakerService = {
   applyForSpeaker,
+  getAllAppliedSpeakers,
 };
 
 export default speakerService;
