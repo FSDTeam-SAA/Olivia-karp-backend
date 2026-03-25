@@ -11,5 +11,11 @@ router.post(
   speakerController.applyForSpeaker,
 );
 
+router.get(
+  "/all",
+//   auth(USER_ROLE.ADMIN),
+  speakerController.getAllAppliedSpeakers,
+);
+
 const speakerRouter = router;
 export default speakerRouter;
