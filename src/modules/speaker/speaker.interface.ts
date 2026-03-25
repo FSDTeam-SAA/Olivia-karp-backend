@@ -9,4 +9,5 @@ export interface ISpeaker {
   eventId: Types.ObjectId;
   userId: Types.ObjectId;
   climateMatters: string;
+  status: "pending" | "approved" | "rejected";
 }
