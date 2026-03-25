@@ -11,6 +11,7 @@ import jobRouter from "../modules/job/job.router";
 import joinMentorsAndCoachRouter from "../modules/JoinMentorsAndCoache/JoinMentorsAndCoach.router";
 import { MediaRoutes } from "../modules/media/media.routes";
 import { ReviewRoutes } from "../modules/review/review.routes";
+import speakerRouter from "../modules/speaker/speaker.router";
 import userRouter from "../modules/user/user.router";
 
 const router = Router();
@@ -67,6 +68,10 @@ const moduleRoutes = [
   {
     path: "/course",
     route: courseRouter,
+  },
+  {
+    path: "/speaker",
+    route: speakerRouter,
   },
 ];
 
