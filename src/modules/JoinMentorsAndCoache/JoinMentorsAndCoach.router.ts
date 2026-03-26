@@ -16,6 +16,11 @@ router.post(
 router.get("/all", JoinMentorsAndCoachController.getAllJoinMentorsAndCoaches);
 
 router.get(
+  "/",
+  JoinMentorsAndCoachController.getApprovedJoinMentorsAndCoaches,
+);
+
+router.get(
   "/:joinMentorsAndCoachId",
   JoinMentorsAndCoachController.getSingleJoinMentorsAndCoach,
 );
