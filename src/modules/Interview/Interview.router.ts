@@ -11,5 +11,11 @@ router.post(
   InterviewController.createInterview,
 );
 
+router.get(
+  "/",
+  auth(USER_ROLE.ADMIN),
+  InterviewController.getAllInterviews,
+);
+
 const InterviewRouter = router;
 export default InterviewRouter;
