@@ -36,7 +36,8 @@ const createJoinMentorsAndCoachIntoDB = async (
 
   const result = await JoinMentorCoach.create({
     ...payload,
-    user: user._id,
+    userId: user._id,
+    isApproved: user.role === "admin" ? true : false,
   });
 
   return result;
@@ -45,7 +46,7 @@ const createJoinMentorsAndCoachIntoDB = async (
 const getAllJoinMentorsAndCoaches = async (query: any) => {
   const { searchTerm, type, page = 1, limit = 10 } = query;
 
-  const filter: any = { isApproved: true, isActive: true };
+  const filter: any = {};
 
   // filter mentor / coach
   if (type) {
