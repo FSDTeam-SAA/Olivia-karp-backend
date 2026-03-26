@@ -32,7 +32,11 @@ const applyForSpeaker = async (email: string, payload: ISpeaker) => {
     throw new AppError("You have already applied for this event", 400);
   }
 
-  const result = await Speaker.create(payload);
+  const result = await Speaker.create({
+    ...payload,
+    userId: user._id,
+    eventId: event._id,
+  });
   return result;
 };
 
@@ -81,9 +85,28 @@ const getAllAppliedSpeakers = async (query: any) => {
   };
 };
 
+const getSingleDetailsForSpeaker = async (id: string) => {
+  const isExists = await Speaker.findById({ _id: id });
+  if (!isExists) {
+    throw new AppError("Speaker not found", 404);
+  }
+
+  const result = await Speaker.findById(id)
+    .populate({
+      path: "userId",
+      select: "firstName lastName image role email",
+    })
+    .populate({
+      path: "eventId",
+      select: "title thumbnail",
+    });
+  return result;
+};
+
 const speakerService = {
   applyForSpeaker,
   getAllAppliedSpeakers,
+  getSingleDetailsForSpeaker,
 };
 
 export default speakerService;
