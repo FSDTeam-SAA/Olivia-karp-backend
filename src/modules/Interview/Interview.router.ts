@@ -1,9 +1,15 @@
 import { Router } from "express";
-
+import auth from "../../middleware/auth";
+import { USER_ROLE } from "../user/user.constant";
+import InterviewController from "./Interview.controller";
 
 const router = Router();
 
-
+router.post(
+  "/create",
+  auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+  InterviewController.createInterview,
+);
 
 const InterviewRouter = router;
 export default InterviewRouter;
