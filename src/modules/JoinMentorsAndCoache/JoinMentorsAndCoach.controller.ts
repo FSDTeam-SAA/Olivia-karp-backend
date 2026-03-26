@@ -4,12 +4,14 @@ import sendResponse from "../../utils/sendResponse";
 import JoinMentorsAndCoachService from "./JoinMentorsAndCoach.service";
 
 const createJoinMentorsAndCoachIntoDB = catchAsync(async (req, res) => {
+  const { email } = req.user!;
   const file = req.file as Express.Multer.File;
 
   const result =
     await JoinMentorsAndCoachService.createJoinMentorsAndCoachIntoDB(
       file,
       req.body,
+      email,
     );
 
   sendResponse(res, {

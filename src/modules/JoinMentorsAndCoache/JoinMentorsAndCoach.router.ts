@@ -1,11 +1,14 @@
 import { Router } from "express";
+import auth from "../../middleware/auth";
 import { upload } from "../../middleware/multer.middleware";
+import { USER_ROLE } from "../user/user.constant";
 import JoinMentorsAndCoachController from "./JoinMentorsAndCoach.controller";
 
 const router = Router();
 
 router.post(
   "/join",
+  auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
   upload.single("file"),
   JoinMentorsAndCoachController.createJoinMentorsAndCoachIntoDB,
 );

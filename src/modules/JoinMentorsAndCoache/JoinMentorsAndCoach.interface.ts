@@ -1,8 +1,13 @@
+import { Types } from "mongoose";
+
 export interface IJoinMentorsAndCoach {
+  userId: Types.ObjectId;
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
+  address?: string;
+  designation?: string;
   bio: string;
   about: string;
   image: {
@@ -21,12 +26,16 @@ export interface IJoinMentorsAndCoach {
   }[];
   languages: string[];
   experienceYears: number;
-  availability?: string;
   linkedin?: string;
   website?: string;
+  isPaidSession: boolean;
+  hourlyRate?: number;
+  bookingLink: string;
+  motivation: string;
+  goal: string;
+  isApproved: boolean;
+  isActive: boolean;
   totalSessions?: number;
-  isActive?: boolean;
-  isApproved?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
