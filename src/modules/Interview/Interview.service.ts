@@ -19,8 +19,61 @@ const createInterview = async (payload: IInterview, email: string) => {
   return result;
 };
 
+
+const getAllInterviews = async (query: any) => {
+  const { status, searchTerm, page = 1, limit = 10 } = query;
+
+  const filter: any = {};
+
+  // ✅ Status filter
+  if (status && ["pending", "approved", "rejected"].includes(status)) {
+    filter.status = status;
+  }
+
+  // ✅ Search by name or email or topic (optional)
+  if (searchTerm) {
+    filter.$or = [
+      { name: { $regex: searchTerm, $options: "i" } },
+      { email: { $regex: searchTerm, $options: "i" } },
+      { topic: { $regex: searchTerm, $options: "i" } },
+      { industry: { $regex: searchTerm, $options: "i" } },
+    ];
+  }
+
+  // ✅ Pagination
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const data = await Interview.find(filter)
+    .skip(skip)
+    .limit(limitNumber)
+    .sort({ createdAt: -1 });
+
+  const total = await Interview.countDocuments(filter);
+
+  return {
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPage: Math.ceil(total / limitNumber),
+    },
+    data,
+  };
+};
+
+
+
+
+
+
+
+
+
 const InterviewService = {
   createInterview,
+  getAllInterviews,
 };
 
 export default InterviewService;
