@@ -27,9 +27,21 @@ const getAllAppliedSpeakers = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleDetailsForSpeaker = catchAsync(async (req, res) => {
+  const result = await speakerService.getSingleDetailsForSpeaker(req.params.id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Speaker details retrieved successfully",
+    data: result,
+  });
+});
+
 const speakerController = {
   applyForSpeaker,
   getAllAppliedSpeakers,
+  getSingleDetailsForSpeaker,
 };
 
 export default speakerController;

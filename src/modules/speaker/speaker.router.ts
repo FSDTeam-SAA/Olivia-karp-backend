@@ -13,8 +13,14 @@ router.post(
 
 router.get(
   "/all",
-//   auth(USER_ROLE.ADMIN),
+  //   auth(USER_ROLE.ADMIN),
   speakerController.getAllAppliedSpeakers,
+);
+
+router.get(
+  "/:id",
+  //   auth(USER_ROLE.ADMIN),
+  speakerController.getSingleDetailsForSpeaker,
 );
 
 const speakerRouter = router;
