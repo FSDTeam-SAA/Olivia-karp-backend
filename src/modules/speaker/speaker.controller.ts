@@ -38,10 +38,22 @@ const getSingleDetailsForSpeaker = catchAsync(async (req, res) => {
   });
 });
 
+const updateStatus = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  await speakerService.updateStatus(id, req.body);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Speaker status updated successfully.",
+  });
+});
+
 const speakerController = {
   applyForSpeaker,
   getAllAppliedSpeakers,
   getSingleDetailsForSpeaker,
+  updateStatus,
 };
 
 export default speakerController;

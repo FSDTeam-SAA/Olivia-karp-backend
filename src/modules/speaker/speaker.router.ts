@@ -23,5 +23,11 @@ router.get(
   speakerController.getSingleDetailsForSpeaker,
 );
 
+router.put(
+  "/update/:id",
+  //   auth(USER_ROLE.ADMIN),
+  speakerController.updateStatus,
+);
+
 const speakerRouter = router;
 export default speakerRouter;

@@ -103,10 +103,21 @@ const getSingleDetailsForSpeaker = async (id: string) => {
   return result;
 };
 
+const updateStatus = async (id: string, payload: any) => {
+  const { status } = payload;
+  const isExist = await Speaker.findById(id);
+  if (!isExist) {
+    throw new AppError("Speaker not found", 404);
+  }
+
+  await Speaker.findOneAndUpdate({ _id: id }, { status }, { new: true });
+};
+
 const speakerService = {
   applyForSpeaker,
   getAllAppliedSpeakers,
   getSingleDetailsForSpeaker,
+  updateStatus,
 };
 
 export default speakerService;
