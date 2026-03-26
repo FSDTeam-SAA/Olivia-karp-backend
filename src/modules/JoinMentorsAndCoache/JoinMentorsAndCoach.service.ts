@@ -1,12 +1,23 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errors/AppError";
 import { uploadToCloudinary } from "../../utils/cloudinary";
+import { User } from "../user/user.model";
+import { IJoinMentorsAndCoach } from "./JoinMentorsAndCoach.interface";
 import JoinMentorCoach from "./JoinMentorsAndCoach.model";
 
 const createJoinMentorsAndCoachIntoDB = async (
   file: Express.Multer.File,
-  payload: any,
+  payload: IJoinMentorsAndCoach,
+  email: string,
 ) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError(
+      "No account found with the provided credentials.",
+      StatusCodes.NOT_FOUND,
+    );
+  }
+
   const emailExists = await JoinMentorCoach.findOne({ email: payload.email });
   if (emailExists) {
     throw new AppError("This email already exists", StatusCodes.BAD_REQUEST);
@@ -23,7 +34,10 @@ const createJoinMentorsAndCoachIntoDB = async (
     throw new AppError("Image is required", StatusCodes.BAD_REQUEST);
   }
 
-  const result = await JoinMentorCoach.create(payload);
+  const result = await JoinMentorCoach.create({
+    ...payload,
+    user: user._id,
+  });
 
   return result;
 };
