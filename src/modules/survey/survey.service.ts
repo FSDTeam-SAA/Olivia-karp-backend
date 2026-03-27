@@ -67,9 +67,18 @@ const getAllSurveys = async (query: any) => {
   return { meta, data };
 };
 
+const getSingleSurvey = async (id: string) => {
+  const result = await Survey.findById(id).populate(
+    "userId",
+    "firstName lastName email image",
+  );
+  return result;
+};
+
 const SurveyService = {
   createNewSurvey,
   getAllSurveys,
+  getSingleSurvey,
 };
 
 export default SurveyService;
