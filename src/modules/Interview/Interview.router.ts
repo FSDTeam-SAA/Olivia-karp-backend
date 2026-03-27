@@ -17,5 +17,11 @@ router.get(
   InterviewController.getAllInterviews,
 );
 
+router.get(
+  "/:id",
+  // auth(USER_ROLE.ADMIN),
+  InterviewController.getSingleInterview,
+);
+
 const InterviewRouter = router;
 export default InterviewRouter;

@@ -27,9 +27,22 @@ const getAllInterviews = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleInterview = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await InterviewService.getSingleInterview(id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Interview retrieved successfully",
+    data: result,
+  });
+});
+
 const InterviewController = {
   createInterview,
   getAllInterviews,
+  getSingleInterview,
 };
 
 export default InterviewController;
