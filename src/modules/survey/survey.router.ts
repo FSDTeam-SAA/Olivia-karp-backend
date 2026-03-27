@@ -11,5 +11,7 @@ router.post(
   surveyController.createNewSurvey,
 );
 
+router.get("/",  surveyController.getAllSurveys);
+
 const surveyRouter = router;
 export default surveyRouter;
