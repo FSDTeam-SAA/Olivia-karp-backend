@@ -1,4 +1,7 @@
+import { Types } from "mongoose";
+
 export interface ISurvey {
+  userId: Types.ObjectId;
   name: string;
   email: string;
   city: string;
