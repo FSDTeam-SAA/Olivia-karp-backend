@@ -14,6 +14,7 @@ import { MediaRoutes } from "../modules/media/media.routes";
 import { ReviewRoutes } from "../modules/review/review.routes";
 import speakerRouter from "../modules/speaker/speaker.router";
 import userRouter from "../modules/user/user.router";
+import surveyRouter from "../modules/survey/survey.router";
 
 const router = Router();
 
@@ -77,6 +78,10 @@ const moduleRoutes = [
   {
     path: "/interview",
     route: InterviewRouter,
+  },
+  {
+    path: "/survey",
+    route: surveyRouter,
   },
 ];
 
