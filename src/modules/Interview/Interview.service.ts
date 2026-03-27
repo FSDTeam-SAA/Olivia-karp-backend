@@ -62,9 +62,21 @@ const getAllInterviews = async (query: any) => {
   };
 };
 
+const getSingleInterview = async (id: string) => {
+  const interview = await Interview.findById(id).populate(
+    "userId",
+    "firstName lastName email image",
+  );
+  if (!interview) {
+    throw new AppError("Interview not found", StatusCodes.NOT_FOUND);
+  }
+  return interview;
+};
+
 const InterviewService = {
   createInterview,
   getAllInterviews,
+  getSingleInterview,
 };
 
 export default InterviewService;
