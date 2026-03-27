@@ -11,16 +11,18 @@ router.post(
   InterviewController.createInterview,
 );
 
-router.get(
-  "/",
-  auth(USER_ROLE.ADMIN),
-  InterviewController.getAllInterviews,
-);
+router.get("/", auth(USER_ROLE.ADMIN), InterviewController.getAllInterviews);
 
 router.get(
   "/:id",
-  // auth(USER_ROLE.ADMIN),
+  auth(USER_ROLE.ADMIN),
   InterviewController.getSingleInterview,
+);
+
+router.put(
+  "/update/:id",
+  // auth(USER_ROLE.ADMIN),
+  InterviewController.updateStatus,
 );
 
 const InterviewRouter = router;

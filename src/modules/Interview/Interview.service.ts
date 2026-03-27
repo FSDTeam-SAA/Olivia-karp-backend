@@ -73,10 +73,22 @@ const getSingleInterview = async (id: string) => {
   return interview;
 };
 
+//! When admin approved or rejected then send email to user
+const updateStatus = async (id: string, payload: any) => {
+  const { status } = payload;
+  const isExist = await Interview.findById(id);
+  if (!isExist) {
+    throw new AppError("Interview not found", StatusCodes.NOT_FOUND);
+  }
+  await Interview.findOneAndUpdate({ _id: id }, { status }, { new: true });
+  // return result;
+};
+
 const InterviewService = {
   createInterview,
   getAllInterviews,
   getSingleInterview,
+  updateStatus,
 };
 
 export default InterviewService;

@@ -39,10 +39,26 @@ const getSingleInterview = catchAsync(async (req, res) => {
   });
 });
 
+const updateStatus = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  await InterviewService.updateStatus(id, req.body);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Applied job status updated successfully.",
+    // data: result,
+  });
+});
+
+//! Deleted api for only rejected interview and which interview is completed.
+//! It will be add in future.
+
 const InterviewController = {
   createInterview,
   getAllInterviews,
   getSingleInterview,
+  updateStatus,
 };
 
 export default InterviewController;
