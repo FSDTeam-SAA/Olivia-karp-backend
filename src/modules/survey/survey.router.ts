@@ -11,7 +11,9 @@ router.post(
   surveyController.createNewSurvey,
 );
 
-router.get("/",  surveyController.getAllSurveys);
+router.get("/", auth(USER_ROLE.ADMIN), surveyController.getAllSurveys);
+
+router.get("/:id", surveyController.getSingleSurvey);
 
 const surveyRouter = router;
 export default surveyRouter;

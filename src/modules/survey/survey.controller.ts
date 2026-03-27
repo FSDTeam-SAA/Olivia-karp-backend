@@ -27,9 +27,21 @@ const getAllSurveys = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleSurvey = catchAsync(async (req, res) => {
+  const result = await SurveyService.getSingleSurvey(req.params.id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Survey retrieved successfully",
+    data: result,
+  });
+});
+
 const surveyController = {
   createNewSurvey,
   getAllSurveys,
+  getSingleSurvey,
 };
 
 export default surveyController;
