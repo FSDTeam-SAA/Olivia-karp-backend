@@ -1,14 +1,23 @@
-
-
 export interface ISurvey {
-    name: string;
-    email: string;
-    topic: string;
-    industry: string;
-    professionalBackground: string;
-    focus: string;
-    preferredQuestions: string[];
-    date: Date;
-    time: string;
-    status: "pending" | "approved" | "rejected";
+  name: string;
+  email: string;
+  city: string;
+  country: string;
+  link?: string;
+  climateJourney: string;
+  message: string;
+  interest: string[];
+  goals: string[];
+  successMessage: string;
+  whatLooking: string[];
+  engagementPreference: string;
+  opportunity: string;
+  hubs: string;
+  region: string;
+  impactNewsletter: boolean;
+  localNotification: boolean;
+  updateFrequency: string;
+  tellAbout: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
