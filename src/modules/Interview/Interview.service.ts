@@ -19,7 +19,6 @@ const createInterview = async (payload: IInterview, email: string) => {
   return result;
 };
 
-
 const getAllInterviews = async (query: any) => {
   const { status, searchTerm, page = 1, limit = 10 } = query;
 
@@ -62,14 +61,6 @@ const getAllInterviews = async (query: any) => {
     data,
   };
 };
-
-
-
-
-
-
-
-
 
 const InterviewService = {
   createInterview,
