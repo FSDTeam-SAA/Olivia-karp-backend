@@ -11,13 +11,14 @@ import InterviewRouter from "../modules/Interview/Interview.router";
 import jobRouter from "../modules/job/job.router";
 import joinMentorsAndCoachRouter from "../modules/JoinMentorsAndCoache/JoinMentorsAndCoach.router";
 import { MediaRoutes } from "../modules/media/media.routes";
+import { NewsletterRoutes } from "../modules/newsletter/newsletter.routes";
+import paymentRouter from "../modules/payment/payment.router";
+import purchaseSubscriptionRouter from "../modules/purchaseSubscription/purchaseSubscription.router";
 import { ReviewRoutes } from "../modules/review/review.routes";
 import speakerRouter from "../modules/speaker/speaker.router";
 import subscriptionPlanRouter from "../modules/subscriptionPlan/subscriptionPlan.router";
 import surveyRouter from "../modules/survey/survey.router";
-import { NewsletterRoutes } from "../modules/newsletter/newsletter.routes";
 import userRouter from "../modules/user/user.router";
-import purchaseSubscriptionRouter from "../modules/purchaseSubscription/purchaseSubscription.router";
 
 const router = Router();
 
@@ -97,6 +98,10 @@ const moduleRoutes = [
   {
     path: "/purchase-subscription",
     route: purchaseSubscriptionRouter,
+  },
+  {
+    path: "/payment",
+    route: paymentRouter,
   },
 ];
 
