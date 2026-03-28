@@ -8,25 +8,16 @@ const purchaseSubscriptionSchema = new Schema<IPurchaseSubscription>(
       ref: "User",
       required: true,
     },
-
     subscriptionId: {
       type: Schema.Types.ObjectId,
       ref: "SubscriptionPlan",
       required: true,
     },
-
-    status: {
-      type: String,
-      enum: ["approved", "pending", "rejected"],
-      default: "pending",
-    },
-
     purchaseDate: {
       type: Date,
       required: true,
       default: Date.now,
     },
-
     expirationDate: {
       type: Date,
       required: true,
@@ -38,7 +29,7 @@ const purchaseSubscriptionSchema = new Schema<IPurchaseSubscription>(
   },
 );
 
-// 🔥 Validation: expirationDate must be greater than purchaseDate
+//  Validation: expirationDate must be greater than purchaseDate
 purchaseSubscriptionSchema.pre("save", function (next) {
   if (this.expirationDate <= this.purchaseDate) {
     return next(
@@ -51,7 +42,6 @@ purchaseSubscriptionSchema.pre("save", function (next) {
 // 🔥 Index (performance optimization)
 purchaseSubscriptionSchema.index({ userId: 1 });
 purchaseSubscriptionSchema.index({ subscriptionId: 1 });
-purchaseSubscriptionSchema.index({ status: 1 });
 
 const PurchaseSubscription = model<IPurchaseSubscription>(
   "PurchaseSubscription",

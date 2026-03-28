@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 export interface IPurchaseSubscription {
   userId: Types.ObjectId;
   subscriptionId: Types.ObjectId;
-  status: "approved" | "pending" | "rejected";
+  paymentId: Types.ObjectId;
   purchaseDate: Date;
   expirationDate: Date;
   createdAt: Date;
