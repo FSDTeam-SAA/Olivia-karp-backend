@@ -33,6 +33,10 @@ export default {
     AES_KEY: process.env.AES_KEY,
     AES_IV: process.env.AES_IV,
   },
+  beehiiv: {
+    beehiiv_api_key: process.env.BEEHIIV_API_KEY,
+    beehiiv_publication_id: process.env.BEEHIIV_PUBLICATION_ID,
+  },
 
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID,
