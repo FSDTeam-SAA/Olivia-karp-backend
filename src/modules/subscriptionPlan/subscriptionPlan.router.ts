@@ -12,5 +12,10 @@ router.get(
   subscriptionPlanController.getSingleSubscriptionPlan,
 );
 
+router.put(
+  "/update/:subscriptionPlanId",
+  subscriptionPlanController.updateSubscriptionPlan,
+);
+
 const subscriptionPlanRouter = router;
 export default subscriptionPlanRouter;

@@ -63,10 +63,40 @@ const getSingleSubscriptionPlan = async (id: string) => {
   return result;
 };
 
+const updateSubscriptionPlan = async (
+  id: string,
+  payload: ISubscriptionPlan,
+) => {
+  const subscriptionPlan = await SubscriptionPlan.findById(id);
+  if (!subscriptionPlan) {
+    throw new AppError("Subscription plan not found", StatusCodes.NOT_FOUND);
+  }
+
+  if (payload.hasTrial && (!payload.trialDays || payload.trialDays <= 0)) {
+    throw new AppError(
+      "Trial days must be greater than 0 when trial is enabled",
+      StatusCodes.BAD_REQUEST,
+    );
+  }
+
+  if (payload.billingType !== "monthly" && payload.billingType !== "yearly") {
+    throw new AppError(
+      "Billing type must be monthly or yearly",
+      StatusCodes.BAD_REQUEST,
+    );
+  }
+
+  const result = await SubscriptionPlan.findByIdAndUpdate(id, payload, {
+    new: true,
+  });
+  return result;
+};
+
 const subscriptionPlanService = {
   createNewSubscriptionPlan,
   getAllSubscriptionPlans,
   getSingleSubscriptionPlan,
+  updateSubscriptionPlan,
 };
 
 export default subscriptionPlanService;
