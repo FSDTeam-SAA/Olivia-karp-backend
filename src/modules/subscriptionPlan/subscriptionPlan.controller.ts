@@ -40,10 +40,26 @@ const getSingleSubscriptionPlan = catchAsync(async (req, res) => {
   });
 });
 
+const updateSubscriptionPlan = catchAsync(async (req, res) => {
+  const { subscriptionPlanId } = req.params;
+  const result = await subscriptionPlanService.updateSubscriptionPlan(
+    subscriptionPlanId,
+    req.body,
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Subscription plan updated successfully",
+    data: result,
+  });
+});
+
 const subscriptionPlanController = {
   createNewSubscriptionPlan,
   getAllSubscriptionPlans,
   getSingleSubscriptionPlan,
+  updateSubscriptionPlan,
 };
 
 export default subscriptionPlanController;
