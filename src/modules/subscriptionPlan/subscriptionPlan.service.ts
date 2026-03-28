@@ -4,9 +4,24 @@ import { ISubscriptionPlan } from "./subscriptionPlan.interface";
 import SubscriptionPlan from "./subscriptionPlan.model";
 
 const createNewSubscriptionPlan = async (payload: ISubscriptionPlan) => {
+  const total = await SubscriptionPlan.countDocuments();
+  if (total >= 3) {
+    throw new AppError(
+      "You can only create up to 3 subscription plans",
+      StatusCodes.BAD_REQUEST,
+    );
+  }
+
   if (payload.hasTrial && (!payload.trialDays || payload.trialDays <= 0)) {
     throw new AppError(
       "Trial days must be greater than 0 when trial is enabled",
+      StatusCodes.BAD_REQUEST,
+    );
+  }
+
+  if (payload.billingType !== "monthly" && payload.billingType !== "yearly") {
+    throw new AppError(
+      "Billing type must be monthly or yearly",
       StatusCodes.BAD_REQUEST,
     );
   }
