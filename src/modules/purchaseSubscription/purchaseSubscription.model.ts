@@ -13,6 +13,11 @@ const purchaseSubscriptionSchema = new Schema<IPurchaseSubscription>(
       ref: "SubscriptionPlan",
       required: true,
     },
+    paymentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Payment",
+      required: true,
+    },
     purchaseDate: {
       type: Date,
       required: true,
@@ -20,7 +25,6 @@ const purchaseSubscriptionSchema = new Schema<IPurchaseSubscription>(
     },
     expirationDate: {
       type: Date,
-      required: true,
     },
   },
   {

@@ -5,7 +5,6 @@ import purchaseSubscriptionService from "./purchaseSubscription.service";
 
 const createPurchaseSubscription = catchAsync(async (req, res) => {
   const { email } = req.user!;
-
   const result = await purchaseSubscriptionService.createPurchaseSubscription(
     req.body,
     email,
