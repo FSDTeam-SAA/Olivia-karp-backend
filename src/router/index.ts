@@ -17,6 +17,7 @@ import subscriptionPlanRouter from "../modules/subscriptionPlan/subscriptionPlan
 import surveyRouter from "../modules/survey/survey.router";
 import { NewsletterRoutes } from "../modules/newsletter/newsletter.routes";
 import userRouter from "../modules/user/user.router";
+import purchaseSubscriptionRouter from "../modules/purchaseSubscription/purchaseSubscription.router";
 
 const router = Router();
 
@@ -92,6 +93,10 @@ const moduleRoutes = [
   {
     path: "/newsletter",
     route: NewsletterRoutes,
+  },
+  {
+    path: "/purchase-subscription",
+    route: purchaseSubscriptionRouter,
   },
 ];
 
