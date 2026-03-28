@@ -13,9 +13,10 @@ import joinMentorsAndCoachRouter from "../modules/JoinMentorsAndCoache/JoinMento
 import { MediaRoutes } from "../modules/media/media.routes";
 import { ReviewRoutes } from "../modules/review/review.routes";
 import speakerRouter from "../modules/speaker/speaker.router";
-import userRouter from "../modules/user/user.router";
+import subscriptionPlanRouter from "../modules/subscriptionPlan/subscriptionPlan.router";
 import surveyRouter from "../modules/survey/survey.router";
 import { NewsletterRoutes } from "../modules/newsletter/newsletter.routes";
+import userRouter from "../modules/user/user.router";
 
 const router = Router();
 
@@ -83,6 +84,10 @@ const moduleRoutes = [
   {
     path: "/survey",
     route: surveyRouter,
+  },
+  {
+    path: "/subscription-plans",
+    route: subscriptionPlanRouter,
   },
   {
     path: "/newsletter",
