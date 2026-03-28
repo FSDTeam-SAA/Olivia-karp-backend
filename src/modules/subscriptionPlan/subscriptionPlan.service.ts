@@ -54,9 +54,19 @@ const getAllSubscriptionPlans = async () => {
   return result;
 };
 
+const getSingleSubscriptionPlan = async (id: string) => {
+  const result = await SubscriptionPlan.findById(id);
+  if (!result) {
+    throw new AppError("Subscription plan not found", StatusCodes.NOT_FOUND);
+  }
+
+  return result;
+};
+
 const subscriptionPlanService = {
   createNewSubscriptionPlan,
   getAllSubscriptionPlans,
+  getSingleSubscriptionPlan,
 };
 
 export default subscriptionPlanService;
