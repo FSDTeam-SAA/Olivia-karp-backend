@@ -18,6 +18,7 @@ const createNewSubscriptionPlan = catchAsync(async (req, res) => {
 
 const getAllSubscriptionPlans = catchAsync(async (req, res) => {
   const result = await subscriptionPlanService.getAllSubscriptionPlans();
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -26,9 +27,23 @@ const getAllSubscriptionPlans = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleSubscriptionPlan = catchAsync(async (req, res) => {
+  const { subscriptionPlanId } = req.params;
+  const result =
+    await subscriptionPlanService.getSingleSubscriptionPlan(subscriptionPlanId);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Subscription plan retrieved successfully",
+    data: result,
+  });
+});
+
 const subscriptionPlanController = {
   createNewSubscriptionPlan,
   getAllSubscriptionPlans,
+  getSingleSubscriptionPlan,
 };
 
 export default subscriptionPlanController;
