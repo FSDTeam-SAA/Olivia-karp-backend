@@ -1,5 +1,5 @@
-interface ISubscriptionPlan {
-  name: string;
+export interface ISubscriptionPlan {
+  title: string;
   description: string;
   price: number;
   billingType: "monthly" | "yearly";
