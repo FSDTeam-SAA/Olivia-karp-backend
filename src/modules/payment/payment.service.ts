@@ -209,10 +209,19 @@ const getAllPayment = async (query: any) => {
   };
 };
 
+const getSinglePayment = async (id: string) => {
+  const payment = await Payment.findById(id);
+  if (!payment) {
+    throw new AppError("Payment not found", StatusCodes.NOT_FOUND);
+  }
+  return payment;
+};
+
 const paymentService = {
   createPaymentForSubscription,
   stripeWebhookHandler,
   getAllPayment,
+  getSinglePayment,
 };
 
 export default paymentService;
