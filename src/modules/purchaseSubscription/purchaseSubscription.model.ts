@@ -16,7 +16,7 @@ const purchaseSubscriptionSchema = new Schema<IPurchaseSubscription>(
     paymentId: {
       type: Schema.Types.ObjectId,
       ref: "Payment",
-      required: true,
+      // required: true,
     },
     purchaseDate: {
       type: Date,

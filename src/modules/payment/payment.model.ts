@@ -5,36 +5,31 @@ const paymentSchema = new Schema<IPayment>(
   {
     paymentId: {
       type: String,
-      required: true,
+      // required: true,
       unique: true,
       trim: true,
     },
-
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      // required: true,
     },
-
-    subscriptionPlan: {
+    subscriptionPlanId: {
       type: Schema.Types.ObjectId,
       ref: "SubscriptionPlan",
-      required: true,
+      // required: true,
     },
-
     transactionId: {
       type: String,
       required: true,
       unique: true,
       trim: true,
     },
-
     status: {
       type: String,
       enum: ["paid", "unpaid"],
       default: "unpaid",
     },
-
     amount: {
       type: Number,
       required: true,
