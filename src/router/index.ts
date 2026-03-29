@@ -1,4 +1,5 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
+import { StatusCodes } from "http-status-codes";
 import { ApplyBlogRoutes } from "../modules/applyBlog/applyBlog.routes";
 import applyJobRouter from "../modules/applyJob/applyJob.router";
 import authRouter from "../modules/auth/auth.router";
@@ -106,5 +107,13 @@ const moduleRoutes = [
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
+
+router.get("/", (req: Request, res: Response) => {
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Welcome to Olivia Karp API v1",
+    data: null,
+  });
+});
 
 export default router;
