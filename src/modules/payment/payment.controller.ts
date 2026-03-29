@@ -31,9 +31,29 @@ const stripeWebhookHandler = catchAsync(async (req, res) => {
   });
 });
 
+const getAllPayment = catchAsync(async (req, res) => {
+  const result = await paymentService.getAllPayment(req.query);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Payment retrieved successfully",
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
+
+
+
+
+
+
+
 const paymentController = {
   createPaymentForSubscription,
   stripeWebhookHandler,
+  getAllPayment,
 };
 
 export default paymentController;

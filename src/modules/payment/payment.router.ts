@@ -10,7 +10,9 @@ router.post(
   auth(USER_ROLE.NON_MEMBER, USER_ROLE.MEMBER),
   paymentController.createPaymentForSubscription,
 );
+
 router.post("/webhook", paymentController.stripeWebhookHandler);
+router.get("/all", paymentController.getAllPayment);
 
 const paymentRouter = router;
 export default paymentRouter;

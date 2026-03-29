@@ -14,7 +14,7 @@ const createPaymentForSubscription = async (
   subscriptionPlanId: string,
   email: string,
 ) => {
-  // 1️⃣ Check User
+  //  Check User
   const user = await User.findOne({ email });
   if (!user) {
     throw new AppError(
@@ -23,7 +23,7 @@ const createPaymentForSubscription = async (
     );
   }
 
-  // 2️⃣ Check Subscription Plan
+  // Check Subscription Plan
   const subscription = await SubscriptionPlan.findById(subscriptionPlanId);
   if (!subscription) {
     throw new AppError("Subscription not found", StatusCodes.NOT_FOUND);
@@ -31,7 +31,7 @@ const createPaymentForSubscription = async (
 
   const now = new Date();
 
-  // 3️⃣ Free Trial
+  // Free Trial
   if (subscription.hasTrial) {
     const expirationDate = new Date(
       now.getTime() + (subscription.trialDays || 7) * 24 * 60 * 60 * 1000,
@@ -51,7 +51,7 @@ const createPaymentForSubscription = async (
     };
   }
 
-  // 4️⃣ Paid Plan → Create Stripe Checkout Session
+  // Paid Plan → Create Stripe Checkout Session
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
@@ -90,7 +90,7 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
 
   let event: Stripe.Event;
 
-  // ✅ 1️⃣ Verify Stripe Signature
+  //  Verify Stripe Signature
   try {
     event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
   } catch (err: any) {
@@ -100,7 +100,7 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
     );
   }
 
-  // ✅ 2️⃣ Handle Event
+  //  Handle Event
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
@@ -114,13 +114,13 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
     const userObjectId = new Types.ObjectId(userId);
     const subscriptionObjectId = new Types.ObjectId(subscriptionId);
 
-    // ✅ 3️⃣ Get Subscription Plan
+    // Get Subscription Plan
     const subscription = await SubscriptionPlan.findById(subscriptionObjectId);
     if (!subscription) {
       throw new AppError("Subscription not found", StatusCodes.NOT_FOUND);
     }
 
-    // ✅ 4️⃣ Calculate Expiration Date
+    // Calculate Expiration Date
     const now = new Date();
     let expirationDate = new Date(now);
 
@@ -130,7 +130,7 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
       expirationDate.setFullYear(expirationDate.getFullYear() + 1);
     }
 
-    // ✅ 5️⃣ Prevent Duplicate Entry (VERY IMPORTANT)
+    // Prevent Duplicate Entry (VERY IMPORTANT)
     const existingPayment = await Payment.findOne({
       transactionId: session.id,
     });
@@ -139,7 +139,7 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
       return { message: "Payment already processed" };
     }
 
-    // ✅ 6️⃣ Create Payment
+    // Create Payment
     const payment = await Payment.create({
       userId: userObjectId,
       subscriptionPlan: subscriptionObjectId,
@@ -148,7 +148,7 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
       amount: subscription.price,
     });
 
-    // ✅ 7️⃣ Create Subscription (Option 2: New Document)
+    // Create Subscription (Option 2: New Document)
     const purchase = await PurchaseSubscription.create({
       userId: userObjectId,
       subscriptionId: subscriptionObjectId,
@@ -160,13 +160,59 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
     return purchase;
   }
 
-  // অন্যান্য event ignore
   return { message: `Unhandled event type: ${event.type}` };
+};
+
+const getAllPayment = async (query: any) => {
+  // ✅ 1️⃣ Pagination params
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  // ✅ 2️⃣ Filter (optional)
+  const filter: any = {};
+
+  if (query.userId) {
+    filter.userId = query.userId;
+  }
+
+  if (query.status) {
+    filter.status = query.status;
+  }
+
+  // ✅ 3️⃣ Search (optional transactionId)
+  if (query.search) {
+    filter.transactionId = {
+      $regex: query.search,
+      $options: "i",
+    };
+  }
+
+  // ✅ 4️⃣ Query execution
+  const payments = await Payment.find(filter)
+    .sort({ createdAt: -1 }) // latest first
+    .skip(skip)
+    .limit(limit);
+
+  // ✅ 5️⃣ Total count
+  const total = await Payment.countDocuments(filter);
+
+  // ✅ 6️⃣ Meta return
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+    data: payments,
+  };
 };
 
 const paymentService = {
   createPaymentForSubscription,
   stripeWebhookHandler,
+  getAllPayment,
 };
 
 export default paymentService;
