@@ -43,17 +43,23 @@ const getAllPayment = catchAsync(async (req, res) => {
   });
 });
 
+const getSinglePayment = catchAsync(async (req, res) => {
+  const { paymentId } = req.params;
+  const result = await paymentService.getSinglePayment(paymentId);
 
-
-
-
-
-
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Payment retrieved successfully",
+    data: result,
+  });
+});
 
 const paymentController = {
   createPaymentForSubscription,
   stripeWebhookHandler,
   getAllPayment,
+  getSinglePayment,
 };
 
 export default paymentController;
