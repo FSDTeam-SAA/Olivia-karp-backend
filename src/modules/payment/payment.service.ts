@@ -14,7 +14,7 @@ const createPaymentForSubscription = async (
   subscriptionPlanId: string,
   email: string,
 ) => {
-  //  Check User
+  // 🔹 1. Check User
   const user = await User.findOne({ email });
   if (!user) {
     throw new AppError(
@@ -23,7 +23,7 @@ const createPaymentForSubscription = async (
     );
   }
 
-  // Check Subscription Plan
+  // 🔹 2. Check Subscription Plan
   const subscription = await SubscriptionPlan.findById(subscriptionPlanId);
   if (!subscription) {
     throw new AppError("Subscription not found", StatusCodes.NOT_FOUND);
@@ -31,8 +31,23 @@ const createPaymentForSubscription = async (
 
   const now = new Date();
 
-  // Free Trial
+  // ===============================
+  // ✅ FREE TRIAL
+  // ===============================
   if (subscription.hasTrial) {
+    // ❗ prevent multiple trial
+    const existingTrial = await PurchaseSubscription.findOne({
+      userId: user._id,
+      subscriptionId: subscription._id,
+    });
+
+    if (existingTrial) {
+      throw new AppError(
+        "You have already used the trial for this plan",
+        StatusCodes.BAD_REQUEST,
+      );
+    }
+
     const expirationDate = new Date(
       now.getTime() + (subscription.trialDays || 7) * 24 * 60 * 60 * 1000,
     );
@@ -51,7 +66,6 @@ const createPaymentForSubscription = async (
     };
   }
 
-  // Paid Plan → Create Stripe Checkout Session
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
@@ -65,7 +79,7 @@ const createPaymentForSubscription = async (
             name: subscription.title,
             description: subscription.description,
           },
-          unit_amount: subscription.price * 100, // cents
+          unit_amount: subscription.price * 100,
         },
         quantity: 1,
       },
@@ -80,6 +94,15 @@ const createPaymentForSubscription = async (
     cancel_url: `${process.env.FRONT_END_URL}/payment/cancel`,
   });
 
+  // 🔹 Create unpaid payment (IMPORTANT)
+  await Payment.create({
+    userId: user._id,
+    subscriptionId: subscription._id,
+    amount: subscription.price,
+    status: "unpaid",
+    transactionId: session.id,
+  });
+
   return {
     checkoutUrl: session.url,
   };
@@ -90,7 +113,7 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
 
   let event: Stripe.Event;
 
-  //  Verify Stripe Signature
+  // 🔐 Verify Signature
   try {
     event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
   } catch (err: any) {
@@ -100,7 +123,9 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
     );
   }
 
-  //  Handle Event
+  // ===============================
+  // ✅ HANDLE SUCCESS PAYMENT
+  // ===============================
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
@@ -114,13 +139,13 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
     const userObjectId = new Types.ObjectId(userId);
     const subscriptionObjectId = new Types.ObjectId(subscriptionId);
 
-    // Get Subscription Plan
+    // 🔹 Get Subscription Plan
     const subscription = await SubscriptionPlan.findById(subscriptionObjectId);
     if (!subscription) {
       throw new AppError("Subscription not found", StatusCodes.NOT_FOUND);
     }
 
-    // Calculate Expiration Date
+    // 🔹 Calculate Expiration
     const now = new Date();
     let expirationDate = new Date(now);
 
@@ -130,25 +155,39 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
       expirationDate.setFullYear(expirationDate.getFullYear() + 1);
     }
 
-    // Prevent Duplicate Entry (VERY IMPORTANT)
-    const existingPayment = await Payment.findOne({
+    // 🔹 Find existing payment
+    const payment = await Payment.findOne({
       transactionId: session.id,
     });
 
-    if (existingPayment) {
+    if (!payment) {
+      throw new AppError("Payment not found", StatusCodes.NOT_FOUND);
+    }
+
+    // 🔹 Prevent duplicate webhook execution
+    if (payment.status === "paid") {
       return { message: "Payment already processed" };
     }
 
-    // Create Payment
-    const payment = await Payment.create({
-      userId: userObjectId,
-      subscriptionPlan: subscriptionObjectId,
-      transactionId: session.id,
-      status: "paid",
-      amount: subscription.price,
+    // 🔹 Update payment
+    // payment.status = "paid";
+    // await payment.save();
+
+    await Payment.updateOne(
+      { transactionId: session.id },
+      { $set: { status: "paid" } },
+    );
+
+    // 🔹 Prevent duplicate subscription
+    const existingSubscription = await PurchaseSubscription.findOne({
+      paymentId: payment._id,
     });
 
-    // Create Subscription (Option 2: New Document)
+    if (existingSubscription) {
+      return existingSubscription;
+    }
+
+    // 🔹 Create subscription
     const purchase = await PurchaseSubscription.create({
       userId: userObjectId,
       subscriptionId: subscriptionObjectId,
