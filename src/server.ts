@@ -21,7 +21,7 @@ async function main() {
 
     io.on("connection", (socket) => {
       logger.info(`Client connected: ${socket.id}`);
-      socket.on("joinRoom", (userId) => socket.join(userId));
+      socket.on("joinRoom", (userId: string) => socket.join(userId));
     });
 
     initNotificationSocket(io);

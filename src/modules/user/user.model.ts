@@ -78,7 +78,7 @@ const userSchema = new Schema<IUser>(
   },
 );
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function (this: any, next: (err?: Error) => void) {
   // 🔹 password change না হলে hash করো না
   if (!this.isModified("password")) {
     return next();
@@ -100,7 +100,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.post("save", function (doc, next) {
+userSchema.post("save", function (doc: any, next: (err?: Error) => void) {
   doc.password = "";
   next();
 });
