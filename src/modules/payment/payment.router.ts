@@ -15,6 +15,12 @@ router.post("/webhook", paymentController.stripeWebhookHandler);
 router.get("/all", auth(USER_ROLE.ADMIN), paymentController.getAllPayment);
 
 router.get(
+  "/me",
+  auth(USER_ROLE.NON_MEMBER, USER_ROLE.MEMBER),
+  paymentController.getMyPayment,
+);
+
+router.get(
   "/:paymentId",
   //   auth(USER_ROLE.ADMIN),
   paymentController.getSinglePayment,
