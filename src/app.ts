@@ -7,6 +7,7 @@ import globalErrorHandler from "./middleware/globalErrorHandler";
 import notFound from "./middleware/notFound";
 import { applySecurity } from "./middleware/security";
 import router from "./router";
+import serverTemplate from "./utils/serverTemplate";
 const app: Application = express();
 
 app.use(
@@ -30,9 +31,7 @@ applySecurity(app);
 app.use("/api/v1", router);
 
 app.get("/", (_req, res) => {
-  res.send(
-    "Hey there! Welcome to our API. Please refer to the documentation for more details.",
-  );
+  res.send(serverTemplate());
 });
 
 app.use(notFound);
