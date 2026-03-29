@@ -190,6 +190,14 @@ const getAllPayment = async (query: any) => {
 
   // ✅ 4️⃣ Query execution
   const payments = await Payment.find(filter)
+    .populate({
+      path: "userId",
+      select: "firstName lastName email image",
+    })
+    .populate({
+      path: "subscriptionPlan",
+      select: "title description price",
+    })
     .sort({ createdAt: -1 }) // latest first
     .skip(skip)
     .limit(limit);
@@ -210,11 +218,36 @@ const getAllPayment = async (query: any) => {
 };
 
 const getSinglePayment = async (id: string) => {
-  const payment = await Payment.findById(id);
+  const payment = await Payment.findById(id)
+    .populate({
+      path: "userId",
+      select: "firstName lastName email image",
+    })
+    .populate({
+      path: "subscriptionPlan",
+      select: "title description price",
+    });
   if (!payment) {
     throw new AppError("Payment not found", StatusCodes.NOT_FOUND);
   }
   return payment;
+};
+
+const getMyPayment = async (email: string) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError("User not found", StatusCodes.NOT_FOUND);
+  }
+  const payments = await Payment.find({ userId: user._id })
+    .populate({
+      path: "userId",
+      select: "firstName lastName email image",
+    })
+    .populate({
+      path: "subscriptionPlan",
+      select: "title description price",
+    });
+  return payments;
 };
 
 const paymentService = {
@@ -222,6 +255,7 @@ const paymentService = {
   stripeWebhookHandler,
   getAllPayment,
   getSinglePayment,
+  getMyPayment,
 };
 
 export default paymentService;
