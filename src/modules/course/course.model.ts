@@ -12,6 +12,7 @@ const LessonSchema = new Schema<ILesson>({
 const CourseSchema = new Schema<ICourse>(
   {
     title: { type: String, required: true },
+    category: { type: String },
     lessonsCount: { type: Number },
     totalDuration: { type: String },
     lessons: { type: [LessonSchema], default: [] },

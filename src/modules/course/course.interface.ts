@@ -9,6 +9,7 @@ export interface ILesson {
 export interface ICourse {
   id: number;
   title: string;
+  category: string;
   lessonsCount: number;
   totalDuration: string;
   lessons: ILesson[];
