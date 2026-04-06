@@ -43,6 +43,7 @@ const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
   const courseData = {
     id: payload.id,
     title: payload.title,
+    category: payload.category, // added category
     lessons: lessonsData,
     lessonsCount,
     totalDuration: `${totalDuration} min`,
@@ -55,24 +56,36 @@ const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
 };
 
 const getAllCourses = async (query: any) => {
-  const { page = 1, limit = 10, searchTerm } = query;
+  const { page = 1, limit = 10, searchTerm, category } = query;
 
-  const pageNumber = Number(page);
-  const limitNumber = Number(limit);
+  const pageNumber = Math.max(Number(page) || 1, 1);
+  const limitNumber = Math.max(Number(limit) || 10, 1);
   const skip = (pageNumber - 1) * limitNumber;
 
   const filter: any = {};
 
   // search by title (case insensitive)
   if (searchTerm && searchTerm.trim() !== "") {
-    filter.$or = [
-      {
-        title: {
-          $regex: searchTerm.trim(),
-          $options: "i", // makes search case-insensitive
-        },
-      },
-    ];
+    filter.title = {
+      $regex: searchTerm.trim(),
+      $options: "i",
+    };
+  }
+
+  // filter by category
+  if (category && category.trim() !== "") {
+    const categoryLower = category.trim().toLowerCase();
+    
+    // ignore filter if category is "all" or "all courses"
+    if (categoryLower !== "all" && categoryLower !== "all courses") {
+      // clean suffix " courses" from labels like "Business Courses"
+      const cleanCategory = category.trim().replace(/\s*courses$/i, "");
+      
+      filter.category = {
+        $regex: cleanCategory,
+        $options: "i",
+      };
+    }
   }
 
   const data = await Course.find(filter)
