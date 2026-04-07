@@ -53,10 +53,9 @@ const updateCourse = catchAsync(async (req, res) => {
   });
 });
 
-
 const updateCourseAvailability = catchAsync(async (req, res) => {
   const { courseId } = req.params;
- await courseService.updateCourseAvailability(courseId);
+  await courseService.updateCourseAvailability(courseId);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -65,13 +64,11 @@ const updateCourseAvailability = catchAsync(async (req, res) => {
   });
 });
 
-
-
 const courseController = {
   CreateNewCourse,
   getAllCourses,
   getSingleCourse,
   updateCourse,
-  updateCourseAvailability
+  updateCourseAvailability,
 };
 export default courseController;
