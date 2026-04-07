@@ -23,12 +23,12 @@ const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
     };
   }
 
-  // lessons already contain videoUrl
+
   const lessonsData = lessons.map((lesson) => ({
     title: lesson.title,
     duration: lesson.duration,
     level: lesson.level,
-    videoUrl: lesson.videoUrl, // directly from payload
+    videoUrl: lesson.videoUrl, 
   }));
 
   const lessonsCount = lessonsData.length;
@@ -42,9 +42,9 @@ const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
   const courseData = {
     id: payload.id,
     title: payload.title,
-    category: payload.category, // added category
+    category: payload.category,
     lessons: lessonsData,
-    lessonsCount,
+    lessonCount:lessonsCount,
     totalDuration: `${totalDuration} min`,
     price: Number(payload.price) || 0,
     currency: payload.currency || "CAD",
@@ -64,7 +64,6 @@ const getAllCourses = async (query: any) => {
 
   const filter: any = {};
 
-  // search by title (case insensitive)
   if (searchTerm && searchTerm.trim() !== "") {
     filter.title = {
       $regex: searchTerm.trim(),
@@ -76,11 +75,8 @@ const getAllCourses = async (query: any) => {
   if (category && category.trim() !== "") {
     const categoryLower = category.trim().toLowerCase();
 
-    // ignore filter if category is "all" or "all courses"
     if (categoryLower !== "all" && categoryLower !== "all courses") {
-      // clean suffix " courses" from labels like "Business Courses"
       const cleanCategory = category.trim().replace(/\s*courses$/i, "");
-
       filter.category = {
         $regex: cleanCategory,
         $options: "i",
