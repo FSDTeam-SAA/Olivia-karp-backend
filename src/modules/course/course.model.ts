@@ -4,7 +4,6 @@ import { ICourse, ILesson } from "./course.interface";
 const LessonSchema = new Schema<ILesson>({
   title: { type: String, required: true },
   duration: { type: String, required: true },
-  isLocked: { type: Boolean, default: false },
   level: { type: String, required: true },
   videoUrl: { type: String, required: true },
 });
@@ -13,16 +12,16 @@ const CourseSchema = new Schema<ICourse>(
   {
     title: { type: String, required: true },
     category: { type: String },
-    lessonsCount: { type: Number },
+    lessosCount: { type: Number },
     totalDuration: { type: String },
     lessons: { type: [LessonSchema], default: [] },
-    isLocked: { type: Boolean, default: false },
     price: { type: Number, default: 0, min: 0 },
     currency: { type: String, default: "CAD", trim: true },
     image: {
       url: { type: String },
       public_id: { type: String },
     },
+    isAvailable: { type: Boolean, default: true },
   },
   { timestamps: true, versionKey: false },
 );

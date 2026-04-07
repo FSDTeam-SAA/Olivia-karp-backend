@@ -40,9 +40,38 @@ const getSingleCourse = catchAsync(async (req, res) => {
   });
 });
 
+const updateCourse = catchAsync(async (req, res) => {
+  const { courseId } = req.params;
+  const files = req.files as Express.Multer.File[];
+  const result = await courseService.updateCourse(courseId, req.body, files);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Course updated successfully",
+    data: result,
+  });
+});
+
+
+const updateCourseAvailability = catchAsync(async (req, res) => {
+  const { courseId } = req.params;
+ await courseService.updateCourseAvailability(courseId);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Course availability updated successfully",
+  });
+});
+
+
+
 const courseController = {
   CreateNewCourse,
   getAllCourses,
   getSingleCourse,
+  updateCourse,
+  updateCourseAvailability
 };
 export default courseController;
