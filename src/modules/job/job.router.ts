@@ -11,9 +11,7 @@ import JobController from "./job.controller";
  *   description: API operations for Job
  */
 
-
 const router = Router();
-
 
 /**
  * @swagger
@@ -41,7 +39,6 @@ router.post(
   ]),
   JobController.createNewJob,
 );
-
 
 /**
  * @swagger
@@ -85,7 +82,6 @@ router.get("/all", JobController.getAllJobs);
  */
 router.get("/single/:jobId", JobController.getSingleJob);
 
-
 /**
  * @swagger
  * /api/v1/job/update-job/{jobId}:
@@ -118,6 +114,8 @@ router.put(
   ]),
   JobController.updateJob,
 );
+
+router.put("/:jobId", JobController.toggleJobStatus);
 
 const jobRouter = router;
 export default jobRouter;
