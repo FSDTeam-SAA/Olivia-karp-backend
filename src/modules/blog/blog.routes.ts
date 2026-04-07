@@ -7,6 +7,14 @@ import { USER_ROLE } from '../user/user.constant';
 import { upload } from '../../middleware/multer.middleware';
 import parseData from '../../middleware/parseData';
 
+/**
+ * @swagger
+ * tags:
+ *   name: Blog
+ *   description: API operations for Blog
+ */
+
+
 const router = express.Router();
 
 /**
@@ -18,6 +26,29 @@ router.get(
     BlogControllers.getAllBlogs
 );
 
+
+/**
+ * @swagger
+ * /api/v1/blog/get-single-blog/{blogId}:
+ *   get:
+ *     summary: GET endpoint for blog
+ *     tags: [Blog]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: blogId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful operation
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
 router.get(
     '/get-single-blog/:blogId',
     BlogControllers.getSingleBlog
@@ -39,6 +70,29 @@ router.post(
     BlogControllers.createBlog,
 );
 
+
+/**
+ * @swagger
+ * /api/v1/blog/update-blog/{blogId}:
+ *   patch:
+ *     summary: PATCH endpoint for blog
+ *     tags: [Blog]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: blogId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful operation
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
 router.patch(
     '/update-blog/:blogId',
     auth(USER_ROLE.ADMIN),
@@ -51,6 +105,29 @@ router.patch(
     BlogControllers.updateBlog
 );
 
+
+/**
+ * @swagger
+ * /api/v1/blog/delete-blog/{blogId}:
+ *   delete:
+ *     summary: DELETE endpoint for blog
+ *     tags: [Blog]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: blogId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful operation
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
 router.delete(
     '/delete-blog/:blogId',
     auth(USER_ROLE.ADMIN),

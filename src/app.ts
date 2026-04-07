@@ -9,6 +9,8 @@ import { applySecurity } from "./middleware/security";
 import paymentController from "./modules/payment/payment.controller";
 import router from "./router";
 import serverTemplate from "./utils/serverTemplate";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger.config";
 const app: Application = express();
 
 app.use(
@@ -44,6 +46,12 @@ app.use((req, res, next) => {
   }
   express.json({ limit: "10mb" })(req, res, next);
 });
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, { explorer: true }),
+);
 
 app.use("/api/v1", router);
 
