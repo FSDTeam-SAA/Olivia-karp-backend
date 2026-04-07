@@ -22,23 +22,23 @@ const createJoinMentorsAndCoachIntoDB = async (
     userId: user._id,
     isApproved: true,
   });
-  if (existingUser) {
-    throw new AppError(
-      `You are already join as a ${existingUser.type}`,
-      StatusCodes.BAD_REQUEST,
-    );
-  }
+if (existingUser && user.role !== "admin") {
+  throw new AppError(
+    `You are already join as a ${existingUser.type}`,
+    StatusCodes.BAD_REQUEST,
+  );
+}
 
   const existingEmail = await JoinMentorCoach.findOne({
     userId: user._id,
     isApproved: false,
   });
-  if (existingEmail) {
-    throw new AppError(
-      `You have already applied as a ${existingEmail.type}, please wait for admin approval`,
-      StatusCodes.BAD_REQUEST,
-    );
-  }
+if (existingEmail && user.role !== "admin") {
+  throw new AppError(
+    `You have already applied as a ${existingEmail.type}, please wait for admin approval`,
+    StatusCodes.BAD_REQUEST,
+  );
+}
 
   const emailExists = await JoinMentorCoach.findOne({ email: payload.email });
   if (emailExists) {
