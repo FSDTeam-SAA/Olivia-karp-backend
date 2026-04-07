@@ -19,7 +19,6 @@ const submitIdeaIntoDB = async (payload: ICourseIdea) => {
   const result = await CourseIdea.create(payload);
 
   const admin = await User.findOne({ role: "admin" });
-
   await createNotification({
     to: new mongoose.Types.ObjectId(admin!._id),
     message: "New course idea submitted",
