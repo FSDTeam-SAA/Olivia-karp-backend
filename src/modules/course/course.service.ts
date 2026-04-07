@@ -28,7 +28,6 @@ const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
     title: lesson.title,
     duration: lesson.duration,
     level: lesson.level,
-    isLocked: lesson.isLocked ?? false,
     videoUrl: lesson.videoUrl, // directly from payload
   }));
 
@@ -47,7 +46,6 @@ const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
     lessons: lessonsData,
     lessonsCount,
     totalDuration: `${totalDuration} min`,
-    isLocked: payload.isLocked ?? false,
     price: Number(payload.price) || 0,
     currency: payload.currency || "CAD",
     image,
@@ -117,9 +115,103 @@ const getSingleCourse = async (id: string) => {
   return result;
 };
 
+const updateCourse = async (
+  id: string,
+  payload: any,
+  files: Express.Multer.File[]
+) => {
+  const course = await Course.findById(id);
+
+  if (!course) {
+    throw new Error("Course not found");
+  }
+
+  let lessons: ILesson[] = [];
+
+  // parse lessons (string or array)
+  if (payload.lessons) {
+    lessons =
+      typeof payload.lessons === "string"
+        ? JSON.parse(payload.lessons)
+        : payload.lessons;
+  }
+
+  // update image (if new file uploaded)
+  let image = course.image; // default old image
+
+  if (files && files.length > 0) {
+    const imageFile = files[0];
+
+    image = {
+      url: `/uploads/${imageFile.filename}`,
+      public_id: imageFile.filename,
+    };
+  }
+
+  // update lessons
+  let lessonsData = course.lessons;
+
+  if (lessons.length > 0) {
+    lessonsData = lessons.map((lesson) => ({
+      title: lesson.title,
+      duration: lesson.duration,
+      level: lesson.level,
+      videoUrl: lesson.videoUrl,
+    }));
+  }
+
+  const lessonsCount = lessonsData.length;
+
+  // calculate total duration
+  const totalDuration = lessonsData.reduce((total, lesson) => {
+    const minutes = parseInt(lesson.duration) || 0;
+    return total + minutes;
+  }, 0);
+
+  // update object
+  const updatedData = {
+    title: payload.title ?? course.title,
+    category: payload.category ?? course.category,
+    lessons: lessonsData,
+    lessonsCount,
+    totalDuration: `${totalDuration} min`,
+    price: payload.price ? Number(payload.price) : course.price,
+    currency: payload.currency ?? course.currency,
+    image,
+  };
+
+  const result = await Course.findByIdAndUpdate(id, updatedData, {
+    new: true,
+  });
+
+  return result;
+};
+
+
+const updateCourseAvailability = async (id: string) => {
+  const course = await Course.findById(id);
+  if (!course) {
+    throw new Error("Course not found");
+  }
+
+  const updatedData = {
+    isAvailable: !course.isAvailable,
+  };
+
+ await Course.findByIdAndUpdate(id, updatedData, {
+    new: true,
+  });
+
+};
+
+
+
+
 const courseService = {
   CreateNewCourse,
   getAllCourses,
   getSingleCourse,
+  updateCourse,
+  updateCourseAvailability
 };
 export default courseService;

@@ -6,7 +6,9 @@ import { Router } from "express";
  *   name: Courses
  *   description: Video course modules, lessons, and base pricing configurations.
  */
+import auth from "../../middleware/auth";
 import { upload } from "../../middleware/multer.middleware";
+import { USER_ROLE } from "../user/user.constant";
 import courseController from "./course.controller";
 
 const router = Router();
@@ -39,6 +41,7 @@ const router = Router();
  */
 router.post(
   "/create",
+  auth(USER_ROLE.ADMIN),
   upload.fields([{ name: "image", maxCount: 5 }]),
   courseController.CreateNewCourse,
 );
@@ -83,6 +86,18 @@ router.get("/all", courseController.getAllCourses);
  *         description: Course details and lessons
  */
 router.get("/:courseId", courseController.getSingleCourse);
+
+router.put(
+  "/:courseId",
+  auth(USER_ROLE.ADMIN),
+  upload.fields([{ name: "image", maxCount: 5 }]),
+  courseController.updateCourse
+);
+
+router.put(
+  "/availability/:courseId",
+  courseController.updateCourseAvailability
+);
 
 const courseRouter = router;
 export default courseRouter;
