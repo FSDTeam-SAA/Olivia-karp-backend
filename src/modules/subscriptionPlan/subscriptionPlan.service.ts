@@ -26,6 +26,28 @@ const createNewSubscriptionPlan = async (payload: ISubscriptionPlan) => {
     );
   }
 
+  // Validate planTier
+  const validTiers = ["beginner", "monthly", "yearly"];
+  if (!validTiers.includes(payload.planTier)) {
+    throw new AppError(
+      "Plan tier must be beginner, monthly, or yearly",
+      StatusCodes.BAD_REQUEST,
+    );
+  }
+
+  // Prevent duplicate planTier
+  const existingTier = await SubscriptionPlan.findOne({
+    planTier: payload.planTier,
+    status: "active",
+  });
+
+  if (existingTier) {
+    throw new AppError(
+      `An active subscription plan with tier "${payload.planTier}" already exists`,
+      StatusCodes.CONFLICT,
+    );
+  }
+
   const isExist = await SubscriptionPlan.findOne({
     title: { $regex: `^${payload.title}$`, $options: "i" },
   });
@@ -50,7 +72,7 @@ const createNewSubscriptionPlan = async (payload: ISubscriptionPlan) => {
 };
 
 const getAllSubscriptionPlans = async () => {
-  const result = await SubscriptionPlan.find();
+  const result = await SubscriptionPlan.find().sort({ order: 1 });
   return result;
 };
 
@@ -65,11 +87,22 @@ const getSingleSubscriptionPlan = async (id: string) => {
 
 const updateSubscriptionPlan = async (
   id: string,
-  payload: ISubscriptionPlan,
+  payload: Partial<ISubscriptionPlan>,
 ) => {
   const subscriptionPlan = await SubscriptionPlan.findById(id);
   if (!subscriptionPlan) {
     throw new AppError("Subscription plan not found", StatusCodes.NOT_FOUND);
+  }
+
+  if (
+    payload.billingType &&
+    payload.billingType !== "monthly" &&
+    payload.billingType !== "yearly"
+  ) {
+    throw new AppError(
+      "Billing type must be monthly or yearly",
+      StatusCodes.BAD_REQUEST,
+    );
   }
 
   if (payload.hasTrial && (!payload.trialDays || payload.trialDays <= 0)) {
@@ -79,11 +112,20 @@ const updateSubscriptionPlan = async (
     );
   }
 
-  if (payload.billingType !== "monthly" && payload.billingType !== "yearly") {
-    throw new AppError(
-      "Billing type must be monthly or yearly",
-      StatusCodes.BAD_REQUEST,
-    );
+  // If planTier is being updated, check for duplicate active tier
+  if (payload.planTier && payload.planTier !== subscriptionPlan.planTier) {
+    const existingTier = await SubscriptionPlan.findOne({
+      planTier: payload.planTier,
+      status: "active",
+      _id: { $ne: id },
+    });
+
+    if (existingTier) {
+      throw new AppError(
+        `An active subscription plan with tier "${payload.planTier}" already exists`,
+        StatusCodes.CONFLICT,
+      );
+    }
   }
 
   const result = await SubscriptionPlan.findByIdAndUpdate(id, payload, {

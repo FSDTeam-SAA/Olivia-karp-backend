@@ -16,6 +16,8 @@ export interface IEvent extends Document {
     description?: string;
     eventDate?: string;     // Added: e.g., "Oct 24, 2026 - 6:00 PM"
     location?: string;
+    price: number;
+    currency: string;
     isPublished: boolean;
 
     /** Automatically managed by Mongoose timestamps */

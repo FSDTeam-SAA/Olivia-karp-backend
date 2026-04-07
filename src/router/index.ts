@@ -20,6 +20,7 @@ import speakerRouter from "../modules/speaker/speaker.router";
 import subscriptionPlanRouter from "../modules/subscriptionPlan/subscriptionPlan.router";
 import surveyRouter from "../modules/survey/survey.router";
 import userRouter from "../modules/user/user.router";
+import { purchaseRecordRoutes } from "../modules/purchaseRecord/purchaseRecord.router";
 
 const router = Router();
 
@@ -103,6 +104,10 @@ const moduleRoutes = [
   {
     path: "/payment",
     route: paymentRouter,
+  },
+  {
+    path: "/purchase-records",
+    route: purchaseRecordRoutes,
   },
 ];
 

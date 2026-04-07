@@ -19,6 +19,24 @@ const createPaymentForSubscription = catchAsync(async (req, res) => {
   });
 });
 
+const createGeneralCheckoutForEntity = catchAsync(async (req, res) => {
+  const { itemType, itemId } = req.body;
+  const userId = req.user!._id; // string representation or ObjectId
+
+  const result = await paymentService.createGeneralCheckoutForEntity(
+    userId.toString(),
+    itemType,
+    itemId,
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Checkout session created successfully",
+    data: result,
+  });
+});
+
 const stripeWebhookHandler = catchAsync(async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const result = await paymentService.stripeWebhookHandler(sig, req.body);
@@ -69,6 +87,7 @@ const getMyPayment = catchAsync(async (req, res) => {
 
 const paymentController = {
   createPaymentForSubscription,
+  createGeneralCheckoutForEntity,
   stripeWebhookHandler,
   getAllPayment,
   getSinglePayment,
