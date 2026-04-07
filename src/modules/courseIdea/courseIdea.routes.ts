@@ -21,7 +21,7 @@ const router = express.Router();
  */
 router.post(
     '/submit-idea',
-    auth(USER_ROLE.NON_MEMBER, USER_ROLE.ADMIN),
+    auth(USER_ROLE.NON_MEMBER, USER_ROLE.ADMIN, USER_ROLE.MEMBER),
     validateRequest(CourseIdeaValidations.createCourseIdeaValidationSchema),
     CourseIdeaControllers.submitIdea
 );
