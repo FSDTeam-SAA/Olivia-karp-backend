@@ -12,7 +12,7 @@ const CourseSchema = new Schema<ICourse>(
   {
     title: { type: String, required: true },
     category: { type: String },
-    lessosCount: { type: Number },
+    lessonCount: { type: Number },
     totalDuration: { type: String },
     lessons: { type: [LessonSchema], default: [] },
     price: { type: Number, default: 0, min: 0 },
@@ -22,6 +22,7 @@ const CourseSchema = new Schema<ICourse>(
       public_id: { type: String },
     },
     isAvailable: { type: Boolean, default: true },
+    totalEnrolled: { type: Number, default: 0 },
   },
   { timestamps: true, versionKey: false },
 );

@@ -18,6 +18,11 @@ const createEnrollCourse = async (payload: IEnrollCourse, email: string) => {
     userId: user._id,
     courseId: course._id,
   });
+
+  await Course.findByIdAndUpdate(payload.courseId, {
+    $inc: { totalEnrolled: 1 },
+  });
+
   return result;
 };
 

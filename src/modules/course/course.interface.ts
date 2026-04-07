@@ -10,7 +10,7 @@ export interface ICourse {
   id: number;
   title: string;
   category: string;
-  lessosCount: number;
+  lessonCount: number;
   totalDuration: string;
   lessons: ILesson[];
   isLocked: boolean;
@@ -20,5 +20,6 @@ export interface ICourse {
     url: string;
     public_id: string;
   };
-  isAvailable: boolean; 
+  isAvailable: boolean;
+  totalEnrolled: number;
 }
