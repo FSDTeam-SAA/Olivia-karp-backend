@@ -14,6 +14,8 @@ export interface ICourse {
   totalDuration: string;
   lessons: ILesson[];
   isLocked: boolean;
+  price: number;
+  currency: string;
   image: {
     url: string;
     public_id: string;

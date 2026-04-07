@@ -26,6 +26,11 @@ const purchaseSubscriptionSchema = new Schema<IPurchaseSubscription>(
     expirationDate: {
       type: Date,
     },
+    status: {
+      type: String,
+      enum: ["active", "expired", "cancelled"],
+      default: "active",
+    },
   },
   {
     timestamps: true,
@@ -44,8 +49,9 @@ purchaseSubscriptionSchema.pre("save", function (next) {
 });
 
 // 🔥 Index (performance optimization)
-purchaseSubscriptionSchema.index({ userId: 1 });
+purchaseSubscriptionSchema.index({ userId: 1, status: 1 });
 purchaseSubscriptionSchema.index({ subscriptionId: 1 });
+purchaseSubscriptionSchema.index({ expirationDate: 1 });
 
 const PurchaseSubscription = model<IPurchaseSubscription>(
   "PurchaseSubscription",

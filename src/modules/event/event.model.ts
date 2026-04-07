@@ -25,6 +25,8 @@ const eventSchema = new Schema<IEvent>(
         description: { type: String },
         eventDate: { type: String }, // New field
         location: { type: String },  // New field
+        price: { type: Number, default: 0, min: 0 },
+        currency: { type: String, default: 'CAD', trim: true },
         // Admin toggle to control visibility on the actonclimate.ca site [cite: 187]
         isPublished: {
             type: Boolean,
