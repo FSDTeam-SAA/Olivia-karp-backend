@@ -21,6 +21,7 @@ import subscriptionPlanRouter from "../modules/subscriptionPlan/subscriptionPlan
 import surveyRouter from "../modules/survey/survey.router";
 import userRouter from "../modules/user/user.router";
 import { purchaseRecordRoutes } from "../modules/purchaseRecord/purchaseRecord.router";
+import enrollCourseRouter from "../modules/enrollCourse/enrollCourse.router";
 
 const router = Router();
 
@@ -108,6 +109,10 @@ const moduleRoutes = [
   {
     path: "/purchase-records",
     route: purchaseRecordRoutes,
+  },
+  {
+    path: "/enrollment",
+    route: enrollCourseRouter,
   },
 ];
 

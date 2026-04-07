@@ -75,12 +75,12 @@ const getAllCourses = async (query: any) => {
   // filter by category
   if (category && category.trim() !== "") {
     const categoryLower = category.trim().toLowerCase();
-    
+
     // ignore filter if category is "all" or "all courses"
     if (categoryLower !== "all" && categoryLower !== "all courses") {
       // clean suffix " courses" from labels like "Business Courses"
       const cleanCategory = category.trim().replace(/\s*courses$/i, "");
-      
+
       filter.category = {
         $regex: cleanCategory,
         $options: "i",
@@ -118,7 +118,7 @@ const getSingleCourse = async (id: string) => {
 const updateCourse = async (
   id: string,
   payload: any,
-  files: Express.Multer.File[]
+  files: Express.Multer.File[],
 ) => {
   const course = await Course.findById(id);
 
@@ -187,7 +187,6 @@ const updateCourse = async (
   return result;
 };
 
-
 const updateCourseAvailability = async (id: string) => {
   const course = await Course.findById(id);
   if (!course) {
@@ -198,20 +197,16 @@ const updateCourseAvailability = async (id: string) => {
     isAvailable: !course.isAvailable,
   };
 
- await Course.findByIdAndUpdate(id, updatedData, {
+  await Course.findByIdAndUpdate(id, updatedData, {
     new: true,
   });
-
 };
-
-
-
 
 const courseService = {
   CreateNewCourse,
   getAllCourses,
   getSingleCourse,
   updateCourse,
-  updateCourseAvailability
+  updateCourseAvailability,
 };
 export default courseService;
