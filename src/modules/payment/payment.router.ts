@@ -11,6 +11,12 @@ router.post(
   paymentController.createPaymentForSubscription,
 );
 
+router.post(
+  "/checkout-general",
+  auth(USER_ROLE.NON_MEMBER, USER_ROLE.MEMBER),
+  paymentController.createGeneralCheckoutForEntity,
+);
+
 router.post("/webhook", paymentController.stripeWebhookHandler);
 router.get("/all", auth(USER_ROLE.ADMIN), paymentController.getAllPayment);
 

@@ -17,6 +17,8 @@ const CourseSchema = new Schema<ICourse>(
     totalDuration: { type: String },
     lessons: { type: [LessonSchema], default: [] },
     isLocked: { type: Boolean, default: false },
+    price: { type: Number, default: 0, min: 0 },
+    currency: { type: String, default: "CAD", trim: true },
     image: {
       url: { type: String },
       public_id: { type: String },

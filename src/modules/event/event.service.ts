@@ -48,6 +48,8 @@ const createEventIntoDB = async (payload: Partial<IEvent>) => {
     const result = await Event.create({
         lumaUrl,
         ...metadata,
+        price: Number(payload.price) || 0,
+        currency: payload.currency || "CAD",
         isPublished: false, // Land in dashboard for review
     });
 

@@ -48,6 +48,8 @@ const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
     lessonsCount,
     totalDuration: `${totalDuration} min`,
     isLocked: payload.isLocked ?? false,
+    price: Number(payload.price) || 0,
+    currency: payload.currency || "CAD",
     image,
   };
 
