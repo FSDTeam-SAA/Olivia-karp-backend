@@ -15,13 +15,10 @@ import { CourseIdeaControllers } from './courseIdea.controller';
 
 const router = express.Router();
 
-/**
- * USER & ADMIN ROUTES
- * Both roles can submit ideas and see their own personal submission history
- */
+
 router.post(
     '/submit-idea',
-    auth(USER_ROLE.NON_MEMBER, USER_ROLE.ADMIN),
+    auth(USER_ROLE.NON_MEMBER, USER_ROLE.ADMIN, USER_ROLE.MEMBER),
     validateRequest(CourseIdeaValidations.createCourseIdeaValidationSchema),
     CourseIdeaControllers.submitIdea
 );

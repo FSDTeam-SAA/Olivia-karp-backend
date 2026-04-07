@@ -193,11 +193,29 @@ const updateJob = async (
   return updatedJob;
 };
 
+const toggleJobStatus = async (jobId: string, payload: { status: string }) => {
+  const job = await Job.findById(jobId);
+  if (!job) {
+    throw new AppError("Job not found", StatusCodes.NOT_FOUND);
+  }
+
+  const updatedJob = await Job.findByIdAndUpdate(
+    jobId,
+    {
+      status: payload.status,
+    },
+    { new: true, runValidators: true },
+  );
+
+  return updatedJob;
+};
+
 const JobService = {
   createNewJob,
   getAllJobs,
   getSingleJob,
   updateJob,
+  toggleJobStatus,
 };
 
 export default JobService;

@@ -14,17 +14,20 @@ export const createNotification = async ({
   message,
   type,
   id,
+  title,
 }: {
   to: mongoose.Types.ObjectId;
   message: string;
   type: string;
   id: mongoose.Types.ObjectId;
+  title: string;
 }) => {
   const notification = await Notification.create({
     to,
     message,
     type,
     id,
+    title,
   });
 
   // Emit live notification

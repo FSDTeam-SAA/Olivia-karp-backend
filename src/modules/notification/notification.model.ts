@@ -24,13 +24,17 @@ const notificationSchema: Schema<INotification> = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
+    title: {
+      type: String,
+      required: true,
+    },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 const Notification: Model<INotification> = mongoose.model<INotification>(
   "Notification",
-  notificationSchema
+  notificationSchema,
 );
 
 export default Notification;

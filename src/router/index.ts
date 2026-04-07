@@ -23,6 +23,7 @@ import userRouter from "../modules/user/user.router";
 import { purchaseRecordRoutes } from "../modules/purchaseRecord/purchaseRecord.router";
 import enrollCourseRouter from "../modules/enrollCourse/enrollCourse.router";
 import analyticsRouter from "../modules/analytics/analytics.router";
+import notificationRouter from "../modules/notification/notification.router";
 
 const router = Router();
 
@@ -118,6 +119,10 @@ const moduleRoutes = [
   {
     path: "/analytics",
     route: analyticsRouter,
+  },
+  {
+    path: "/notifications",
+    route: notificationRouter,  
   },
 ];
 

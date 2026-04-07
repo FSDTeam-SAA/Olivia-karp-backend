@@ -6,4 +6,7 @@ export interface INotification extends Document {
   isViewed: boolean;
   type: string;
   id: mongoose.Types.ObjectId;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

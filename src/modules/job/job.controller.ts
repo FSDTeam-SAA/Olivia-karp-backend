@@ -76,11 +76,24 @@ const updateJob = catchAsync(async (req, res) => {
   });
 });
 
+const toggleJobStatus = catchAsync(async (req, res) => {
+  const { jobId } = req.params;
+  const result = await JobService.toggleJobStatus(jobId, req.body);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Job status updated successfully",
+    data: result,
+  });
+});
+
 const JobController = {
   createNewJob,
   getAllJobs,
   getSingleJob,
   updateJob,
+  toggleJobStatus,
 };
 
 export default JobController;
