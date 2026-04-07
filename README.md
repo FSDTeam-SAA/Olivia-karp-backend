@@ -4,6 +4,14 @@ An enterprise-grade, highly scalable backend application for the **Olivia Karp /
 
 ## 🌟 Key Features
 
+### 📚 Interactive API Documentation (Swagger)
+The entire project integrates a dynamic, industry-standard **Swagger UI** for Postman-like native endpoint testing.
+To access it:
+1. Run the server (`npm run dev`)
+2. Navigate to: `http://localhost:5000/api-docs`
+
+This interface automatically documents the core modules (Auth, Payments, Subscriptions, Courses, Events) with integrated JSON request bodies and JWT Bearer Security.
+
 ### 1. Act On Pricing Integration & Checkouts
 * **Dynamic Subscriptions**: Full alignment with the "Act On Pricing" model (Beginner, Monthly, Yearly).
 * **Tiered Benefits Engine**: Automatically resolves user benefits, computing percentage-based discounts (e.g., 10% off Courses) or `free_access` overrides natively.
