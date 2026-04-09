@@ -184,9 +184,176 @@ const dashboardAnalytics = async () => {
   };
 };
 
+const chatAnalytics = async (query: any) => {
+  const type = query.type || "monthly";
+  const now = new Date();
+
+  let startDate: Date;
+  let labels: string[] = [];
+  let groupStage: any;
+  let formatKey = "month";
+
+  // =========================
+  // 📅 WEEKLY
+  // =========================
+  if (type === "weekly") {
+    startDate = new Date();
+    startDate.setDate(now.getDate() - 7);
+
+    labels = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ];
+
+    groupStage = {
+      day: { $dayOfWeek: "$createdAt" }, // 1 = Sunday
+    };
+
+    formatKey = "day";
+  }
+
+  // =========================
+  // 📅 YEARLY
+  // =========================
+  else if (type === "yearly") {
+    startDate = new Date();
+    startDate.setFullYear(now.getFullYear() - 5); // last 5 years
+
+    groupStage = {
+      year: { $year: "$createdAt" },
+    };
+
+    formatKey = "year";
+  }
+
+  // =========================
+  // 📅 MONTHLY (default)
+  // =========================
+  else {
+    startDate = new Date(now.getFullYear(), 0, 1);
+
+    labels = [
+      "january",
+      "february",
+      "march",
+      "april",
+      "may",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december",
+    ];
+
+    groupStage = {
+      month: { $month: "$createdAt" },
+    };
+
+    formatKey = "month";
+  }
+
+  // =========================
+  // 🔥 AGGREGATION
+  // =========================
+  const rawData = await User.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: startDate,
+          $lte: now,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: groupStage,
+        totalUser: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // =========================
+  // 🧠 FORMAT RESULT
+  // =========================
+  const result: any = {};
+
+  // WEEKLY
+  if (type === "weekly") {
+    const weekMap = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ];
+
+    weekMap.forEach((day, index) => {
+      const found = rawData.find((d: any) => d._id.day === index + 1);
+
+      result[day] = {
+        totalUser: found ? found.totalUser : 0,
+      };
+    });
+  }
+
+  // MONTHLY
+  else if (type === "monthly") {
+    const monthMap = [
+      "january",
+      "february",
+      "march",
+      "april",
+      "may",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december",
+    ];
+
+    monthMap.forEach((month, index) => {
+      const found = rawData.find((d: any) => d._id.month === index + 1);
+
+      result[month] = {
+        totalUser: found ? found.totalUser : 0,
+        year: now.getFullYear(),
+      };
+    });
+  }
+
+  // YEARLY
+  else if (type === "yearly") {
+    rawData.forEach((item: any) => {
+      result[item._id.year] = {
+        totalUser: item.totalUser,
+      };
+    });
+  }
+
+  // =========================
+  // 🎯 RESPONSE
+  // =========================
+  return {
+    type,
+    data: result,
+  };
+};
+
 const analyticsService = {
   getCourserAnalytics,
   dashboardAnalytics,
+  chatAnalytics,
 };
 
 export default analyticsService;

@@ -25,9 +25,21 @@ const dashboardAnalytics = catchAsync(async (req, res) => {
   });
 });
 
+const chatAnalytics = catchAsync(async (req, res) => {
+  const result = await analyticsService.chatAnalytics(req.query);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Courses retrieved successfully",
+    data: result,
+  });
+});
+
 const analyticsController = {
   getCourserAnalytics,
   dashboardAnalytics,
+  chatAnalytics,
 };
 
 export default analyticsController;
