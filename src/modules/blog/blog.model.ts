@@ -2,8 +2,8 @@ import { Schema, model } from 'mongoose';
 import { IBlog, IBlogAuthor } from './blog.interface';
 
 const authorSchema = new Schema<IBlogAuthor>({
-    name: { type: String, required: true },
-    description: { type: String, required: true },
+    name: { type: String, default: '' },
+    description: { type: String, default: '' },
     profileImage: {
         url: String,
         public_id: String
@@ -14,7 +14,7 @@ const blogSchema = new Schema<IBlog>(
     {
         title: {
             type: String,
-            required: true,
+            default: '',
             trim: true
         },
         category: {
@@ -28,11 +28,11 @@ const blogSchema = new Schema<IBlog>(
         },
         content: {
             type: String,
-            required: true
+            default: ''
         },
         author: {
             type: authorSchema,
-            required: true
+            
         },
         isFeatured: {
             type: Boolean,
