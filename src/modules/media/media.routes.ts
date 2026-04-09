@@ -122,7 +122,7 @@ router.get('/get-single-media/:mediaId', MediaController.getSingleMedia);
 router.post(
     '/create-media',
     auth(USER_ROLE.ADMIN, USER_ROLE.NON_MEMBER),
-    validateRequest(MediaValidation.createMediaValidationSchema),
+    // validateRequest(MediaValidation.createMediaValidationSchema),
     MediaController.createMedia
 );
 

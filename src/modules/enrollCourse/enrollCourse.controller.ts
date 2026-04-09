@@ -29,11 +29,28 @@ const getMyEnrollments = catchAsync(async (req, res) => {
   });
 });
 
+const verifyPayment = catchAsync(async (req, res) => {
+  const { session_id } = req.query;
+
+  if (!session_id) {
+    throw new Error("Session ID is required for verification.");
+  }
+
+  const result = await enrollCourseService.verifyPaymentStatus(session_id as string);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Payment verified successfully",
+    data: result,
+  });
+});
 
 
 const enrollCourseController = {
   createEnrollCourse,
   getMyEnrollments,
+  verifyPayment,
 };
 
 export default enrollCourseController;
