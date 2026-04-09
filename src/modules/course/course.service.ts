@@ -57,7 +57,7 @@ const CreateNewCourse = async (
   return result;
 };
 
-const getAllCourses = async (query: Record<string, any>) => {
+const getAllCourses = async (query: Record<string, any>, user?: any) => {
   const { page = 1, limit = 10, searchTerm, category, sort } = query;
 
   const pageNumber = Math.max(Number(page), 1);
@@ -94,8 +94,32 @@ const getAllCourses = async (query: Record<string, any>) => {
     Course.countDocuments(filter),
   ]);
 
+  let finalData: any = data;
+
+  if (user && user.role === "admin") {
+    finalData = data.map((course: any) => ({ ...course, isLocked: false }));
+  } else {
+    let enrolledCourseIds: string[] = [];
+    if (user) {
+      const enrollments = await EnrollCourse.find({
+        userId: user._id || user.id,
+        paymentStatus: "completed",
+      });
+      enrolledCourseIds = enrollments.map((e) => e.courseId.toString());
+    }
+
+    finalData = data.map((course: any) => {
+      const price = course.price || 0;
+      const isEnrolled = enrolledCourseIds.includes(course._id.toString());
+      return {
+        ...course,
+        isLocked: price > 0 && !isEnrolled,
+      };
+    });
+  }
+
   return {
-    data,
+    data: finalData,
     meta: {
       page: pageNumber,
       limit: limitNumber,
@@ -124,10 +148,13 @@ const getSingleCourse = async (id: string, user?: any) => {
     }
   }
 
+  result.isLocked = !hasAccess && (result.price || 0) > 0;
+
   if (!hasAccess) {
     if (result.lessons) {
       result.lessons = result.lessons.map((lesson: any) => {
-        if (lesson.isLocked) {
+        // Assume true unless explicitly set to false to secure old courses!
+        if (lesson.isLocked !== false) {
           lesson.videoUrl = "LOCKED";
         }
         return lesson;
