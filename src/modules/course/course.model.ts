@@ -12,6 +12,8 @@ const CourseSchema = new Schema<ICourse>(
   {
     title: { type: String, required: true },
     category: { type: String },
+    picture:  {type: String},
+    description: {type: String},
     lessonCount: { type: Number },
     totalDuration: { type: String },
     lessons: { type: [LessonSchema], default: [] },

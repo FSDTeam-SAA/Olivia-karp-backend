@@ -16,28 +16,34 @@ const router = Router();
 /**
  * @swagger
  * /api/v1/course/create:
- *   post:
- *     summary: Create a new course (Form-Data)
- *     tags: [Courses]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               image:
- *                 type: string
- *                 format: binary
- *               title:
- *                 type: string
- *               price:
- *                 type: number
- *     responses:
- *       200:
- *         description: Course successfully created
+ * post:
+ * summary: Create a new course with Image and Lessons
+ * tags: [Courses]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * multipart/form-data:
+ * schema:
+ * type: object
+ * properties:
+ * image:
+ * type: string
+ * format: binary
+ * description: Course thumbnail image
+ * title:
+ * type: string
+ * category:
+ * type: string
+ * price:
+ * type: number
+ * lessons:
+ * type: string
+ * description: JSON string of lessons array. Example '[{"title":"Intro","duration":"10"}]'
+ * responses:
+ * 201:
+ * description: Course created
  */
 router.post(
   "/create",
@@ -49,23 +55,34 @@ router.post(
 /**
  * @swagger
  * /api/v1/course/all:
- *   get:
- *     summary: Get all courses (Paginated)
- *     tags: [Courses]
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *         description: Page number
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Number of items per page
- *     responses:
- *       200:
- *         description: A paginated list of courses
+ * get:
+ * summary: Retrieve courses with search and category filtering
+ * tags: [Courses]
+ * parameters:
+ * - in: query
+ * name: searchTerm
+ * schema:
+ * type: string
+ * description: Search by title or description
+ * - in: query
+ * name: category
+ * schema:
+ * type: string
+ * enum: ['All Courses', 'Beginner Courses', 'Business Courses', 'Educational Courses']
+ * description: Filter by specific category
+ * - in: query
+ * name: page
+ * schema:
+ * type: integer
+ * default: 1
+ * - in: query
+ * name: limit
+ * schema:
+ * type: integer
+ * default: 10
+ * responses:
+ * 200:
+ * description: List of filtered courses
  */
 router.get("/all", courseController.getAllCourses);
 

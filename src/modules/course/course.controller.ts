@@ -2,25 +2,25 @@ import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import courseService from "./course.service";
+import httpStatus from "http-status";
+import { Request, Response } from "express";
 
-const CreateNewCourse = catchAsync(async (req, res) => {
-  const files = req.files as Express.Multer.File[];
-
+const CreateNewCourse = catchAsync(async (req: Request, res: Response) => {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
   const result = await courseService.CreateNewCourse(req.body, files);
 
   sendResponse(res, {
-    statusCode: StatusCodes.OK,
+    statusCode: httpStatus.CREATED,
     success: true,
-    message: "New course created successfully",
+    message: "Course created successfully",
     data: result,
   });
 });
 
-const getAllCourses = catchAsync(async (req, res) => {
+const getAllCourses = catchAsync(async (req: Request, res: Response) => {
   const result = await courseService.getAllCourses(req.query);
-
   sendResponse(res, {
-    statusCode: StatusCodes.OK,
+    statusCode: httpStatus.OK,
     success: true,
     message: "Courses retrieved successfully",
     meta: result.meta,
@@ -28,39 +28,34 @@ const getAllCourses = catchAsync(async (req, res) => {
   });
 });
 
-const getSingleCourse = catchAsync(async (req, res) => {
-  const { courseId } = req.params;
-  const result = await courseService.getSingleCourse(courseId);
-
+const getSingleCourse = catchAsync(async (req: Request, res: Response) => {
+  const result = await courseService.getSingleCourse(req.params.courseId);
   sendResponse(res, {
-    statusCode: StatusCodes.OK,
+    statusCode: httpStatus.OK,
     success: true,
     message: "Course retrieved successfully",
     data: result,
   });
 });
 
-const updateCourse = catchAsync(async (req, res) => {
-  const { courseId } = req.params;
-  const files = req.files as Express.Multer.File[];
-  const result = await courseService.updateCourse(courseId, req.body, files);
-
+const updateCourse = catchAsync(async (req: Request, res: Response) => {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  const result = await courseService.updateCourse(req.params.courseId, req.body, files);
   sendResponse(res, {
-    statusCode: StatusCodes.OK,
+    statusCode: httpStatus.OK,
     success: true,
     message: "Course updated successfully",
     data: result,
   });
 });
 
-const updateCourseAvailability = catchAsync(async (req, res) => {
-  const { courseId } = req.params;
-  await courseService.updateCourseAvailability(courseId);
-
+const updateCourseAvailability = catchAsync(async (req: Request, res: Response) => {
+  const result = await courseService.updateCourseAvailability(req.params.courseId);
   sendResponse(res, {
-    statusCode: StatusCodes.OK,
+    statusCode: httpStatus.OK,
     success: true,
-    message: "Course availability updated successfully",
+    message: "Availability toggled successfully",
+    data: result,
   });
 });
 

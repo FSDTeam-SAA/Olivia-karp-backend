@@ -1,15 +1,16 @@
 export interface ILesson {
   title: string;
   duration: string;
-
   level: string;
   videoUrl: string;
 }
 
 export interface ICourse {
-  id: number;
   title: string;
   category: string;
+  picture?: string;
+  description?: string;
+  level: string;
   lessonCount: number;
   totalDuration: string;
   lessons: ILesson[];

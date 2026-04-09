@@ -1,51 +1,43 @@
 import { ILesson } from "./course.interface";
 import Course from "./course.model";
+import httpStatus from "http-status";
+import AppError from "../../errors/AppError";
 
-const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
+const CreateNewCourse = async (payload: any, files: { [fieldname: string]: Express.Multer.File[] }) => {
   let lessons: ILesson[] = [];
 
-  // parse lessons if sent as string
+  // Parse lessons if sent as a JSON string from form-data
   if (payload.lessons) {
-    lessons =
-      typeof payload.lessons === "string"
-        ? JSON.parse(payload.lessons)
-        : payload.lessons;
+    lessons = typeof payload.lessons === "string" ? JSON.parse(payload.lessons) : payload.lessons;
   }
 
-  // course image
-  let image = {};
-  if (files && files.length > 0) {
-    const imageFile = files[0];
-
+  // Handle Image Upload
+  let image = { url: "", public_id: "" };
+  if (files && files.image && files.image.length > 0) {
+    const imageFile = files.image[0];
     image = {
       url: `/uploads/${imageFile.filename}`,
       public_id: imageFile.filename,
     };
   }
 
-
   const lessonsData = lessons.map((lesson) => ({
     title: lesson.title,
     duration: lesson.duration,
     level: lesson.level,
-    videoUrl: lesson.videoUrl, 
+    videoUrl: lesson.videoUrl,
   }));
 
-  const lessonsCount = lessonsData.length;
-
-  // calculate duration
-  const totalDuration = lessonsData.reduce((total, lesson) => {
-    const minutes = parseInt(lesson.duration) || 0;
-    return total + minutes;
+  // Calculate duration in minutes
+  const totalDurationMinutes = lessonsData.reduce((total, lesson) => {
+    return total + (parseInt(lesson.duration) || 0);
   }, 0);
 
   const courseData = {
-    id: payload.id,
-    title: payload.title,
-    category: payload.category,
+    ...payload,
     lessons: lessonsData,
-    lessonCount:lessonsCount,
-    totalDuration: `${totalDuration} min`,
+    lessonCount: lessonsData.length,
+    totalDuration: `${totalDurationMinutes} min`,
     price: Number(payload.price) || 0,
     currency: payload.currency || "CAD",
     image,
@@ -55,33 +47,31 @@ const CreateNewCourse = async (payload: any, files: Express.Multer.File[]) => {
   return result;
 };
 
-const getAllCourses = async (query: any) => {
+const getAllCourses = async (query: Record<string, any>) => {
   const { page = 1, limit = 10, searchTerm, category } = query;
 
-  const pageNumber = Math.max(Number(page) || 1, 1);
-  const limitNumber = Math.max(Number(limit) || 10, 1);
+  const pageNumber = Math.max(Number(page), 1);
+  const limitNumber = Math.max(Number(limit), 1);
   const skip = (pageNumber - 1) * limitNumber;
 
   const filter: any = {};
 
-  if (searchTerm && searchTerm.trim() !== "") {
-    filter.title = {
-      $regex: searchTerm.trim(),
-      $options: "i",
-    };
+  // 1. Search Logic: Search in Title or Description
+  if (searchTerm) {
+    filter.$or = [
+      { title: { $regex: searchTerm, $options: "i" } },
+      { description: { $regex: searchTerm, $options: "i" } },
+    ];
   }
 
-  // filter by category
-  if (category && category.trim() !== "") {
-    const categoryLower = category.trim().toLowerCase();
-
-    if (categoryLower !== "all" && categoryLower !== "all courses") {
-      const cleanCategory = category.trim().replace(/\s*courses$/i, "");
-      filter.category = {
-        $regex: cleanCategory,
-        $options: "i",
-      };
-    }
+  // 2. Filter Logic: Match the UI Tabs from your image
+  if (category && category !== "all" && category !== "All Courses") {
+    /** * Logic: If the UI sends "Business Courses", we strip " Courses" 
+     * to match the DB category "Business". 
+     */
+    const cleanCategory = category.replace(/\s*courses$/i, "").trim();
+    
+    filter.category = { $regex: `^${cleanCategory}$`, $options: "i" };
   }
 
   const data = await Course.find(filter)
@@ -104,98 +94,81 @@ const getAllCourses = async (query: any) => {
 
 const getSingleCourse = async (id: string) => {
   const result = await Course.findById(id);
-  if (!result) {
-    throw new Error("Course not found");
-  }
-
+  if (!result) throw new AppError("Course not found", httpStatus.NOT_FOUND);
   return result;
 };
+
 
 const updateCourse = async (
   id: string,
   payload: any,
-  files: Express.Multer.File[],
+  files: Record<string, Express.Multer.File[]> | undefined,
 ) => {
   const course = await Course.findById(id);
 
   if (!course) {
-    throw new Error("Course not found");
+    throw new AppError("Course not found", httpStatus.NOT_FOUND);
   }
 
-  let lessons: ILesson[] = [];
+  let lessonsData = course.lessons;
 
-  // parse lessons (string or array)
+  // 1. Properly parse and update lessons
   if (payload.lessons) {
-    lessons =
+    const lessons: ILesson[] =
       typeof payload.lessons === "string"
         ? JSON.parse(payload.lessons)
         : payload.lessons;
+
+    if (lessons.length > 0) {
+      lessonsData = lessons.map((lesson) => ({
+        title: lesson.title,
+        duration: lesson.duration,
+        level: lesson.level,
+        videoUrl: lesson.videoUrl,
+      }));
+    }
   }
 
-  // update image (if new file uploaded)
-  let image = course.image; // default old image
-
-  if (files && files.length > 0) {
-    const imageFile = files[0];
-
+  // 2. Handle image from Multer fields object
+  let image = course.image; 
+  if (files && files.image && files.image.length > 0) {
+    const imageFile = files.image[0];
     image = {
       url: `/uploads/${imageFile.filename}`,
       public_id: imageFile.filename,
     };
   }
 
-  // update lessons
-  let lessonsData = course.lessons;
-
-  if (lessons.length > 0) {
-    lessonsData = lessons.map((lesson) => ({
-      title: lesson.title,
-      duration: lesson.duration,
-      level: lesson.level,
-      videoUrl: lesson.videoUrl,
-    }));
-  }
-
-  const lessonsCount = lessonsData.length;
-
-  // calculate total duration
-  const totalDuration = lessonsData.reduce((total, lesson) => {
-    const minutes = parseInt(lesson.duration) || 0;
-    return total + minutes;
+  // 3. Recalculate derived data
+  const lessonCount = lessonsData.length;
+  const totalMinutes = lessonsData.reduce((total, lesson) => {
+    return total + (parseInt(lesson.duration) || 0);
   }, 0);
 
-  // update object
+  // 4. Construct update object
   const updatedData = {
-    title: payload.title ?? course.title,
-    category: payload.category ?? course.category,
+    ...payload, // Spread the rest (title, category, etc.)
     lessons: lessonsData,
-    lessonsCount,
-    totalDuration: `${totalDuration} min`,
+    lessonCount,
+    totalDuration: `${totalMinutes} min`,
     price: payload.price ? Number(payload.price) : course.price,
-    currency: payload.currency ?? course.currency,
     image,
   };
 
   const result = await Course.findByIdAndUpdate(id, updatedData, {
     new: true,
+    runValidators: true,
   });
 
   return result;
 };
 
+
 const updateCourseAvailability = async (id: string) => {
   const course = await Course.findById(id);
-  if (!course) {
-    throw new Error("Course not found");
-  }
-
-  const updatedData = {
-    isAvailable: !course.isAvailable,
-  };
-
-  await Course.findByIdAndUpdate(id, updatedData, {
-    new: true,
-  });
+  if (!course) throw new AppError("Course not found", httpStatus.NOT_FOUND);
+  
+  return await Course.findByIdAndUpdate(id, { isAvailable: !course.isAvailable }, { new: true });
 };
 
 const courseService = {
