@@ -5,6 +5,7 @@ import app from "./app";
 import config from "./config";
 import logger from "./logger";
 import { initNotificationSocket } from "./socket/notification.service";
+import "./modules/enrollCourse/enrollCourse.cron";
 
 async function main() {
   try {
