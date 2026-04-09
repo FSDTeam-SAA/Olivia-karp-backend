@@ -7,6 +7,7 @@ import { Router } from "express";
  *   description: Video course modules, lessons, and base pricing configurations.
  */
 import auth from "../../middleware/auth";
+import optionalAuth from "../../middleware/optionalAuth";
 import { upload } from "../../middleware/multer.middleware";
 import { USER_ROLE } from "../user/user.constant";
 import courseController from "./course.controller";
@@ -120,7 +121,7 @@ router.get("/all", courseController.getAllCourses);
  *       200:
  *         description: Course details and lessons
  */
-router.get("/:courseId", courseController.getSingleCourse);
+router.get("/:courseId", optionalAuth(), courseController.getSingleCourse);
 
 /**
  * @swagger

@@ -3,6 +3,7 @@ import Course from "./course.model";
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { uploadToCloudinary } from "../../utils/cloudinary";
+import EnrollCourse from "../enrollCourse/enrollCourse.model";
 
 const CreateNewCourse = async (
   payload: any, 
@@ -35,6 +36,7 @@ const CreateNewCourse = async (
     duration: lesson.duration,
     level: lesson.level,
     videoUrl: lesson.videoUrl,
+    isLocked: lesson.isLocked !== undefined ? lesson.isLocked : true,
   }));
 
   const totalDurationMinutes = lessonsData.reduce((total, lesson) => {
@@ -84,6 +86,7 @@ const getAllCourses = async (query: Record<string, any>) => {
   // 3. Optimized Execution: Lean queries and parallel counting
   const [data, total] = await Promise.all([
     Course.find(filter)
+      .select("-lessons")
       .sort(sort ? sort : { createdAt: -1 })
       .skip(skip)
       .limit(limitNumber)
@@ -102,9 +105,36 @@ const getAllCourses = async (query: Record<string, any>) => {
   };
 };
 
-const getSingleCourse = async (id: string) => {
-  const result = await Course.findById(id);
+const getSingleCourse = async (id: string, user?: any) => {
+  const result = await Course.findById(id).lean();
   if (!result) throw new AppError("Course not found", httpStatus.NOT_FOUND);
+
+  let hasAccess = false;
+
+  if (user && user.role === "admin") {
+    hasAccess = true;
+  } else if (user) {
+    const isEnrolled = await EnrollCourse.findOne({
+      userId: user._id || user.id,
+      courseId: id,
+      paymentStatus: "completed",
+    });
+    if (isEnrolled) {
+      hasAccess = true;
+    }
+  }
+
+  if (!hasAccess) {
+    if (result.lessons) {
+      result.lessons = result.lessons.map((lesson: any) => {
+        if (lesson.isLocked) {
+          lesson.videoUrl = "LOCKED";
+        }
+        return lesson;
+      });
+    }
+  }
+
   return result;
 };
 
@@ -135,6 +165,7 @@ const updateCourse = async (
         duration: lesson.duration,
         level: lesson.level,
         videoUrl: lesson.videoUrl,
+        isLocked: lesson.isLocked !== undefined ? lesson.isLocked : true,
       }));
     }
   }
