@@ -6,7 +6,9 @@ import httpStatus from "http-status";
 import { Request, Response } from "express";
 
 const CreateNewCourse = catchAsync(async (req: Request, res: Response) => {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  // Cast req.files to the Record type for .fields() support
+  const files = req.files as Record<string, Express.Multer.File[]>;
+  
   const result = await courseService.CreateNewCourse(req.body, files);
 
   sendResponse(res, {

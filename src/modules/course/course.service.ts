@@ -2,8 +2,12 @@ import { ILesson } from "./course.interface";
 import Course from "./course.model";
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
+import { uploadToCloudinary } from "../../utils/cloudinary";
 
-const CreateNewCourse = async (payload: any, files: { [fieldname: string]: Express.Multer.File[] }) => {
+const CreateNewCourse = async (
+  payload: any, 
+  files: Record<string, Express.Multer.File[]> | undefined
+) => {
   let lessons: ILesson[] = [];
 
   // Parse lessons if sent as a JSON string from form-data
@@ -11,13 +15,18 @@ const CreateNewCourse = async (payload: any, files: { [fieldname: string]: Expre
     lessons = typeof payload.lessons === "string" ? JSON.parse(payload.lessons) : payload.lessons;
   }
 
-  // Handle Image Upload
+  // Handle Cloudinary Image Upload
   let image = { url: "", public_id: "" };
+  
   if (files && files.image && files.image.length > 0) {
     const imageFile = files.image[0];
+    
+    // Call your Cloudinary utility (ensure it's imported)
+    const cloudinaryResult = await uploadToCloudinary(imageFile.path, 'courses');
+    
     image = {
-      url: `/uploads/${imageFile.filename}`,
-      public_id: imageFile.filename,
+      url: cloudinaryResult.secure_url,
+      public_id: cloudinaryResult.public_id,
     };
   }
 
@@ -28,7 +37,6 @@ const CreateNewCourse = async (payload: any, files: { [fieldname: string]: Expre
     videoUrl: lesson.videoUrl,
   }));
 
-  // Calculate duration in minutes
   const totalDurationMinutes = lessonsData.reduce((total, lesson) => {
     return total + (parseInt(lesson.duration) || 0);
   }, 0);
