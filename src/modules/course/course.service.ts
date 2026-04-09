@@ -56,7 +56,7 @@ const getAllCourses = async (query: Record<string, any>) => {
 
   const filter: any = {};
 
-  // 1. Search Logic: Search in Title or Description
+  // 1. Text Search (Title/Description)
   if (searchTerm) {
     filter.$or = [
       { title: { $regex: searchTerm, $options: "i" } },
@@ -64,13 +64,12 @@ const getAllCourses = async (query: Record<string, any>) => {
     ];
   }
 
-  // 2. Filter Logic: Match the UI Tabs from your image
-  if (category && category !== "all" && category !== "All Courses") {
-    /** * Logic: If the UI sends "Business Courses", we strip " Courses" 
-     * to match the DB category "Business". 
-     */
+  // 2. Category Filter (Matching your UI Image)
+  if (category && category !== "all" && category !== "all courses") {
+    // Logic: Remove " courses" if the frontend sends it, then match exactly
     const cleanCategory = category.replace(/\s*courses$/i, "").trim();
     
+    // Using regex to ensure case-insensitive matching against your DB values
     filter.category = { $regex: `^${cleanCategory}$`, $options: "i" };
   }
 

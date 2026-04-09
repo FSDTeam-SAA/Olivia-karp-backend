@@ -55,34 +55,67 @@ router.post(
 /**
  * @swagger
  * /api/v1/course/all:
- *   get:
- *     summary: Retrieve courses with search and category filtering
- *     tags: [Courses]
- *     parameters:
- *       - in: query
- *         name: searchTerm
- *         schema:
- *           type: string
- *         description: Search by title or description
- *       - in: query
- *         name: category
- *         schema:
- *           type: string
- *           enum: ['All Courses', 'Beginner Courses', 'Business Courses', 'Educational Courses']
- *         description: Filter by specific category
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *     responses:
- *       200:
- *         description: List of filtered courses
+ * get:
+ * summary: Retrieve courses with search and category filtering
+ * tags: [Courses]
+ * parameters:
+ * - in: query
+ * name: searchTerm
+ * schema:
+ * type: string
+ * description: Search by course title or description (case-insensitive)
+ * - in: query
+ * name: category
+ * schema:
+ * type: string
+ * enum: [
+ * 'all courses', 
+ * 'beginner courses', 
+ * 'professional development courses', 
+ * 'business courses', 
+ * 'educational courses', 
+ * 'insight courses'
+ * ]
+ * description: |
+ * Filter by category. Note: The backend automatically strips ' courses' 
+ * from the end to match database values.
+ * - in: query
+ * name: page
+ * schema:
+ * type: integer
+ * minimum: 1
+ * default: 1
+ * description: Page number for pagination
+ * - in: query
+ * name: limit
+ * schema:
+ * type: integer
+ * minimum: 1
+ * default: 10
+ * description: Number of items per page
+ * responses:
+ * 200:
+ * description: A paginated list of courses successfully retrieved
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * success:
+ * type: boolean
+ * message:
+ * type: string
+ * meta:
+ * type: object
+ * properties:
+ * page: { type: integer }
+ * limit: { type: integer }
+ * total: { type: integer }
+ * totalPage: { type: integer }
+ * data:
+ * type: array
+ * items:
+ * $ref: '#/components/schemas/Course'
  */
 router.get("/all", courseController.getAllCourses);
 
