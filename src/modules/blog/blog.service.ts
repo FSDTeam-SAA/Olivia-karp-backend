@@ -11,18 +11,16 @@ import httpStatus from 'http-status';
  * Logic: Persists rich text content and nested author data.
  */
 const createBlogIntoDB = async (payload: IBlog): Promise<IBlog> => {
-    // Logic 1: Duplicate Title Check (SEO best practice)
-    const isExist = await Blog.findOne({ title: payload.title });
-    if (isExist) {
-        throw new AppError(
-            'A blog with this title already exists. Please use a unique title.',
-            httpStatus.CONFLICT,
-        );
+    // Only check for duplicates if title exists and isn't empty
+    if (payload.title) {
+        const isExist = await Blog.findOne({ title: payload.title });
+        if (isExist) {
+            throw new AppError(
+                'A blog with this title already exists.',
+                httpStatus.CONFLICT,
+            );
+        }
     }
-
-    // Logic 2: Mandatory Featured Check 
-    // (Optional: If you only want ONE featured blog at a time, 
-    // you could un-feature others here, but usually, we allow multiple).
 
     const result = await Blog.create(payload);
     return result;

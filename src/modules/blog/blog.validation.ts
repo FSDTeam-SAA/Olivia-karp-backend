@@ -10,19 +10,17 @@ const blogCategories = [
 
 const createBlogValidationSchema = z.object({
     body: z.object({
-        title: z.string({ required_error: 'Title is required' }).trim(),
-        category: z.enum(blogCategories, {
-            required_error: 'Category is required',
-        }),
-        content: z.string({ required_error: 'Blog content is required' }),
+        title: z.string().trim().optional(),
+        category: z.enum(blogCategories).optional(),
+        content: z.string().optional(),
         author: z.object({
-            name: z.string({ required_error: 'Author name is required' }),
-            description: z.string({ required_error: 'Author description is required' }),
-            profileImage: z.string().optional(), // Allow it to be missing initially
-        }),
-        thumbnailImage: z.string().optional(), // Allow it to be missing initially
-        isPublished: z.boolean().default(false),
-        isFeatured: z.boolean().default(false),
+            name: z.string().optional(),
+            description: z.string().optional(),
+            profileImage: z.string().optional(),
+        }).optional(),
+        thumbnailImage: z.string().optional(),
+        isPublished: z.boolean().optional().default(false),
+        isFeatured: z.boolean().optional().default(false),
     }),
 });
 
