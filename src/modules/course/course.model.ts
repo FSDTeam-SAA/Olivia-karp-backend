@@ -6,6 +6,7 @@ const LessonSchema = new Schema<ILesson>({
   duration: { type: String, required: true },
   level: { type: String, required: true },
   videoUrl: { type: String, required: true },
+  isLocked: { type: Boolean, default: true },
 });
 
 const CourseSchema = new Schema<ICourse>(

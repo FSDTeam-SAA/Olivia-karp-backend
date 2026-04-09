@@ -3,6 +3,7 @@ export interface ILesson {
   duration: string;
   level: string;
   videoUrl: string;
+  isLocked?: boolean;
 }
 
 export interface ICourse {
