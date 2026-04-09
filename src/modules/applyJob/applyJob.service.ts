@@ -236,11 +236,28 @@ const updateStatus = async (id: string, payload: any) => {
   return result;
 };
 
+const deletedAppliedJob = async (id: string) => {
+  const applyJob = await ApplyJob.findById(id);
+  if (!applyJob) {
+    throw new AppError("Job apply record not found", StatusCodes.NOT_FOUND);
+  }
+
+  if (applyJob.status !== "rejected") {
+    throw new AppError(
+      "Only rejected job applications can be deleted",
+      StatusCodes.BAD_REQUEST,
+    );
+  }
+
+  await ApplyJob.findByIdAndDelete(id);
+};
+
 const ApplyJobService = {
   applyForJobService,
   getAllAppliedJobs,
   getSingleAppliedJob,
   updateStatus,
+  deletedAppliedJob,
 };
 
 export default ApplyJobService;
