@@ -107,18 +107,13 @@ const applyForJobService = async (
   return application;
 };
 
-const getAllAppliedJobs = async (query: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string[];
-}) => {
-  const page = parseInt(query.page as any) || 1;
-  const limit = parseInt(query.limit as any) || 10;
+const getAllAppliedJobs = async (query: any) => {
+  const page = parseInt(query.page) || 1;
+  const limit = parseInt(query.limit) || 10;
   const skip = (page - 1) * limit;
 
   const searchRegex = query.search ? new RegExp(query.search, "i") : null;
-  const statusFilter = query.status && query.status.length ? query.status : [];
+  const statusFilter = query.status?.length ? query.status : [];
 
   const matchStage: any = {};
 
@@ -128,6 +123,7 @@ const getAllAppliedJobs = async (query: {
 
   const pipeline: any[] = [
     { $match: matchStage },
+
     {
       $lookup: {
         from: "jobs",
@@ -137,6 +133,7 @@ const getAllAppliedJobs = async (query: {
       },
     },
     { $unwind: "$job" },
+
     {
       $lookup: {
         from: "users",
@@ -148,7 +145,6 @@ const getAllAppliedJobs = async (query: {
     { $unwind: "$user" },
   ];
 
-  // Add search filter
   if (searchRegex) {
     pipeline.push({
       $match: {
@@ -162,7 +158,6 @@ const getAllAppliedJobs = async (query: {
     });
   }
 
-  // Project only required fields
   pipeline.push({
     $project: {
       _id: 1,
@@ -185,27 +180,112 @@ const getAllAppliedJobs = async (query: {
     },
   });
 
-  // Count total
-  const countPipeline = [...pipeline, { $count: "total" }];
-  const totalResult = await ApplyJob.aggregate(countPipeline);
-  const total = totalResult[0]?.total || 0;
-
-  // Pagination
-  pipeline.push({ $skip: skip }, { $limit: limit });
+  // 🔥 FACET
+  pipeline.push({
+    $facet: {
+      data: [{ $skip: skip }, { $limit: limit }],
+      totalCount: [{ $count: "total" }],
+      analytics: [
+        {
+          $group: {
+            _id: "$status",
+            count: { $sum: 1 },
+          },
+        },
+      ],
+    },
+  });
 
   const result = await ApplyJob.aggregate(pipeline);
 
+  const data = result[0].data;
+  const total = result[0].totalCount[0]?.total || 0;
+
+  const analyticsRaw = result[0].analytics;
+
+  // =========================
+  // 🔹 BASE ANALYTICS
+  // =========================
+  const analytics = {
+    totalApplyJobs: total,
+    totalPendingJobs:
+      analyticsRaw.find((a: any) => a._id === "pending")?.count || 0,
+    totalRejectedJobs:
+      analyticsRaw.find((a: any) => a._id === "rejected")?.count || 0,
+    totalAcceptedJobs:
+      analyticsRaw.find((a: any) => a._id === "accepted")?.count || 0,
+  };
+
+  // =========================
+  // 🔥 7 DAYS GROWTH CALCULATION
+  // =========================
+
+  const now = new Date();
+
+  const last7DaysStart = new Date();
+  last7DaysStart.setDate(now.getDate() - 7);
+
+  const prev7DaysStart = new Date();
+  prev7DaysStart.setDate(now.getDate() - 14);
+
+  const prev7DaysEnd = new Date();
+  prev7DaysEnd.setDate(now.getDate() - 7);
+
+  // Pending
+  const currentPending = await ApplyJob.countDocuments({
+    status: "pending",
+    appliedAt: { $gte: last7DaysStart, $lte: now },
+  });
+
+  const previousPending = await ApplyJob.countDocuments({
+    status: "pending",
+    appliedAt: { $gte: prev7DaysStart, $lte: prev7DaysEnd },
+  });
+
+  const pendingGrowth =
+    previousPending === 0
+      ? currentPending > 0
+        ? 100
+        : 0
+      : ((currentPending - previousPending) / previousPending) * 100;
+
+  // Accepted
+  const currentAccepted = await ApplyJob.countDocuments({
+    status: "accepted",
+    appliedAt: { $gte: last7DaysStart, $lte: now },
+  });
+
+  const previousAccepted = await ApplyJob.countDocuments({
+    status: "accepted",
+    appliedAt: { $gte: prev7DaysStart, $lte: prev7DaysEnd },
+  });
+
+  const acceptedGrowth =
+    previousAccepted === 0
+      ? currentAccepted > 0
+        ? 100
+        : 0
+      : ((currentAccepted - previousAccepted) / previousAccepted) * 100;
+
+  // =========================
+  // 🎯 FINAL RETURN
+  // =========================
+
   return {
-    data: result,
+    data,
     meta: {
       total,
       page,
       limit,
       totalPage: Math.ceil(total / limit),
     },
+    analytics: {
+      ...analytics,
+      pendingGrowth: Number(pendingGrowth.toFixed(0)),
+      acceptedGrowth: Number(acceptedGrowth.toFixed(0)),
+    },
   };
 };
-
 const getSingleAppliedJob = async (id: string) => {
   const result = await ApplyJob.findById(id)
     .populate("jobId", "title category") // only include fields you want from Job
@@ -236,11 +316,28 @@ const updateStatus = async (id: string, payload: any) => {
   return result;
 };
 
+const deletedAppliedJob = async (id: string) => {
+  const applyJob = await ApplyJob.findById(id);
+  if (!applyJob) {
+    throw new AppError("Job apply record not found", StatusCodes.NOT_FOUND);
+  }
+
+  if (applyJob.status !== "rejected") {
+    throw new AppError(
+      "Only rejected job applications can be deleted",
+      StatusCodes.BAD_REQUEST,
+    );
+  }
+
+  await ApplyJob.findByIdAndDelete(id);
+};
+
 const ApplyJobService = {
   applyForJobService,
   getAllAppliedJobs,
   getSingleAppliedJob,
   updateStatus,
+  deletedAppliedJob,
 };
 
 export default ApplyJobService;

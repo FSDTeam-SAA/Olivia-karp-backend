@@ -13,7 +13,6 @@ import ApplyJobController from "./applyJob.controller";
 
 const router = Router();
 
-
 /**
  * @swagger
  * /api/v1/applyJob/apply:
@@ -55,7 +54,6 @@ router.post(
   ApplyJobController.applyForJob,
 );
 
-
 /**
  * @swagger
  * /api/v1/applyJob/all:
@@ -89,8 +87,7 @@ router.post(
  *       200:
  *         description: List of applied jobs retrieved
  */
-router.get("/all", auth(USER_ROLE.ADMIN), ApplyJobController.getAllAppliedJobs);
-
+router.get("/all",  ApplyJobController.getAllAppliedJobs);
 
 /**
  * @swagger
@@ -112,10 +109,9 @@ router.get("/all", auth(USER_ROLE.ADMIN), ApplyJobController.getAllAppliedJobs);
  */
 router.get(
   "/:id",
-    auth(USER_ROLE.ADMIN),
+  auth(USER_ROLE.ADMIN),
   ApplyJobController.getSingleAppliedJob,
 );
-
 
 /**
  * @swagger
@@ -153,6 +149,11 @@ router.put(
   ApplyJobController.updateStatus,
 );
 
+router.delete(
+  "/delete/:id",
+  // auth(USER_ROLE.ADMIN),
+  ApplyJobController.deletedAppliedJob,
+);
+
 const applyJobRouter = router;
 export default applyJobRouter;
-

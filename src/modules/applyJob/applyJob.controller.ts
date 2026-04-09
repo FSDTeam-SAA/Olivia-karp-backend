@@ -37,6 +37,7 @@ const getAllAppliedJobs = catchAsync(async (req, res) => {
     message: "Applied jobs retrieved successfully.",
     data: result.data,
     meta: result.meta,
+    analytics: result.analytics,
   });
 });
 
@@ -64,11 +65,23 @@ const updateStatus = catchAsync(async (req, res) => {
   });
 });
 
+const deletedAppliedJob = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  await ApplyJobService.deletedAppliedJob(id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Applied job deleted successfully.",
+  });
+});
+
 const ApplyJobController = {
   applyForJob,
   getAllAppliedJobs,
   getSingleAppliedJob,
   updateStatus,
+  deletedAppliedJob,
 };
 
 export default ApplyJobController;
