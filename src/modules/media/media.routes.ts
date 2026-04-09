@@ -4,6 +4,7 @@ import { USER_ROLE } from '../user/user.constant';
 import auth from '../../middleware/auth';
 import { MediaValidation } from './media.validation';
 import validateRequest from '../../middleware/validateRequest';
+import { upload } from '../../middleware/multer.middleware';
 
 /**
  * @swagger
@@ -122,7 +123,9 @@ router.get('/get-single-media/:mediaId', MediaController.getSingleMedia);
 router.post(
     '/create-media',
     auth(USER_ROLE.ADMIN, USER_ROLE.NON_MEMBER),
-    // validateRequest(MediaValidation.createMediaValidationSchema),
+    // 1. Multer middleware intercepts the 'thumbnailImage' file
+    upload.single('thumbnailImage'), 
+    // 2. Controller handles the logic
     MediaController.createMedia
 );
 
