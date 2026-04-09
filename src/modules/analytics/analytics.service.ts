@@ -193,9 +193,7 @@ const chatAnalytics = async (query: any) => {
   let groupStage: any;
   let formatKey = "month";
 
-  // =========================
-  // 📅 WEEKLY
-  // =========================
+
   if (type === "weekly") {
     startDate = new Date();
     startDate.setDate(now.getDate() - 7);
@@ -211,18 +209,16 @@ const chatAnalytics = async (query: any) => {
     ];
 
     groupStage = {
-      day: { $dayOfWeek: "$createdAt" }, // 1 = Sunday
+      day: { $dayOfWeek: "$createdAt" },
     };
 
     formatKey = "day";
   }
 
-  // =========================
-  // 📅 YEARLY
-  // =========================
+
   else if (type === "yearly") {
     startDate = new Date();
-    startDate.setFullYear(now.getFullYear() - 5); // last 5 years
+    startDate.setFullYear(now.getFullYear() - 5);
 
     groupStage = {
       year: { $year: "$createdAt" },
@@ -231,9 +227,7 @@ const chatAnalytics = async (query: any) => {
     formatKey = "year";
   }
 
-  // =========================
-  // 📅 MONTHLY (default)
-  // =========================
+
   else {
     startDate = new Date(now.getFullYear(), 0, 1);
 
@@ -259,9 +253,7 @@ const chatAnalytics = async (query: any) => {
     formatKey = "month";
   }
 
-  // =========================
-  // 🔥 AGGREGATION
-  // =========================
+
   const rawData = await User.aggregate([
     {
       $match: {
@@ -279,12 +271,9 @@ const chatAnalytics = async (query: any) => {
     },
   ]);
 
-  // =========================
-  // 🧠 FORMAT RESULT
-  // =========================
+
   const result: any = {};
 
-  // WEEKLY
   if (type === "weekly") {
     const weekMap = [
       "sunday",
@@ -305,7 +294,6 @@ const chatAnalytics = async (query: any) => {
     });
   }
 
-  // MONTHLY
   else if (type === "monthly") {
     const monthMap = [
       "january",
@@ -332,7 +320,6 @@ const chatAnalytics = async (query: any) => {
     });
   }
 
-  // YEARLY
   else if (type === "yearly") {
     rawData.forEach((item: any) => {
       result[item._id.year] = {
@@ -341,9 +328,6 @@ const chatAnalytics = async (query: any) => {
     });
   }
 
-  // =========================
-  // 🎯 RESPONSE
-  // =========================
   return {
     type,
     data: result,
