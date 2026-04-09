@@ -2,6 +2,7 @@ import express from 'express';
 import auth from '../../middleware/auth';
 import { USER_ROLE } from '../user/user.constant';
 import { ApplyBlogController } from './applyBlog.controller';
+import { upload } from '../../middleware/multer.middleware';
 
 /**
  * @swagger
@@ -16,19 +17,21 @@ const router = express.Router();
  * @swagger
  * /api/v1/apply-blog/submit-blog-idea:
  *   post:
- *     summary: Submit a new blog idea for review
+ *     summary: Submit a new blog idea for review (Multipart)
+ *     description: Submits a blog idea along with a thumbnail image.
  *     tags: [ApplyBlog]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
  *               - title
  *               - category
+ *               - thumbnailImage
  *             properties:
  *               title:
  *                 type: string
@@ -37,6 +40,9 @@ const router = express.Router();
  *                 enum: ['Expert Insights', 'Climate Careers', 'Research', 'Toolkit', 'Renewable Energy']
  *               content:
  *                 type: string
+ *               thumbnailImage:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Idea submitted successfully
@@ -44,8 +50,10 @@ const router = express.Router();
 router.post(
     '/submit-blog-idea',
     auth(USER_ROLE.NON_MEMBER),
+    upload.single('thumbnailImage'),
     ApplyBlogController.submitBlogIdea
 );
+
 
 /**
  * @swagger

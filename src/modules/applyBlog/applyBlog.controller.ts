@@ -4,6 +4,7 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { ApplyBlogService } from './applyBlog.service';
 import AppError from '../../errors/AppError';
+import { uploadToCloudinary } from '../../utils/cloudinary';
 
 
 /**
@@ -20,7 +21,17 @@ const submitBlogIdea = catchAsync(async (req: Request, res: Response) => {
         );
     }
 
-    const result = await ApplyBlogService.submitBlogIdeaIntoDB(userId, req.body);
+    const payload = { ...req.body };
+
+    if (req.file) {
+        const cloudinaryResult = await uploadToCloudinary(req.file.path, 'apply-blogs');
+        payload.thumbnailImage = {
+            url: cloudinaryResult.secure_url,
+            public_id: cloudinaryResult.public_id
+        };
+    }
+
+    const result = await ApplyBlogService.submitBlogIdeaIntoDB(userId, payload);
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
@@ -29,6 +40,7 @@ const submitBlogIdea = catchAsync(async (req: Request, res: Response) => {
         data: result,
     });
 });
+
 
 /**
  * Admin updates blog (Content, Status, or Metadata)
