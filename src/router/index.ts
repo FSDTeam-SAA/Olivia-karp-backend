@@ -93,7 +93,7 @@ const moduleRoutes = [
     route: surveyRouter,
   },
   {
-    path: "/subscription-plans",
+    path: "/subscription",
     route: subscriptionPlanRouter,
   },
   {

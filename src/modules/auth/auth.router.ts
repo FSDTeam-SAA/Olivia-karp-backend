@@ -110,13 +110,13 @@ router.post("/forgot-password", authController.forgotPassword);
  * @swagger
  * /api/v1/auth/resend-forgot-otp:
  *   post:
- *     summary: POST endpoint for auth
+ *     summary: Resend OTP for password reset
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
+ *         description: OTP resent successfully
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -133,13 +133,25 @@ router.post(
  * @swagger
  * /api/v1/auth/verify-otp:
  *   post:
- *     summary: POST endpoint for auth
+ *     summary: Verify OTP for password reset
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - otp
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
  *     responses:
  *       200:
- *         description: Successful operation
+ *         description: OTP verified successfully
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -156,13 +168,25 @@ router.post(
  * @swagger
  * /api/v1/auth/reset-password:
  *   post:
- *     summary: POST endpoint for auth
+ *     summary: Reset password using token/OTP
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - newPassword
+ *             properties:
+ *               newPassword:
+ *                 type: string
+ *                 example: Password123!
  *     responses:
  *       200:
- *         description: Successful operation
+ *         description: Password reset successfully
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -179,13 +203,27 @@ router.post(
  * @swagger
  * /api/v1/auth/change-password:
  *   post:
- *     summary: POST endpoint for auth
+ *     summary: Change password for logged-in user
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Successful operation
+ *         description: Password changed successfully
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -202,17 +240,17 @@ router.post(
  * @swagger
  * /api/v1/auth/google:
  *   get:
- *     summary: GET endpoint for auth
+ *     summary: Initiate Google OAuth login
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: redirect
+ *         schema:
+ *           type: string
+ *         description: URL to redirect to after successful login
  *     responses:
- *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *       302:
+ *         description: Redirects to Google login page
  */
 router.get(
   "/google",
@@ -231,17 +269,11 @@ router.get(
  * @swagger
  * /api/v1/auth/facebook:
  *   get:
- *     summary: GET endpoint for auth
+ *     summary: Initiate Facebook OAuth login
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
  *     responses:
- *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *       302:
+ *         description: Redirects to Facebook login page
  */
 router.get(
   "/facebook",

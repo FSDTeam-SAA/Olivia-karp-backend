@@ -16,7 +16,7 @@ const router = express.Router();
  * @swagger
  * /api/v1/event/published:
  *   get:
- *     summary: Retrieve published events (Public)
+ *     summary: Retrieve only live/published events (Public)
  *     tags: [Events]
  *     responses:
  *       200:
@@ -31,13 +31,24 @@ router.get(
  * @swagger
  * /api/v1/event/get:
  *   get:
- *     summary: Fetch all events for Admin Dashboard
+ *     summary: Fetch all events with pagination (Admin Dashboard)
  *     tags: [Events]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: Array of events
+ *         description: Paginated list of events
  */
 router.get(
     "/get",
@@ -49,7 +60,7 @@ router.get(
  * @swagger
  * /api/v1/event/create:
  *   post:
- *     summary: Create an event entry using a Luma URL and base price
+ *     summary: Register a new Luma event link (Admin Only)
  *     tags: [Events]
  *     security:
  *       - bearerAuth: []
@@ -59,14 +70,22 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - lumaUrl
+ *               - price
  *             properties:
  *               lumaUrl:
  *                 type: string
+ *                 example: "https://lu.ma/example-event"
  *               price:
  *                 type: number
+ *                 example: 25.00
+ *               currency:
+ *                 type: string
+ *                 default: "CAD"
  *     responses:
- *       200:
- *         description: Event created
+ *       201:
+ *         description: Event created successfully
  */
 router.post(
     "/create",
@@ -79,8 +98,8 @@ router.post(
  * @swagger
  * /api/v1/event/{eventId}/toggle-publish:
  *   patch:
- *     summary: PATCH endpoint for event
- *     tags: [Event]
+ *     summary: Toggle visibility (isPublished) of an event
+ *     tags: [Events]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -89,13 +108,20 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isPublished
+ *             properties:
+ *               isPublished:
+ *                 type: boolean
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Status updated successfully
  */
 router.patch(
     "/:eventId/toggle-publish",
@@ -108,8 +134,8 @@ router.patch(
  * @swagger
  * /api/v1/event/{eventId}:
  *   delete:
- *     summary: DELETE endpoint for event
- *     tags: [Event]
+ *     summary: Delete an event link from the system
+ *     tags: [Events]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -120,11 +146,7 @@ router.patch(
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Event deleted
  */
 router.delete(
     "/:eventId",

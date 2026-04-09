@@ -9,96 +9,86 @@ import { NewsletterValidation } from './newsletter.validation';
  * @swagger
  * tags:
  *   name: Newsletter
- *   description: API operations for Newsletter
+ *   description: Managing email subscriptions and subscriber synchronization for Act On Pricing outreach
  */
 
-
-
 const router = express.Router();
-
-// Public: Anyone can join
 
 /**
  * @swagger
  * /api/v1/newsletter/subscribe:
  *   post:
- *     summary: POST endpoint for newsletter
+ *     summary: Subscribe a new email to the newsletter
  *     tags: [Newsletter]
- *     security:
- *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
  *     responses:
- *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *       201:
+ *         description: Successfully subscribed
  */
 router.post(
     '/subscribe',
     validateRequest(NewsletterValidation.createSubscriptionZodSchema),
-    NewsletterController.subscribe);
-
-// Private: Only the Admin can see the list in the dashboard
+    NewsletterController.subscribe
+);
 
 /**
  * @swagger
  * /api/v1/newsletter/all-subscribers:
  *   get:
- *     summary: GET endpoint for newsletter
+ *     summary: Retrieve all newsletter subscribers (Admin Only)
  *     tags: [Newsletter]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of subscribers retrieved successfully
  */
-router.get('/all-subscribers', auth(USER_ROLE.ADMIN), NewsletterController.getSubscribers);
-
-// 2. Admin Routes (For Your Dashboard)
+router.get(
+    '/all-subscribers',
+    auth(USER_ROLE.ADMIN),
+    NewsletterController.getSubscribers
+);
 
 /**
  * @swagger
  * /api/v1/newsletter/stats:
  *   get:
- *     summary: GET endpoint for newsletter
+ *     summary: Get newsletter subscriber growth statistics (Admin Only)
  *     tags: [Newsletter]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Newsletter stats retrieved successfully
  */
 router.get(
     '/stats',
-    auth(USER_ROLE.ADMIN, USER_ROLE.ADMIN),
+    auth(USER_ROLE.ADMIN),
     NewsletterController.getSubscriberStats
 );
-
 
 /**
  * @swagger
  * /api/v1/newsletter/sync-retry:
  *   post:
- *     summary: POST endpoint for newsletter
+ *     summary: Manually retry synchronizing unsynced subscribers (Admin Only)
  *     tags: [Newsletter]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Sync process triggered
  */
 router.post(
     '/sync-retry',

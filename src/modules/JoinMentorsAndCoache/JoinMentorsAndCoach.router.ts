@@ -8,28 +8,67 @@ import JoinMentorsAndCoachController from "./JoinMentorsAndCoach.controller";
  * @swagger
  * tags:
  *   name: JoinMentorsAndCoache
- *   description: API operations for JoinMentorsAndCoache
+ *   description: Mentors and Coaches joining, discovery, and management
  */
 
-
 const router = Router();
-
 
 /**
  * @swagger
  * /api/v1/JoinMentorsAndCoache/join:
  *   post:
- *     summary: POST endpoint for JoinMentorsAndCoache
+ *     summary: Apply to join as a Mentor or Coach
  *     tags: [JoinMentorsAndCoache]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - firstName
+ *               - lastName
+ *               - email
+ *               - file
+ *               - type
+ *               - bio
+ *               - about
+ *               - bookingLink
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Profile image
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [mentor, coach]
+ *               bio:
+ *                 type: string
+ *               about:
+ *                 type: string
+ *               skills:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               experienceYears:
+ *                 type: number
+ *               bookingLink:
+ *                 type: string
+ *               isPaidSession:
+ *                 type: boolean
+ *               hourlyRate:
+ *                 type: number
  *     responses:
- *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *       201:
+ *         description: Application submitted successfully
  */
 router.post(
   "/join",
@@ -38,56 +77,71 @@ router.post(
   JoinMentorsAndCoachController.createJoinMentorsAndCoachIntoDB,
 );
 
-
 /**
  * @swagger
  * /api/v1/JoinMentorsAndCoache/all:
  *   get:
- *     summary: GET endpoint for JoinMentorsAndCoache
+ *     summary: Retrieve all join applications (Admin Only)
  *     tags: [JoinMentorsAndCoache]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: searchTerm
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [mentor, coach]
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of all applications retrieved
  */
 router.get("/all", JoinMentorsAndCoachController.getAllJoinMentorsAndCoaches);
-
 
 /**
  * @swagger
  * /api/v1/JoinMentorsAndCoache:
  *   get:
- *     summary: GET endpoint for JoinMentorsAndCoache
+ *     summary: Retrieve approved and active Mentors/Coaches (Public)
  *     tags: [JoinMentorsAndCoache]
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: searchTerm
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [mentor, coach]
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of approved mentors and coaches
  */
 router.get(
   "/",
   JoinMentorsAndCoachController.getApprovedJoinMentorsAndCoaches,
 );
 
-
 /**
  * @swagger
  * /api/v1/JoinMentorsAndCoache/{joinMentorsAndCoachId}:
  *   get:
- *     summary: GET endpoint for JoinMentorsAndCoache
+ *     summary: Get details of a single Mentor/Coach profile
  *     tags: [JoinMentorsAndCoache]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: joinMentorsAndCoachId
@@ -96,23 +150,18 @@ router.get(
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Profile details retrieved
  */
 router.get(
   "/:joinMentorsAndCoachId",
   JoinMentorsAndCoachController.getSingleJoinMentorsAndCoach,
 );
 
-
 /**
  * @swagger
  * /api/v1/JoinMentorsAndCoache/approved/{joinMentorsAndCoachId}:
  *   put:
- *     summary: PUT endpoint for JoinMentorsAndCoache
+ *     summary: Approve a Mentor/Coach application (Admin Only)
  *     tags: [JoinMentorsAndCoache]
  *     security:
  *       - bearerAuth: []
@@ -124,23 +173,18 @@ router.get(
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Application approved
  */
 router.put(
   "/approved/:joinMentorsAndCoachId",
   JoinMentorsAndCoachController.approvedJoinMentorsAndCoach,
 );
 
-
 /**
  * @swagger
  * /api/v1/JoinMentorsAndCoache/toggle/{joinMentorsAndCoachId}:
  *   put:
- *     summary: PUT endpoint for JoinMentorsAndCoache
+ *     summary: Toggle active status (show/hide) of a Mentor/Coach (Admin Only)
  *     tags: [JoinMentorsAndCoache]
  *     security:
  *       - bearerAuth: []
@@ -152,11 +196,7 @@ router.put(
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Active status toggled
  */
 router.put(
   "/toggle/:joinMentorsAndCoachId",
@@ -165,3 +205,4 @@ router.put(
 
 const joinMentorsAndCoachRouter = router;
 export default joinMentorsAndCoachRouter;
+

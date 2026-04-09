@@ -9,29 +9,52 @@ import validateRequest from '../../middleware/validateRequest';
  * @swagger
  * tags:
  *   name: Media
- *   description: API operations for Media
+ *   description: Managing media content including videos, podcasts, event recordings, and expert interviews
  */
 
-
 const router = express.Router();
-
-// Public Routes: Anyone can browse the media
 
 /**
  * @swagger
  * /api/v1/media/get-media:
  *   get:
- *     summary: GET endpoint for media
+ *     summary: Retrieve all media posts with filtering and search
  *     tags: [Media]
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: searchTerm
+ *         schema:
+ *           type: string
+ *         description: Search by title or description
+ *       - in: query
+ *         name: mediaType
+ *         schema:
+ *           type: string
+ *           enum: ['video', 'podcast', 'event-recording', 'expert-interview', 'insight', 'blog', 'resource']
+ *         description: Filter by media type
+ *       - in: query
+ *         name: isFeatured
+ *         schema:
+ *           type: boolean
+ *         description: Filter featured media
+ *       - in: query
+ *         name: isPublished
+ *         schema:
+ *           type: boolean
+ *         description: Filter by publication status
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of media posts retrieved successfully
  */
 router.get('/get-media', MediaController.getAllMedia);
 
@@ -39,10 +62,8 @@ router.get('/get-media', MediaController.getAllMedia);
  * @swagger
  * /api/v1/media/get-single-media/{mediaId}:
  *   get:
- *     summary: GET endpoint for media
+ *     summary: Get details of a single media post
  *     tags: [Media]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: mediaId
@@ -51,31 +72,52 @@ router.get('/get-media', MediaController.getAllMedia);
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Media post details retrieved
  */
 router.get('/get-single-media/:mediaId', MediaController.getSingleMedia);
-
-// Admin/Owner Routes: Only authorized users can modify content
 
 /**
  * @swagger
  * /api/v1/media/create-media:
  *   post:
- *     summary: POST endpoint for media
+ *     summary: Create a new media entry (Admin Only)
  *     tags: [Media]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - mediaType
+ *               - sourceType
+ *               - contentUrl
+ *             properties:
+ *               title:
+ *                 type: string
+ *               mediaType:
+ *                 type: string
+ *                 enum: ['video', 'podcast', 'event-recording', 'expert-interview', 'insight', 'blog', 'resource']
+ *               sourceType:
+ *                 type: string
+ *                 example: "URL"
+ *               contentUrl:
+ *                 type: string
+ *                 example: "https://www.youtube.com/watch?v=..."
+ *               description:
+ *                 type: string
+ *               thumbnailImage:
+ *                 type: string
+ *               isPublished:
+ *                 type: boolean
+ *               isFeatured:
+ *                 type: boolean
  *     responses:
- *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *       201:
+ *         description: Media created successfully
  */
 router.post(
     '/create-media',
@@ -84,12 +126,11 @@ router.post(
     MediaController.createMedia
 );
 
-
 /**
  * @swagger
  * /api/v1/media/update-media/{mediaId}:
  *   patch:
- *     summary: PATCH endpoint for media
+ *     summary: Update an existing media entry (Admin Only)
  *     tags: [Media]
  *     security:
  *       - bearerAuth: []
@@ -99,13 +140,28 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               mediaType:
+ *                 type: string
+ *               contentUrl:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               isPublished:
+ *                 type: boolean
+ *               isFeatured:
+ *                 type: boolean
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Media updated successfully
  */
 router.patch(
     '/update-media/:mediaId',
@@ -114,12 +170,11 @@ router.patch(
     MediaController.updateMedia
 );
 
-
 /**
  * @swagger
  * /api/v1/media/delete-media/{mediaId}:
  *   delete:
- *     summary: DELETE endpoint for media
+ *     summary: Delete a media entry (Admin Only)
  *     tags: [Media]
  *     security:
  *       - bearerAuth: []
@@ -131,11 +186,7 @@ router.patch(
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Media deleted successfully
  */
 router.delete(
     '/delete-media/:mediaId',

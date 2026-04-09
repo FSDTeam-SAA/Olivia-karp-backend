@@ -7,28 +7,58 @@ import surveyController from "./survey.controller";
  * @swagger
  * tags:
  *   name: Survey
- *   description: API operations for Survey
+ *   description: Onboarding surveys and profile completion data for Act On Pricing personalization
  */
 
-
 const router = Router();
-
 
 /**
  * @swagger
  * /api/v1/survey/create:
  *   post:
- *     summary: POST endpoint for survey
+ *     summary: Submit an onboarding survey
  *     tags: [Survey]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - city
+ *               - country
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               city:
+ *                 type: string
+ *               country:
+ *                 type: string
+ *               link:
+ *                 type: string
+ *               climateJourney:
+ *                 type: string
+ *               message:
+ *                 type: string
+ *               interest:
+ *                 type: array
+ *                 items: { type: string }
+ *               goals:
+ *                 type: array
+ *                 items: { type: string }
+ *               engagementPreference:
+ *                 type: string
+ *               region:
+ *                 type: string
  *     responses:
- *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *       201:
+ *         description: Survey submitted successfully
  */
 router.post(
   "/create",
@@ -36,34 +66,37 @@ router.post(
   surveyController.createNewSurvey,
 );
 
-
 /**
  * @swagger
  * /api/v1/survey:
  *   get:
- *     summary: GET endpoint for survey
+ *     summary: Retrieve all survey responses (Admin Only)
  *     tags: [Survey]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of survey responses retrieved successfully
  */
 router.get("/", auth(USER_ROLE.ADMIN), surveyController.getAllSurveys);
-
 
 /**
  * @swagger
  * /api/v1/survey/{id}:
  *   get:
- *     summary: GET endpoint for survey
+ *     summary: Get details of a single survey response
  *     tags: [Survey]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -72,13 +105,10 @@ router.get("/", auth(USER_ROLE.ADMIN), surveyController.getAllSurveys);
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Survey details retrieved
  */
 router.get("/:id", surveyController.getSingleSurvey);
 
 const surveyRouter = router;
 export default surveyRouter;
+

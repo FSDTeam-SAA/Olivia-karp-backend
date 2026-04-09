@@ -7,7 +7,7 @@ import enrollCourseController from "./enrollCourse.controller";
  * @swagger
  * tags:
  *   name: Enrollment
- *   description: Course enrollment and student tracking
+ *   description: Course enrollment and student tracking for Act On Pricing education modules
  */
 
 const router = Router();
@@ -26,10 +26,10 @@ const router = Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - courseId
  *             properties:
  *               courseId:
- *                 type: string
- *               email:
  *                 type: string
  *     responses:
  *       201:
@@ -43,4 +43,5 @@ router.post(
 
 const enrollCourseRouter = router;
 export default enrollCourseRouter;
+
 

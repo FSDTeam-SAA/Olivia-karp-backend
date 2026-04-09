@@ -1,14 +1,14 @@
 import { Router } from "express";
+import auth from "../../middleware/auth";
+import { USER_ROLE } from "../user/user.constant";
+import paymentController from "./payment.controller";
 
 /**
  * @swagger
  * tags:
  *   name: Payment
- *   description: Stripe payment processing for Act On Pricing constraints, subscriptions, and standalone modules.
+ *   description: Stripe payment processing for subscriptions and standalone modules (Courses, Events, Career Services)
  */
-import auth from "../../middleware/auth";
-import { USER_ROLE } from "../user/user.constant";
-import paymentController from "./payment.controller";
 
 const router = Router();
 
@@ -16,7 +16,7 @@ const router = Router();
  * @swagger
  * /api/v1/payment/purchase:
  *   post:
- *     summary: Purchase a Subscription Plan
+ *     summary: Purchase a Subscription Plan (Stripe)
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
@@ -26,14 +26,14 @@ const router = Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - subscriptionPlanId
  *             properties:
  *               subscriptionPlanId:
  *                 type: string
  *     responses:
  *       200:
  *         description: Returns a Stripe checkout URL
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
  */
 router.post(
   "/purchase",
@@ -45,8 +45,8 @@ router.post(
  * @swagger
  * /api/v1/payment/checkout-general:
  *   post:
- *     summary: Unified Checkout for Standalone Modules
- *     description: Creates a Stripe checkout session calculating Act On Pricing discounts for Course, Event, and Career Services natively.
+ *     summary: Unified Checkout for Standalone Modules (Course, Event, Career Service)
+ *     description: Calculates Act On Pricing discounts natively and creates a Stripe checkout session.
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
@@ -67,9 +67,7 @@ router.post(
  *                 type: string
  *     responses:
  *       200:
- *         description: Either grants access instantly (if free_access) or returns a Stripe Checkout URL with the respective discount applied.
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Either grants access instantly (if free/included) or returns a Stripe Checkout URL.
  */
 router.post(
   "/checkout-general",
@@ -77,22 +75,16 @@ router.post(
   paymentController.createGeneralCheckoutForEntity,
 );
 
-
 /**
  * @swagger
  * /api/v1/payment/webhook:
  *   post:
- *     summary: POST endpoint for payment
+ *     summary: Stripe Webhook Endpoint
+ *     description: Handles checkout.session.completed events to fulfill purchases.
  *     tags: [Payment]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Webhook received
  */
 router.post("/webhook", paymentController.stripeWebhookHandler);
 
@@ -100,36 +92,48 @@ router.post("/webhook", paymentController.stripeWebhookHandler);
  * @swagger
  * /api/v1/payment/all:
  *   get:
- *     summary: GET endpoint for payment
+ *     summary: Retrieve all payment transactions (Admin Only)
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [paid, unpaid]
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by transactionId
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of payments retrieved
  */
 router.get("/all", auth(USER_ROLE.ADMIN), paymentController.getAllPayment);
-
 
 /**
  * @swagger
  * /api/v1/payment/me:
  *   get:
- *     summary: GET endpoint for payment
+ *     summary: Retrieve my payment history
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Personal payment history retrieved
  */
 router.get(
   "/me",
@@ -137,12 +141,11 @@ router.get(
   paymentController.getMyPayment,
 );
 
-
 /**
  * @swagger
  * /api/v1/payment/{paymentId}:
  *   get:
- *     summary: GET endpoint for payment
+ *     summary: Get details of a single payment transaction
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
@@ -154,17 +157,14 @@ router.get(
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Payment details retrieved
  */
 router.get(
   "/:paymentId",
-  //   auth(USER_ROLE.ADMIN),
+  auth(USER_ROLE.ADMIN),
   paymentController.getSinglePayment,
 );
 
 const paymentRouter = router;
 export default paymentRouter;
+
