@@ -4,5 +4,5 @@ export interface IEnrollCourse {
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
   transactionId?: string;
-  paymentStatus?: "pending" | "paid" | "failed";
+  paymentStatus?: "pending" | "completed" | "failed" | "free";
 }

@@ -17,7 +17,7 @@ cron.schedule("*/10 * * * * *", async () => {
         const session = await stripe.checkout.sessions.retrieve(enrollment.transactionId);
 
         if (session.payment_status === "paid") {
-          enrollment.paymentStatus = "paid";
+          enrollment.paymentStatus = "completed";
           await enrollment.save();
 
           await Course.findByIdAndUpdate(enrollment.courseId, {

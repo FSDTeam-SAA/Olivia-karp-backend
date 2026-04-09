@@ -17,20 +17,21 @@ const createEnrollCourse = async (payload: IEnrollCourse, email: string) => {
     throw new Error("Course not found.");
   }
 
+  // Verify if already enrolled
+  const existingEnrollment = await EnrollCourse.findOne({
+    userId: user._id,
+    courseId: course._id,
+    paymentStatus: "completed",
+  });
+
+  if (existingEnrollment) {
+    throw new Error("You are already enrolled in this course.");
+  }
+
   const price = course.price || 0;
 
-  if (price === 0) {
-    const result = await EnrollCourse.create({
-      userId: user._id,
-      courseId: course._id,
-      paymentStatus: "paid",
-    });
-
-    await Course.findByIdAndUpdate(payload.courseId, {
-      $inc: { totalEnrolled: 1 },
-    });
-
-    return { result, checkoutUrl: null };
+  if (price <= 0) {
+    throw new Error("Course price must be greater than 0 to generate a Stripe checkout URL.");
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -52,7 +53,7 @@ const createEnrollCourse = async (payload: IEnrollCourse, email: string) => {
       courseId: course._id.toString(),
       isCourseEnrollment: "true",
     },
-    success_url: `${process.env.FRONT_END_URL}/payment/success`,
+    success_url: `${process.env.FRONT_END_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.FRONT_END_URL}/payment/cancel`,
   });
 
@@ -66,8 +67,21 @@ const createEnrollCourse = async (payload: IEnrollCourse, email: string) => {
   return { result, checkoutUrl: session.url };
 };
 
+const getMyEnrollments = async (userId: string) => {
+  // Optimized: Directly filter by userId from token
+  const enrollments = await EnrollCourse.find({
+    userId,
+    paymentStatus: "completed",
+  })
+  .populate("courseId")
+  .sort({ createdAt: -1 });
+
+  return enrollments;
+};
+
 const enrollCourseService = {
   createEnrollCourse,
+  getMyEnrollments,
 };
 
 export default enrollCourseService;

@@ -12,7 +12,7 @@ const enrollCourseSchema = new Schema<IEnrollCourse>(
     transactionId: { type: String, default: "" },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed"],
+      enum: ["pending", "completed", "failed", "free"],
       default: "pending",
     },
   },
