@@ -21,7 +21,7 @@ const router = Router();
  *         description: Course analytics retrieved successfully
  */
 router.get("/course", analyticsController.getCourserAnalytics);
+router.get("/dashboard", analyticsController.dashboardAnalytics);
 
 const analyticsRouter = router;
 export default analyticsRouter;
-
