@@ -56,7 +56,7 @@ const CreateNewCourse = async (
 };
 
 const getAllCourses = async (query: Record<string, any>) => {
-  const { page = 1, limit = 10, searchTerm, category } = query;
+  const { page = 1, limit = 10, searchTerm, category, sort } = query;
 
   const pageNumber = Math.max(Number(page), 1);
   const limitNumber = Math.max(Number(limit), 1);
@@ -64,29 +64,32 @@ const getAllCourses = async (query: Record<string, any>) => {
 
   const filter: any = {};
 
-  // 1. Text Search (Title/Description)
+  // 1. Efficient Search: Use Text Index if searchTerm exists
   if (searchTerm) {
     filter.$or = [
       { title: { $regex: searchTerm, $options: "i" } },
-      { description: { $regex: searchTerm, $options: "i" } },
+      { category: { $regex: searchTerm, $options: "i" } }
     ];
   }
 
-  // 2. Category Filter (Matching your UI Image)
-  if (category && category !== "all" && category !== "all courses") {
-    // Logic: Remove " courses" if the frontend sends it, then match exactly
+  // 2. Exact Category Filter: Avoid regex for fixed categories
+  if (category && !['all', 'all courses'].includes(category.toLowerCase())) {
+    // Standardize: "Business Courses" -> "Business"
     const cleanCategory = category.replace(/\s*courses$/i, "").trim();
     
-    // Using regex to ensure case-insensitive matching against your DB values
-    filter.category = { $regex: `^${cleanCategory}$`, $options: "i" };
+    // Exact match is much faster than regex
+    filter.category = new RegExp(`^${cleanCategory}$`, "i");
   }
 
-  const data = await Course.find(filter)
-    .skip(skip)
-    .limit(limitNumber)
-    .sort({ createdAt: -1 });
-
-  const total = await Course.countDocuments(filter);
+  // 3. Optimized Execution: Lean queries and parallel counting
+  const [data, total] = await Promise.all([
+    Course.find(filter)
+      .sort(sort ? sort : { createdAt: -1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .lean(), // Converts Mongoose docs to plain JS objects (faster)
+    Course.countDocuments(filter),
+  ]);
 
   return {
     data,

@@ -9,6 +9,12 @@ const enrollCourseSchema = new Schema<IEnrollCourse>(
       ref: "Course",
       required: true,
     },
+    transactionId: { type: String, default: "" },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",
+    },
   },
   {
     timestamps: true,

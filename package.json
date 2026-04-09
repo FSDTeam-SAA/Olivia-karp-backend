@@ -56,6 +56,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.1",
     "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
     "nodemailer": "^7.0.6",
     "open-graph-scraper": "^6.11.0",
     "passport": "^0.7.0",
@@ -77,6 +78,7 @@
     "zod": "^3.25.61"
   },
   "devDependencies": {
+    "@types/node-cron": "^3.0.11",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8"
   }
