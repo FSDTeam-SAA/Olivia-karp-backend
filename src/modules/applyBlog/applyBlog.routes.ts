@@ -14,7 +14,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/applyBlog/submit-blog-idea:
+ * /api/v1/apply-blog/submit-blog-idea:
  *   post:
  *     summary: Submit a new blog idea for review
  *     tags: [ApplyBlog]
