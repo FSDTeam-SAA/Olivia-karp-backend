@@ -14,8 +14,20 @@ const getCourserAnalytics = catchAsync(async (req, res) => {
   });
 });
 
+const dashboardAnalytics = catchAsync(async (req, res) => {
+  const result = await analyticsService.dashboardAnalytics();
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Courses retrieved successfully",
+    data: result,
+  });
+});
+
 const analyticsController = {
   getCourserAnalytics,
+  dashboardAnalytics,
 };
 
 export default analyticsController;
