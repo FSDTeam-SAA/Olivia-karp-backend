@@ -79,9 +79,53 @@ const getMyEnrollments = async (userId: string) => {
   return enrollments;
 };
 
+const verifyPaymentStatus = async (sessionId: string) => {
+  // 1. Find the enrollment and populate course details for the response
+  const enrollment = await EnrollCourse.findOne({ transactionId: sessionId }).populate("courseId");
+  
+  if (!enrollment) {
+    throw new Error("Enrollment record not found for this session.");
+  }
+
+  // 2. If already marked as completed by Cron, return immediately
+  if (enrollment.paymentStatus === "completed") {
+    return enrollment;
+  }
+
+  // 3. Fetch current status from Stripe
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+  if (session.payment_status === "paid") {
+    /**
+     * ATOMIC UPDATE: We only update if status is still 'pending'.
+     * This prevents the course 'totalEnrolled' count from incrementing twice 
+     * if the Cron Job and this API hit at the same time.
+     */
+    const updatedEnrollment = await EnrollCourse.findOneAndUpdate(
+      { transactionId: sessionId, paymentStatus: "pending" },
+      { paymentStatus: "completed" },
+      { new: true }
+    ).populate("courseId");
+
+    if (updatedEnrollment) {
+      // Increment enrollment count on the Course
+      await Course.findByIdAndUpdate(enrollment.courseId, { 
+        $inc: { totalEnrolled: 1 } 
+      });
+      return updatedEnrollment;
+    }
+  } else if (session.status === "expired" || session.payment_status === "unpaid") {
+    enrollment.paymentStatus = "failed";
+    await enrollment.save();
+  }
+
+  return enrollment;
+};
+
 const enrollCourseService = {
   createEnrollCourse,
   getMyEnrollments,
+  verifyPaymentStatus,
 };
 
 export default enrollCourseService;

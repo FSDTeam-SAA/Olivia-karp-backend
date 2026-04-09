@@ -54,6 +54,30 @@ router.post(
  */
 router.get("/my-enrollments", auth(USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER), enrollCourseController.getMyEnrollments);
 
+/**
+ * @swagger
+ * /api/v1/enrollment/verify-payment:
+ *   get:
+ *     summary: Verify payment status for a course enrollment
+ *     tags: [Enrollment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: session_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Payment verified successfully
+ */
+router.get(
+  "/verify-payment",
+  auth(USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+  enrollCourseController.verifyPayment,
+);
+
 const enrollCourseRouter = router;
 export default enrollCourseRouter;
 
