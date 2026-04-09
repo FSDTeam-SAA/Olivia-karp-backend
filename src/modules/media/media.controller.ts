@@ -3,10 +3,18 @@ import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync'; // Assuming your standard utility
 import sendResponse from '../../utils/sendResponse'; // Assuming your standard utility
 import { MediaService } from './media.service';
-
+import { uploadToCloudinary } from '../../utils/cloudinary';
 
 const createMedia = catchAsync(async (req: Request, res: Response) => {
-    const result = await MediaService.createMediaIntoDB(req.body);
+    const payload = { ...req.body };
+
+    // If a file is uploaded via Multi-part, upload it to Cloudinary
+    if (req.file) {
+        const cloudinaryResult = await uploadToCloudinary(req.file.path, 'media-thumbnails');
+        payload.thumbnailImage = cloudinaryResult.secure_url;
+    }
+
+    const result = await MediaService.createMediaIntoDB(payload);
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,

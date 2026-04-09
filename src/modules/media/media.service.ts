@@ -7,25 +7,25 @@ import AppError from '../../errors/AppError';
  * Service: Create Media
  * Logic: Handles automatic thumbnailing for YouTube and source consistency.
  */
-const createMediaIntoDB = async (payload: IMedia): Promise<IMedia> => {
-    // Logic 1: YouTube Extraction
+const createMediaIntoDB = async (payload: Partial<IMedia>) => {
+    // 1. YouTube ID Extraction Logic
     const youtubeRegex = /(?:youtube\.com\/(?:[^\s]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\s]{11})/i;
-
-    // We only have 'URL' now, so we check contentUrl directly
-    const match = payload.contentUrl.match(youtubeRegex);
+    const match = payload.contentUrl?.match(youtubeRegex);
     const videoId = match ? match[1] : null;
 
-    if (videoId && !payload.thumbnailImage) {
+    // 2. Thumbnail Hierarchy Logic
+    // Priority 1: Already set (handled by Cloudinary in controller)
+    // Priority 2: YouTube Thumbnail (if it's a YT link)
+    if (!payload.thumbnailImage && videoId) {
         payload.thumbnailImage = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     }
 
-    // Logic 2: Mandatory Fallback 
-    // If it's not YouTube and no thumbnail provided, we need a default to prevent frontend breakage
+    // Priority 3: Final Fallback Placeholder
     if (!payload.thumbnailImage) {
         payload.thumbnailImage = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/defaults/placeholder.png';
     }
 
-    // Logic 3: Duplicate Check
+    // 3. Duplicate Check
     const isExist = await Media.findOne({ title: payload.title });
     if (isExist) {
         throw new AppError('A media post with this title already exists.', httpStatus.CONFLICT);
@@ -34,7 +34,6 @@ const createMediaIntoDB = async (payload: IMedia): Promise<IMedia> => {
     const result = await Media.create(payload);
     return result;
 };
-
 
 /**
  * Service: Get All Media
