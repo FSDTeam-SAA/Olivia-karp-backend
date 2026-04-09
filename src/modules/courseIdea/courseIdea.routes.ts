@@ -16,12 +16,36 @@ import { CourseIdeaControllers } from './courseIdea.controller';
 const router = express.Router();
 
 
+/**
+ * @swagger
+ * /api/v1/courseIdea/submit-idea:
+ *   post:
+ *     summary: Submit a new course idea
+ *     tags: [CourseIdea]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Idea submitted successfully
+ */
 router.post(
     '/submit-idea',
     auth(USER_ROLE.NON_MEMBER, USER_ROLE.ADMIN, USER_ROLE.MEMBER),
     validateRequest(CourseIdeaValidations.createCourseIdeaValidationSchema),
     CourseIdeaControllers.submitIdea
 );
+
 
 
 /**

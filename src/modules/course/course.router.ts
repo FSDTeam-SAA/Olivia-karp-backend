@@ -16,34 +16,34 @@ const router = Router();
 /**
  * @swagger
  * /api/v1/course/create:
- * post:
- * summary: Create a new course with Image and Lessons
- * tags: [Courses]
- * security:
- * - bearerAuth: []
- * requestBody:
- * required: true
- * content:
- * multipart/form-data:
- * schema:
- * type: object
- * properties:
- * image:
- * type: string
- * format: binary
- * description: Course thumbnail image
- * title:
- * type: string
- * category:
- * type: string
- * price:
- * type: number
- * lessons:
- * type: string
- * description: JSON string of lessons array. Example '[{"title":"Intro","duration":"10"}]'
- * responses:
- * 201:
- * description: Course created
+ *   post:
+ *     summary: Create a new course with Image and Lessons
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Course thumbnail image
+ *               title:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               lessons:
+ *                 type: string
+ *                 description: JSON string of lessons array. Example '[{"title":"Intro","duration":"10"}]'
+ *     responses:
+ *       201:
+ *         description: Course created
  */
 router.post(
   "/create",
@@ -55,34 +55,34 @@ router.post(
 /**
  * @swagger
  * /api/v1/course/all:
- * get:
- * summary: Retrieve courses with search and category filtering
- * tags: [Courses]
- * parameters:
- * - in: query
- * name: searchTerm
- * schema:
- * type: string
- * description: Search by title or description
- * - in: query
- * name: category
- * schema:
- * type: string
- * enum: ['All Courses', 'Beginner Courses', 'Business Courses', 'Educational Courses']
- * description: Filter by specific category
- * - in: query
- * name: page
- * schema:
- * type: integer
- * default: 1
- * - in: query
- * name: limit
- * schema:
- * type: integer
- * default: 10
- * responses:
- * 200:
- * description: List of filtered courses
+ *   get:
+ *     summary: Retrieve courses with search and category filtering
+ *     tags: [Courses]
+ *     parameters:
+ *       - in: query
+ *         name: searchTerm
+ *         schema:
+ *           type: string
+ *         description: Search by title or description
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: ['All Courses', 'Beginner Courses', 'Business Courses', 'Educational Courses']
+ *         description: Filter by specific category
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: List of filtered courses
  */
 router.get("/all", courseController.getAllCourses);
 
@@ -104,6 +104,42 @@ router.get("/all", courseController.getAllCourses);
  */
 router.get("/:courseId", courseController.getSingleCourse);
 
+/**
+ * @swagger
+ * /api/v1/course/{courseId}:
+ *   put:
+ *     summary: Update an existing course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *               title:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               lessons:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Course updated successfully
+ */
 router.put(
   "/:courseId",
   auth(USER_ROLE.ADMIN),
@@ -111,6 +147,33 @@ router.put(
   courseController.updateCourse
 );
 
+/**
+ * @swagger
+ * /api/v1/course/availability/{courseId}:
+ *   put:
+ *     summary: Update course availability (publish/unpublish)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isPublish:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Availability updated successfully
+ */
 router.put(
   "/availability/:courseId",
   courseController.updateCourseAvailability
