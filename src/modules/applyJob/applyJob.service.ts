@@ -107,18 +107,13 @@ const applyForJobService = async (
   return application;
 };
 
-const getAllAppliedJobs = async (query: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string[];
-}) => {
-  const page = parseInt(query.page as any) || 1;
-  const limit = parseInt(query.limit as any) || 10;
+const getAllAppliedJobs = async (query: any) => {
+  const page = parseInt(query.page) || 1;
+  const limit = parseInt(query.limit) || 10;
   const skip = (page - 1) * limit;
 
   const searchRegex = query.search ? new RegExp(query.search, "i") : null;
-  const statusFilter = query.status && query.status.length ? query.status : [];
+  const statusFilter = query.status?.length ? query.status : [];
 
   const matchStage: any = {};
 
@@ -128,6 +123,7 @@ const getAllAppliedJobs = async (query: {
 
   const pipeline: any[] = [
     { $match: matchStage },
+
     {
       $lookup: {
         from: "jobs",
@@ -137,6 +133,7 @@ const getAllAppliedJobs = async (query: {
       },
     },
     { $unwind: "$job" },
+
     {
       $lookup: {
         from: "users",
@@ -148,7 +145,6 @@ const getAllAppliedJobs = async (query: {
     { $unwind: "$user" },
   ];
 
-  // Add search filter
   if (searchRegex) {
     pipeline.push({
       $match: {
@@ -162,7 +158,6 @@ const getAllAppliedJobs = async (query: {
     });
   }
 
-  // Project only required fields
   pipeline.push({
     $project: {
       _id: 1,
@@ -185,24 +180,48 @@ const getAllAppliedJobs = async (query: {
     },
   });
 
-  // Count total
-  const countPipeline = [...pipeline, { $count: "total" }];
-  const totalResult = await ApplyJob.aggregate(countPipeline);
-  const total = totalResult[0]?.total || 0;
-
-  // Pagination
-  pipeline.push({ $skip: skip }, { $limit: limit });
+  // 🔥 FACET (main optimization)
+  pipeline.push({
+    $facet: {
+      data: [{ $skip: skip }, { $limit: limit }],
+      totalCount: [{ $count: "total" }],
+      analytics: [
+        {
+          $group: {
+            _id: "$status",
+            count: { $sum: 1 },
+          },
+        },
+      ],
+    },
+  });
 
   const result = await ApplyJob.aggregate(pipeline);
 
+  const data = result[0].data;
+  const total = result[0].totalCount[0]?.total || 0;
+
+  // analytics format করা
+  const analyticsRaw = result[0].analytics;
+  const analytics = {
+    totalApplyJobs: total,
+    totalPendingJobs:
+      analyticsRaw.find((a: any) => a._id === "pending")?.count || 0,
+    totalRejectedJobs:
+      analyticsRaw.find((a: any) => a._id === "rejected")?.count || 0,
+    totalAcceptedJobs:
+      analyticsRaw.find((a: any) => a._id === "accepted")?.count || 0,
+  };
+
   return {
-    data: result,
+    data,
     meta: {
       total,
       page,
       limit,
       totalPage: Math.ceil(total / limit),
     },
+    analytics,
   };
 };
 

@@ -37,6 +37,7 @@ const getAllAppliedJobs = catchAsync(async (req, res) => {
     message: "Applied jobs retrieved successfully.",
     data: result.data,
     meta: result.meta,
+    analytics: result.analytics,
   });
 });
 
