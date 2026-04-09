@@ -7,74 +7,77 @@ import { ApplyBlogController } from './applyBlog.controller';
  * @swagger
  * tags:
  *   name: ApplyBlog
- *   description: API operations for ApplyBlog
+ *   description: Managing guest blog submissions (ideas) and pending articles
  */
-
-
 
 const router = express.Router();
 
 /**
- * Public & User Routes
- */
-
-// Any logged-in user (Non-Member, Member, or Owner) can submit a blog idea
-
-/**
  * @swagger
- * /api/v1/applyBlog/submit-blog-idea:
+ * /api/v1/apply-blog/submit-blog-idea:
  *   post:
- *     summary: POST endpoint for applyBlog
+ *     summary: Submit a new blog idea for review
  *     tags: [ApplyBlog]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - category
+ *             properties:
+ *               title:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *                 enum: ['Expert Insights', 'Climate Careers', 'Research', 'Toolkit', 'Renewable Energy']
+ *               content:
+ *                 type: string
  *     responses:
- *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *       201:
+ *         description: Idea submitted successfully
  */
 router.post(
     '/submit-blog-idea',
-    auth(USER_ROLE.NON_MEMBER, USER_ROLE.ADMIN),
+    auth(USER_ROLE.NON_MEMBER),
     ApplyBlogController.submitBlogIdea
 );
-
-// Public can view published blogs (Filtering logic handled in Controller/Query)
 
 /**
  * @swagger
  * /api/v1/applyBlog/get-all-blog-ideas:
  *   get:
- *     summary: GET endpoint for applyBlog
+ *     summary: Retrieve all blog ideas with filtering (Admin/Public)
  *     tags: [ApplyBlog]
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: ['pending', 'published', 'reviewed', 'accepted', 'rejected']
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of blog ideas
  */
 router.get(
     '/get-all-blog-ideas',
     ApplyBlogController.getAllBlogs
 );
 
-// Public or User can view a single blog detail
-
 /**
  * @swagger
  * /api/v1/applyBlog/get-single-blog/{applyBlogId}:
  *   get:
- *     summary: GET endpoint for applyBlog
+ *     summary: Get details of a single blog idea
  *     tags: [ApplyBlog]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: applyBlogId
@@ -83,11 +86,7 @@ router.get(
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Blog idea details
  */
 router.get(
     '/get-single-blog/:applyBlogId',
@@ -95,16 +94,10 @@ router.get(
 );
 
 /**
- * Admin (Owner) Only Routes
- */
-
-// Update status (pending -> accepted), content, or author details
-
-/**
  * @swagger
  * /api/v1/applyBlog/update-blog/{applyBlogId}:
  *   patch:
- *     summary: PATCH endpoint for applyBlog
+ *     summary: Update blog idea status or content (Admin Only)
  *     tags: [ApplyBlog]
  *     security:
  *       - bearerAuth: []
@@ -114,13 +107,23 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: ['pending', 'published', 'reviewed', 'accepted', 'rejected']
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Blog idea updated
  */
 router.patch(
     '/update-blog/:applyBlogId',
@@ -128,13 +131,11 @@ router.patch(
     ApplyBlogController.updateBlog
 );
 
-// Remove a blog idea or a published post
-
 /**
  * @swagger
  * /api/v1/applyBlog/delete-blog/{applyBlogId}:
  *   delete:
- *     summary: DELETE endpoint for applyBlog
+ *     summary: Delete a blog idea record (Admin Only)
  *     tags: [ApplyBlog]
  *     security:
  *       - bearerAuth: []
@@ -146,11 +147,7 @@ router.patch(
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Record deleted successfully
  */
 router.delete(
     '/delete-blog/:applyBlogId',

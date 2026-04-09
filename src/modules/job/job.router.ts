@@ -8,7 +8,7 @@ import JobController from "./job.controller";
  * @swagger
  * tags:
  *   name: Job
- *   description: API operations for Job
+ *   description: Job board management including listings, company logos, and media (images/videos)
  */
 
 const router = Router();
@@ -17,17 +17,47 @@ const router = Router();
  * @swagger
  * /api/v1/job/create-job:
  *   post:
- *     summary: POST endpoint for job
+ *     summary: Post a new job listing (Admin Only)
  *     tags: [Job]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               companyLogo:
+ *                 type: string
+ *                 format: binary
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               videos:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               title:
+ *                 type: string
+ *               companyName:
+ *                 type: string
+ *               jobType:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               skill:
+ *                 type: string
+ *               salaryRange:
+ *                 type: string
+ *               description:
+ *                 type: string
  *     responses:
- *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *       201:
+ *         description: Job created successfully
  */
 router.post(
   "/create-job",
@@ -44,17 +74,27 @@ router.post(
  * @swagger
  * /api/v1/job/all:
  *   get:
- *     summary: GET endpoint for job
+ *     summary: Retrieve all job listings with search and pagination
  *     tags: [Job]
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by title, skill, jobType, or companyName
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of jobs retrieved successfully
  */
 router.get("/all", JobController.getAllJobs);
 
@@ -62,10 +102,8 @@ router.get("/all", JobController.getAllJobs);
  * @swagger
  * /api/v1/job/single/{jobId}:
  *   get:
- *     summary: GET endpoint for job
+ *     summary: Get full details of a single job
  *     tags: [Job]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: jobId
@@ -74,11 +112,7 @@ router.get("/all", JobController.getAllJobs);
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Job details retrieved
  */
 router.get("/single/:jobId", JobController.getSingleJob);
 
@@ -86,7 +120,7 @@ router.get("/single/:jobId", JobController.getSingleJob);
  * @swagger
  * /api/v1/job/update-job/{jobId}:
  *   put:
- *     summary: PUT endpoint for job
+ *     summary: Update an existing job listing (Admin Only)
  *     tags: [Job]
  *     security:
  *       - bearerAuth: []
@@ -96,13 +130,33 @@ router.get("/single/:jobId", JobController.getSingleJob);
  *         required: true
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               companyLogo:
+ *                 type: string
+ *                 format: binary
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               videos:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               title:
+ *                 type: string
+ *               companyName:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Job updated successfully
  */
 router.put(
   "/update-job/:jobId",
@@ -115,7 +169,38 @@ router.put(
   JobController.updateJob,
 );
 
+/**
+ * @swagger
+ * /api/v1/job/{jobId}:
+ *   put:
+ *     summary: Toggle job status (e.g. active/inactive)
+ *     tags: [Job]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 example: "active"
+ *     responses:
+ *       200:
+ *         description: Job status updated successfully
+ */
 router.put("/:jobId", JobController.toggleJobStatus);
 
 const jobRouter = router;
 export default jobRouter;
+

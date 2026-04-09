@@ -7,28 +7,22 @@ import { purchaseRecordController } from "./purchaseRecord.controller";
  * @swagger
  * tags:
  *   name: PurchaseRecord
- *   description: API operations for PurchaseRecord
+ *   description: Tracking individual item purchases (Courses, Events, Career Services) excluding main subscriptions
  */
 
-
 const router = Router();
-
 
 /**
  * @swagger
  * /api/v1/purchaseRecord/my-purchases:
  *   get:
- *     summary: GET endpoint for purchaseRecord
+ *     summary: Retrieve my item purchase history
  *     tags: [PurchaseRecord]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of personal purchases retrieved
  */
 router.get(
   "/my-purchases",
@@ -36,22 +30,38 @@ router.get(
   purchaseRecordController.getMyPurchases,
 );
 
-
 /**
  * @swagger
  * /api/v1/purchaseRecord/all:
  *   get:
- *     summary: GET endpoint for purchaseRecord
+ *     summary: Retrieve all item purchase records (Admin Only)
  *     tags: [PurchaseRecord]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [paid, unpaid, free]
+ *       - in: query
+ *         name: itemType
+ *         schema:
+ *           type: string
+ *           enum: [course, event, careerService]
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Paginated list of all purchase records
  */
 router.get(
   "/all",
@@ -60,3 +70,4 @@ router.get(
 );
 
 export const purchaseRecordRoutes = router;
+

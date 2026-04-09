@@ -21,17 +21,40 @@ const router = Router();
  * @swagger
  * /api/v1/user/register:
  *   post:
- *     summary: POST endpoint for user
+ *     summary: Register a new user
  *     tags: [User]
- *     security:
- *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - firstName
+ *               - lastName
+ *               - email
+ *               - password
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 example: Password123!
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [ADMIN, MEMBER, NON_MEMBER]
  *     responses:
- *       200:
- *         description: Successful operation
+ *       201:
+ *         description: User registered successfully. OTP sent to email.
  *       400:
  *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
  */
 router.post(
   "/register",
@@ -44,13 +67,25 @@ router.post(
  * @swagger
  * /api/v1/user/verify-email:
  *   post:
- *     summary: POST endpoint for user
+ *     summary: Verify email using OTP
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - otp
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
  *     responses:
  *       200:
- *         description: Successful operation
+ *         description: Email verified successfully
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -68,13 +103,13 @@ router.post(
  * @swagger
  * /api/v1/user/resend-otp:
  *   post:
- *     summary: POST endpoint for user
+ *     summary: Resend OTP for email verification
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
+ *         description: OTP resent successfully
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -92,17 +127,13 @@ router.post(
  * @swagger
  * /api/v1/user/all-users:
  *   get:
- *     summary: GET endpoint for user
+ *     summary: Retrieve all users (Admin only)
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of all users
  */
 router.get("/all-users",  userController.getAllUsers);
 
@@ -134,17 +165,38 @@ router.get(
  * @swagger
  * /api/v1/user/update-profile:
  *   put:
- *     summary: PUT endpoint for user
+ *     summary: Update user profile details and image
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               street:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               postalCode:
+ *                 type: string
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Profile updated successfully
  */
 router.put(
   "/update-profile",

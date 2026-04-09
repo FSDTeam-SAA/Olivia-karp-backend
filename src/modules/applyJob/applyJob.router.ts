@@ -8,9 +8,8 @@ import ApplyJobController from "./applyJob.controller";
  * @swagger
  * tags:
  *   name: ApplyJob
- *   description: API operations for ApplyJob
+ *   description: Managing job applications and candidate submissions
  */
-
 
 const router = Router();
 
@@ -19,17 +18,35 @@ const router = Router();
  * @swagger
  * /api/v1/applyJob/apply:
  *   post:
- *     summary: POST endpoint for applyJob
+ *     summary: Submit a job application (Non-Member/Member)
  *     tags: [ApplyJob]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - jobId
+ *               - file
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Resume/CV file
+ *               jobId:
+ *                 type: string
+ *               coverLetter:
+ *                 type: string
+ *               portfolioUrl:
+ *                 type: string
+ *               linkedinUrl:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Application submitted successfully
  */
 router.post(
   "/apply",
@@ -43,17 +60,34 @@ router.post(
  * @swagger
  * /api/v1/applyJob/all:
  *   get:
- *     summary: GET endpoint for applyJob
+ *     summary: Retrieve all job applications with filters (Admin Only)
  *     tags: [ApplyJob]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by job title, category, or candidate name
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by status (comma-separated, e.g. pending,reviewed)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: List of applied jobs retrieved
  */
 router.get("/all", auth(USER_ROLE.ADMIN), ApplyJobController.getAllAppliedJobs);
 
@@ -62,7 +96,7 @@ router.get("/all", auth(USER_ROLE.ADMIN), ApplyJobController.getAllAppliedJobs);
  * @swagger
  * /api/v1/applyJob/{id}:
  *   get:
- *     summary: GET endpoint for applyJob
+ *     summary: Get details of a single job application (Admin Only)
  *     tags: [ApplyJob]
  *     security:
  *       - bearerAuth: []
@@ -74,11 +108,7 @@ router.get("/all", auth(USER_ROLE.ADMIN), ApplyJobController.getAllAppliedJobs);
  *           type: string
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Application details retrieved
  */
 router.get(
   "/:id",
@@ -91,7 +121,7 @@ router.get(
  * @swagger
  * /api/v1/applyJob/update/{id}:
  *   put:
- *     summary: PUT endpoint for applyJob
+ *     summary: Update the status of a job application (Admin Only)
  *     tags: [ApplyJob]
  *     security:
  *       - bearerAuth: []
@@ -101,13 +131,21 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 example: "reviewed"
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Status updated successfully
  */
 router.put(
   "/update/:id",
@@ -117,3 +155,4 @@ router.put(
 
 const applyJobRouter = router;
 export default applyJobRouter;
+

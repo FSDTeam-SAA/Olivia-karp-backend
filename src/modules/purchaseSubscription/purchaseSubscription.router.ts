@@ -7,29 +7,23 @@ import purchaseSubscriptionController from "./purchaseSubscription.controller";
  * @swagger
  * tags:
  *   name: PurchaseSubscription
- *   description: API operations for PurchaseSubscription
+ *   description: Managing user subscription status and calculating active benefits (Access Levels / Discounts)
  */
 
-
 const router = Router();
-
-// 🔹 Get current user's active benefits (access levels + discounts)
 
 /**
  * @swagger
  * /api/v1/purchaseSubscription/my-benefits:
  *   get:
- *     summary: GET endpoint for purchaseSubscription
+ *     summary: Retrieve current user's active benefits (Access Levels + Discounts)
+ *     description: Returns the calculated Act On Pricing benefits based on the user's active subscription tier.
  *     tags: [PurchaseSubscription]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Active benefits retrieved successfully
  */
 router.get(
   "/my-benefits",
@@ -37,23 +31,17 @@ router.get(
   purchaseSubscriptionController.getUserBenefits,
 );
 
-// 🔹 Get current user's subscription history
-
 /**
  * @swagger
  * /api/v1/purchaseSubscription/me:
  *   get:
- *     summary: GET endpoint for purchaseSubscription
+ *     summary: Retrieve current user's subscription history
  *     tags: [PurchaseSubscription]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Personal subscription history retrieved
  */
 router.get(
   "/me",
@@ -61,23 +49,37 @@ router.get(
   purchaseSubscriptionController.getMySubscription,
 );
 
-// 🔹 Admin: Get all subscriptions (paginated)
-
 /**
  * @swagger
  * /api/v1/purchaseSubscription/all:
  *   get:
- *     summary: GET endpoint for purchaseSubscription
+ *     summary: Retrieve all user subscriptions (Admin Only)
  *     tags: [PurchaseSubscription]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, expired, cancelled]
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: Successful operation
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
+ *         description: Paginated list of all subscriptions
  */
 router.get(
   "/all",
@@ -87,3 +89,4 @@ router.get(
 
 const purchaseSubscriptionRouter = router;
 export default purchaseSubscriptionRouter;
+
