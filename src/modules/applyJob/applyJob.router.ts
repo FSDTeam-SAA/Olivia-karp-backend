@@ -87,7 +87,7 @@ router.post(
  *       200:
  *         description: List of applied jobs retrieved
  */
-router.get("/all", auth(USER_ROLE.ADMIN), ApplyJobController.getAllAppliedJobs);
+router.get("/all",  ApplyJobController.getAllAppliedJobs);
 
 /**
  * @swagger

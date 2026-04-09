@@ -180,7 +180,7 @@ const getAllAppliedJobs = async (query: any) => {
     },
   });
 
-  // 🔥 FACET (main optimization)
+  // 🔥 FACET
   pipeline.push({
     $facet: {
       data: [{ $skip: skip }, { $limit: limit }],
@@ -201,8 +201,11 @@ const getAllAppliedJobs = async (query: any) => {
   const data = result[0].data;
   const total = result[0].totalCount[0]?.total || 0;
 
-  // analytics format করা
   const analyticsRaw = result[0].analytics;
+
+  // =========================
+  // 🔹 BASE ANALYTICS
+  // =========================
   const analytics = {
     totalApplyJobs: total,
     totalPendingJobs:
@@ -213,6 +216,61 @@ const getAllAppliedJobs = async (query: any) => {
       analyticsRaw.find((a: any) => a._id === "accepted")?.count || 0,
   };
 
+  // =========================
+  // 🔥 7 DAYS GROWTH CALCULATION
+  // =========================
+
+  const now = new Date();
+
+  const last7DaysStart = new Date();
+  last7DaysStart.setDate(now.getDate() - 7);
+
+  const prev7DaysStart = new Date();
+  prev7DaysStart.setDate(now.getDate() - 14);
+
+  const prev7DaysEnd = new Date();
+  prev7DaysEnd.setDate(now.getDate() - 7);
+
+  // Pending
+  const currentPending = await ApplyJob.countDocuments({
+    status: "pending",
+    appliedAt: { $gte: last7DaysStart, $lte: now },
+  });
+
+  const previousPending = await ApplyJob.countDocuments({
+    status: "pending",
+    appliedAt: { $gte: prev7DaysStart, $lte: prev7DaysEnd },
+  });
+
+  const pendingGrowth =
+    previousPending === 0
+      ? currentPending > 0
+        ? 100
+        : 0
+      : ((currentPending - previousPending) / previousPending) * 100;
+
+  // Accepted
+  const currentAccepted = await ApplyJob.countDocuments({
+    status: "accepted",
+    appliedAt: { $gte: last7DaysStart, $lte: now },
+  });
+
+  const previousAccepted = await ApplyJob.countDocuments({
+    status: "accepted",
+    appliedAt: { $gte: prev7DaysStart, $lte: prev7DaysEnd },
+  });
+
+  const acceptedGrowth =
+    previousAccepted === 0
+      ? currentAccepted > 0
+        ? 100
+        : 0
+      : ((currentAccepted - previousAccepted) / previousAccepted) * 100;
+
+  // =========================
+  // 🎯 FINAL RETURN
+  // =========================
+
   return {
     data,
     meta: {
@@ -221,10 +279,13 @@ const getAllAppliedJobs = async (query: any) => {
       limit,
       totalPage: Math.ceil(total / limit),
     },
-    analytics,
+    analytics: {
+      ...analytics,
+      pendingGrowth: Number(pendingGrowth.toFixed(0)),
+      acceptedGrowth: Number(acceptedGrowth.toFixed(0)),
+    },
   };
 };
-
 const getSingleAppliedJob = async (id: string) => {
   const result = await ApplyJob.findById(id)
     .populate("jobId", "title category") // only include fields you want from Job
