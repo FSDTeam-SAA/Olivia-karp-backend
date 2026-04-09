@@ -86,7 +86,7 @@ router.post(
  *       200:
  *         description: Array of available tiers listed on the frontend
  */
-router.get("/all", subscriptionPlanController.getAllSubscriptionPlans);
+router.get("/", subscriptionPlanController.getAllSubscriptionPlans);
 
 /**
  * @swagger
@@ -149,4 +149,3 @@ router.put(
 
 const subscriptionPlanRouter = router;
 export default subscriptionPlanRouter;
-
