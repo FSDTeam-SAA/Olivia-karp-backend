@@ -55,6 +55,10 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    isSurvey: {
+      type: Boolean,
+      default: false,
+    },
     auth: [
       {
         provider: {
