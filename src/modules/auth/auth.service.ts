@@ -58,6 +58,7 @@ const login = async (payload: { email: string; password: string }) => {
       location: user.location,
       postalCode: user.postalCode,
       dateOfBirth: user.dateOfBirth,
+      isSurvey: user.isSurvey,
     },
   };
 };
