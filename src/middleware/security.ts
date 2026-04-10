@@ -29,6 +29,7 @@ const corsOptions = {
     "http://localhost:3000",
     "http://localhost:3001",
     "https://olivia-frontend-nu.vercel.app",
+    "https://olivia-karp-dashboard.vercel.app/",
   ],
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
   credentials: true,
