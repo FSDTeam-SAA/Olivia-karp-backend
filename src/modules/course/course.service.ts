@@ -1,30 +1,36 @@
-import { ILesson } from "./course.interface";
-import Course from "./course.model";
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { uploadToCloudinary } from "../../utils/cloudinary";
 import EnrollCourse from "../enrollCourse/enrollCourse.model";
+import { ILesson } from "./course.interface";
+import Course from "./course.model";
 
 const CreateNewCourse = async (
-  payload: any, 
-  files: Record<string, Express.Multer.File[]> | undefined
+  payload: any,
+  files: Record<string, Express.Multer.File[]> | undefined,
 ) => {
   let lessons: ILesson[] = [];
 
   // Parse lessons if sent as a JSON string from form-data
   if (payload.lessons) {
-    lessons = typeof payload.lessons === "string" ? JSON.parse(payload.lessons) : payload.lessons;
+    lessons =
+      typeof payload.lessons === "string"
+        ? JSON.parse(payload.lessons)
+        : payload.lessons;
   }
 
   // Handle Cloudinary Image Upload
   let image = { url: "", public_id: "" };
-  
+
   if (files && files.image && files.image.length > 0) {
     const imageFile = files.image[0];
-    
+
     // Call your Cloudinary utility (ensure it's imported)
-    const cloudinaryResult = await uploadToCloudinary(imageFile.path, 'courses');
-    
+    const cloudinaryResult = await uploadToCloudinary(
+      imageFile.path,
+      "courses",
+    );
+
     image = {
       url: cloudinaryResult.secure_url,
       public_id: cloudinaryResult.public_id,
@@ -70,15 +76,15 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
   if (searchTerm) {
     filter.$or = [
       { title: { $regex: searchTerm, $options: "i" } },
-      { category: { $regex: searchTerm, $options: "i" } }
+      { category: { $regex: searchTerm, $options: "i" } },
     ];
   }
 
   // 2. Exact Category Filter: Avoid regex for fixed categories
-  if (category && !['all', 'all courses'].includes(category.toLowerCase())) {
+  if (category && !["all", "all courses"].includes(category.toLowerCase())) {
     // Standardize: "Business Courses" -> "Business"
     const cleanCategory = category.replace(/\s*courses$/i, "").trim();
-    
+
     // Exact match is much faster than regex
     filter.category = new RegExp(`^${cleanCategory}$`, "i");
   }
@@ -86,11 +92,10 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
   // 3. Optimized Execution: Lean queries and parallel counting
   const [data, total] = await Promise.all([
     Course.find(filter)
-      .select("-lessons")
       .sort(sort ? sort : { createdAt: -1 })
       .skip(skip)
       .limit(limitNumber)
-      .lean(), // Converts Mongoose docs to plain JS objects (faster)
+      .lean(),
     Course.countDocuments(filter),
   ]);
 
@@ -165,7 +170,6 @@ const getSingleCourse = async (id: string, user?: any) => {
   return result;
 };
 
-
 const updateCourse = async (
   id: string,
   payload: any,
@@ -198,7 +202,7 @@ const updateCourse = async (
   }
 
   // 2. Handle image from Multer fields object
-  let image = course.image; 
+  let image = course.image;
   if (files && files.image && files.image.length > 0) {
     const imageFile = files.image[0];
     image = {
@@ -231,12 +235,15 @@ const updateCourse = async (
   return result;
 };
 
-
 const updateCourseAvailability = async (id: string) => {
   const course = await Course.findById(id);
   if (!course) throw new AppError("Course not found", httpStatus.NOT_FOUND);
-  
-  return await Course.findByIdAndUpdate(id, { isAvailable: !course.isAvailable }, { new: true });
+
+  return await Course.findByIdAndUpdate(
+    id,
+    { isAvailable: !course.isAvailable },
+    { new: true },
+  );
 };
 
 const courseService = {
