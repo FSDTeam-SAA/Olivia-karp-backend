@@ -103,7 +103,7 @@ router.post(
  *                   items:
  *                     type: object
  */
-router.get("/all", courseController.getAllCourses);
+router.get("/all", optionalAuth(), courseController.getAllCourses);
 
 /**
  * @swagger
