@@ -22,7 +22,7 @@ const registerUser = async (payload: IUser) => {
   if (payload.password.length < 6) {
     throw new AppError(
       "Password must be at least 6 characters long",
-      StatusCodes.BAD_REQUEST
+      StatusCodes.BAD_REQUEST,
     );
   }
 
@@ -37,7 +37,7 @@ const registerUser = async (payload: IUser) => {
     result = (await User.findOneAndUpdate(
       { email: existingUser.email },
       { otp: hashedOtp, otpExpires },
-      { new: true }
+      { new: true },
     )) as IUser;
   } else {
     // Case 3: new user
@@ -66,13 +66,13 @@ const registerUser = async (payload: IUser) => {
   const accessToken = createToken(
     JwtToken,
     config.JWT_SECRET as string,
-    config.JWT_EXPIRES_IN as string
+    config.JWT_EXPIRES_IN as string,
   );
 
   const refreshToken = createToken(
     JwtToken,
     config.refreshTokenSecret as string,
-    config.jwtRefreshTokenExpiresIn as string
+    config.jwtRefreshTokenExpiresIn as string,
   );
 
   return {
@@ -83,6 +83,7 @@ const registerUser = async (payload: IUser) => {
       firstName: result.firstName,
       lastName: result.lastName,
       email: result.email,
+      isSurvey: result.isSurvey,
     },
   };
 };
@@ -95,7 +96,7 @@ const verifyEmail = async (email: string, payload: string) => {
   if (!existingUser)
     throw new AppError(
       "No account found with the provided credentials.",
-      StatusCodes.NOT_FOUND
+      StatusCodes.NOT_FOUND,
     );
 
   if (!existingUser.otp || !existingUser.otpExpires) {
@@ -119,7 +120,7 @@ const verifyEmail = async (email: string, payload: string) => {
       isVerified: true,
       $unset: { otp: "", otpExpires: "" },
     },
-    { new: true }
+    { new: true },
   ).select("username email role");
   return result;
 };
@@ -129,7 +130,7 @@ const resendOtpCode = async (email: string) => {
   if (!existingUser)
     throw new AppError(
       "No account found with the provided credentials.",
-      StatusCodes.NOT_FOUND
+      StatusCodes.NOT_FOUND,
     );
 
   if (existingUser.isVerified === true) {
@@ -146,7 +147,7 @@ const resendOtpCode = async (email: string) => {
       otp: hashedOtp,
       otpExpires,
     },
-    { new: true }
+    { new: true },
   ).select("username email role");
 
   await sendEmail({
@@ -159,7 +160,7 @@ const resendOtpCode = async (email: string) => {
 
 const getAllUsers = async () => {
   const result = await User.find().select(
-    "username firstName lastName email role"
+    "username firstName lastName email role",
   );
   return result;
 };
@@ -174,11 +175,11 @@ const getMyProfile = async (email: string) => {
   if (!existingUser)
     throw new AppError(
       "No account found with the provided credentials.",
-      StatusCodes.NOT_FOUND
+      StatusCodes.NOT_FOUND,
     );
 
   const result = await User.findOne({ email }).select(
-    "-password -otp -otpExpires -resetPasswordOtp -resetPasswordOtpExpires"
+    "-password -otp -otpExpires -resetPasswordOtp -resetPasswordOtpExpires",
   );
 
   return result;
@@ -189,7 +190,7 @@ const updateUserProfile = async (payload: any, email: string, file: any) => {
   if (!user)
     throw new AppError(
       "No account found with the provided credentials.",
-      StatusCodes.NOT_FOUND
+      StatusCodes.NOT_FOUND,
     );
 
   // eslint-disable-next-line prefer-const
@@ -209,7 +210,7 @@ const updateUserProfile = async (payload: any, email: string, file: any) => {
   const result = await User.findOneAndUpdate({ email }, updateData, {
     new: true,
   }).select(
-    "-password -otp -otpExpires -resetPasswordOtp -resetPasswordOtpExpires"
+    "-password -otp -otpExpires -resetPasswordOtp -resetPasswordOtpExpires",
   );
 
   if (file && oldImagePublicId) {

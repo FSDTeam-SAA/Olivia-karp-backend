@@ -3,10 +3,15 @@ import { ISurvey } from "./survey.interface";
 import Survey from "./survey.model";
 
 const createNewSurvey = async (payload: ISurvey, email: string) => {
-  const user = await User.findOne({ email }).select("_id").lean();
+  const user = await User.findOne({ email }).select("_id isSurvey");
 
   if (!user) {
     throw new Error("No account found with the provided credentials.");
+  }
+
+  // Optional: prevent multiple submissions (extra safety)
+  if (user.isSurvey) {
+    throw new Error("You have already submitted the survey.");
   }
 
   try {
@@ -15,9 +20,13 @@ const createNewSurvey = async (payload: ISurvey, email: string) => {
       userId: user._id,
     });
 
+    //  Update user isSurvey = true
+    await User.findByIdAndUpdate(user._id, {
+      isSurvey: true,
+    });
+
     return result;
   } catch (error: any) {
-    // Handle duplicate submission (from unique index)
     if (error.code === 11000) {
       throw new Error("You have already applied for a survey.");
     }
