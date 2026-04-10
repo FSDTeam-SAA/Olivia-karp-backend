@@ -7,6 +7,6 @@ export interface IOpportunity {
   location: string;
   officialLink: string;
   shortDescription: string;
-  submittedBy: Types.ObjectId; // Link to the user who submitted
+  submittedBy?: Types.ObjectId; // Link to the user who submitted
   status: "pending" | "reviewed" | "rejected";
 }

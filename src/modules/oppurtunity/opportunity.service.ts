@@ -1,4 +1,4 @@
-import { IOpportunity } from "./opportunity.intrface";
+import { IOpportunity } from "./opportunity.interface";
 import Opportunity from "./opportunity.model";
 
 
