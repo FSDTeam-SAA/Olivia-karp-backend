@@ -24,6 +24,7 @@ import { purchaseRecordRoutes } from "../modules/purchaseRecord/purchaseRecord.r
 import enrollCourseRouter from "../modules/enrollCourse/enrollCourse.router";
 import analyticsRouter from "../modules/analytics/analytics.router";
 import notificationRouter from "../modules/notification/notification.router";
+import { OpportunityRoutes } from "../modules/oppurtunity/opportunity.routes";
 
 const router = Router();
 
@@ -124,6 +125,10 @@ const moduleRoutes = [
     path: "/notifications",
     route: notificationRouter,  
   },
+  {
+    path: "/opportunity",
+    route: OpportunityRoutes,
+  }
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
