@@ -29,10 +29,22 @@ const corsOptions = {
     "http://localhost:3000",
     "http://localhost:3001",
     "https://olivia-frontend-nu.vercel.app",
-    "https://olivia-karp-dashboard.vercel.app/",
+    "https://olivia-karp-dashboard.vercel.app",
   ],
-  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+  // Allow the server to receive cookies and authorization headers
   credentials: true,
+  // Explicitly allow common headers used with JWT and file uploads
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization", 
+    "X-Requested-With", 
+    "Accept",
+    "Origin"
+  ],
+  // Optional: Allows the frontend to read specific headers from the response
+  exposedHeaders: ["set-cookie"],
+  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 export const applySecurity = (app: Application) => {
   app.use(globalLimiter);
