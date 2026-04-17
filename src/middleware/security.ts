@@ -30,17 +30,18 @@ const corsOptions = {
     "http://localhost:3001",
     "https://olivia-frontend-nu.vercel.app",
     "https://olivia-karp-dashboard.vercel.app",
+    "actonclimate.com",
   ],
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
   // Allow the server to receive cookies and authorization headers
   credentials: true,
   // Explicitly allow common headers used with JWT and file uploads
   allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
-    "X-Requested-With", 
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
     "Accept",
-    "Origin"
+    "Origin",
   ],
   // Optional: Allows the frontend to read specific headers from the response
   exposedHeaders: ["set-cookie"],
