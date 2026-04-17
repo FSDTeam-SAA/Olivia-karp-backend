@@ -46,6 +46,7 @@ export interface ISubscriptionPlan {
   isHighlighted: boolean;
   status: "active" | "inactive";
   order: number;
+  link: string;
   createdAt: Date;
   updatedAt: Date;
 }

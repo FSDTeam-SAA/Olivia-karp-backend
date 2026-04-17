@@ -164,6 +164,11 @@ const subscriptionPlanSchema = new Schema<ISubscriptionPlan>(
       type: Number,
       default: 0,
     },
+    link: {
+      type: String,
+      required: true,
+      trim: true,
+    },
   },
   {
     timestamps: true,
