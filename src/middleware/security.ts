@@ -31,6 +31,7 @@ const corsOptions = {
     "https://olivia-frontend-nu.vercel.app",
     "https://olivia-karp-dashboard.vercel.app",
     "https://actonclimate.co",
+    "https://admin.actonclimate.co",
   ],
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
   // Allow the server to receive cookies and authorization headers
