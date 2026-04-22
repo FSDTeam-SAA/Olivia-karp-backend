@@ -10,6 +10,11 @@ const mediaSchema = new Schema<IMedia>(
         },
         mediaType: {
             type: String,
+            enum: ['url', 'audio', 'files'],
+            required: true
+        },
+        category: {
+            type: String,
             enum: [
                 'video',
                 'podcast',
@@ -20,11 +25,6 @@ const mediaSchema = new Schema<IMedia>(
                 'resource'
             ],
             required: true
-        },
-        sourceType: {
-            type: String,
-            enum: ['URL'],
-            default: 'URL'
         },
         contentUrl: {
             type: String,
@@ -58,6 +58,7 @@ const mediaSchema = new Schema<IMedia>(
  * 2. Compound index for fetching featured content (Home Page).
  * 3. Text index for search functionality.
  */
+mediaSchema.index({ category: 1, isPublished: 1 });
 mediaSchema.index({ mediaType: 1, isPublished: 1 });
 mediaSchema.index({ isFeatured: 1, isPublished: 1 });
 mediaSchema.index({ title: 'text' });

@@ -7,11 +7,34 @@ import { uploadToCloudinary } from '../../utils/cloudinary';
 
 const createMedia = catchAsync(async (req: Request, res: Response) => {
     const payload = { ...req.body };
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-    // If a file is uploaded via Multi-part, upload it to Cloudinary
-    if (req.file) {
-        const cloudinaryResult = await uploadToCloudinary(req.file.path, 'media-thumbnails');
-        payload.thumbnailImage = cloudinaryResult.secure_url;
+    // Parse booleans from multipart/form-data strings
+    if (typeof payload.isPublished === 'string') {
+        payload.isPublished = payload.isPublished === 'true';
+    }
+    if (typeof payload.isFeatured === 'string') {
+        payload.isFeatured = payload.isFeatured === 'true';
+    }
+
+    // Handle file uploads
+    if (files) {
+        if (files.thumbnailImage && files.thumbnailImage[0]) {
+            const cloudinaryResult = await uploadToCloudinary(
+                files.thumbnailImage[0].path,
+                'media-thumbnails'
+            );
+            payload.thumbnailImage = cloudinaryResult.secure_url;
+        }
+
+        if (files.mediaFile && files.mediaFile[0]) {
+            // Upload audio or doc files to Cloudinary
+            const cloudinaryResult = await uploadToCloudinary(
+                files.mediaFile[0].path,
+                'media-contents'
+            );
+            payload.contentUrl = cloudinaryResult.secure_url;
+        }
     }
 
     const result = await MediaService.createMediaIntoDB(payload);
@@ -50,7 +73,37 @@ const getSingleMedia = catchAsync(async (req: Request, res: Response) => {
 
 const updateMedia = catchAsync(async (req: Request, res: Response) => {
     const { mediaId } = req.params;
-    const result = await MediaService.updateMediaInDB(mediaId, req.body);
+    const payload = { ...req.body };
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // Parse booleans from multipart/form-data strings
+    if (typeof payload.isPublished === 'string') {
+        payload.isPublished = payload.isPublished === 'true';
+    }
+    if (typeof payload.isFeatured === 'string') {
+        payload.isFeatured = payload.isFeatured === 'true';
+    }
+
+    // Handle file uploads for update
+    if (files) {
+        if (files.thumbnailImage && files.thumbnailImage[0]) {
+            const cloudinaryResult = await uploadToCloudinary(
+                files.thumbnailImage[0].path,
+                'media-thumbnails'
+            );
+            payload.thumbnailImage = cloudinaryResult.secure_url;
+        }
+
+        if (files.mediaFile && files.mediaFile[0]) {
+            const cloudinaryResult = await uploadToCloudinary(
+                files.mediaFile[0].path,
+                'media-contents'
+            );
+            payload.contentUrl = cloudinaryResult.secure_url;
+        }
+    }
+
+    const result = await MediaService.updateMediaInDB(mediaId, payload);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

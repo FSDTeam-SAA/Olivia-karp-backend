@@ -31,8 +31,14 @@ const router = express.Router();
  *         name: mediaType
  *         schema:
  *           type: string
+ *           enum: ['url', 'audio', 'files']
+ *         description: Filter by format type
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
  *           enum: ['video', 'podcast', 'event-recording', 'expert-interview', 'insight', 'blog', 'resource']
- *         description: Filter by media type
+ *         description: Filter by category
  *       - in: query
  *         name: isFeatured
  *         schema:
@@ -88,30 +94,34 @@ router.get('/get-single-media/:mediaId', MediaController.getSingleMedia);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
  *               - title
  *               - mediaType
- *               - sourceType
- *               - contentUrl
+ *               - category
  *             properties:
  *               title:
  *                 type: string
  *               mediaType:
  *                 type: string
- *                 enum: ['video', 'podcast', 'event-recording', 'expert-interview', 'insight', 'blog', 'resource']
- *               sourceType:
+ *                 enum: ['url', 'audio', 'files']
+ *               category:
  *                 type: string
- *                 example: "URL"
+ *                 enum: ['video', 'podcast', 'event-recording', 'expert-interview', 'insight', 'blog', 'resource']
  *               contentUrl:
  *                 type: string
- *                 example: "https://www.youtube.com/watch?v=..."
+ *                 description: Required if mediaType is 'url'
+ *               mediaFile:
+ *                 type: string
+ *                 format: binary
+ *                 description: Audio or Document file (Required if mediaType is 'audio' or 'files')
  *               description:
  *                 type: string
  *               thumbnailImage:
  *                 type: string
+ *                 format: binary
  *               isPublished:
  *                 type: boolean
  *               isFeatured:
@@ -123,9 +133,10 @@ router.get('/get-single-media/:mediaId', MediaController.getSingleMedia);
 router.post(
     '/create-media',
     auth(USER_ROLE.ADMIN, USER_ROLE.NON_MEMBER),
-    // 1. Multer middleware intercepts the 'thumbnailImage' file
-    upload.single('thumbnailImage'), 
-    // 2. Controller handles the logic
+    upload.fields([
+        { name: 'thumbnailImage', maxCount: 1 },
+        { name: 'mediaFile', maxCount: 1 }
+    ]),
     MediaController.createMedia
 );
 
@@ -146,7 +157,7 @@ router.post(
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -154,10 +165,20 @@ router.post(
  *                 type: string
  *               mediaType:
  *                 type: string
+ *                 enum: ['url', 'audio', 'files']
+ *               category:
+ *                 type: string
+ *                 enum: ['video', 'podcast', 'event-recording', 'expert-interview', 'insight', 'blog', 'resource']
  *               contentUrl:
  *                 type: string
+ *               mediaFile:
+ *                 type: string
+ *                 format: binary
  *               description:
  *                 type: string
+ *               thumbnailImage:
+ *                 type: string
+ *                 format: binary
  *               isPublished:
  *                 type: boolean
  *               isFeatured:
@@ -169,7 +190,10 @@ router.post(
 router.patch(
     '/update-media/:mediaId',
     auth(USER_ROLE.ADMIN),
-    validateRequest(MediaValidation.updateMediaValidationSchema),
+    upload.fields([
+        { name: 'thumbnailImage', maxCount: 1 },
+        { name: 'mediaFile', maxCount: 1 }
+    ]),
     MediaController.updateMedia
 );
 
