@@ -18,7 +18,7 @@ const options: Options = {
         description: "Development Server",
       },
       {
-        url: "https://your-production-url.com",
+        url: "https://api.actonclimate.co",
         description: "Production Server",
       },
     ],
