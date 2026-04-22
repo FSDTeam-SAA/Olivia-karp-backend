@@ -4,7 +4,9 @@ import { Document } from 'mongoose';
  * TMediaType: The only "Type" field needed.
  * This matches your UI dropdown and covers all sections in the Sitemap.
  */
-export type TMediaType =
+export type TMediaType = 'url' | 'audio' | 'files';
+
+export type TCategory =
     | 'video'
     | 'podcast'
     | 'event-recording'
@@ -13,12 +15,10 @@ export type TMediaType =
     | 'blog'
     | 'resource';
 
-export type TSourceType = 'URL';
-
 export interface IMedia extends Document {
     title: string;
-    mediaType: TMediaType;      // This single field handles all sorting
-    sourceType: TSourceType;    // URL (YouTube/Spotify) or FILE (Upload)
+    mediaType: TMediaType;
+    category: TCategory;
     contentUrl: string;         // The link or file path
     description: string;
     thumbnailImage: string;

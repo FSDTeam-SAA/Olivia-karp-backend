@@ -3,7 +3,8 @@ import { z } from 'zod';
 const createMediaValidationSchema = z.object({
     body: z.object({
         title: z.string({ required_error: 'Title is required' }),
-        mediaType: z.enum([
+        mediaType: z.enum(['url', 'audio', 'files']),
+        category: z.enum([
             'video',
             'podcast',
             'event-recording',
@@ -12,10 +13,9 @@ const createMediaValidationSchema = z.object({
             'blog',
             'resource'
         ]),
-        sourceType: z.enum(['URL']),
-        contentUrl: z.string({ required_error: 'Content URL is required' }),
+        contentUrl: z.string().optional(),
         description: z.string({ required_error: 'Description is required' }),
-        thumbnailImage: z.string().optional(), // Optional because our service handles YouTube auto-gen
+        thumbnailImage: z.string().optional(),
         isPublished: z.boolean().default(false),
         isFeatured: z.boolean().default(false),
     }),
@@ -24,11 +24,11 @@ const createMediaValidationSchema = z.object({
 const updateMediaValidationSchema = z.object({
     body: z.object({
         title: z.string().optional(),
-        mediaType: z.enum([
+        mediaType: z.enum(['url', 'audio', 'files']).optional(),
+        category: z.enum([
             'video', 'podcast', 'event-recording',
             'expert-interview', 'insight', 'blog', 'resource'
         ]).optional(),
-        sourceType: z.enum(['URL']).optional(), // Restricted to URL
         contentUrl: z.string().optional(),
         description: z.string().optional(),
         thumbnailImage: z.string().optional(),

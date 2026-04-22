@@ -8,16 +8,16 @@ import AppError from '../../errors/AppError';
  * Logic: Handles automatic thumbnailing for YouTube and source consistency.
  */
 const createMediaIntoDB = async (payload: Partial<IMedia>) => {
-    // 1. YouTube ID Extraction Logic
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\s]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\s]{11})/i;
-    const match = payload.contentUrl?.match(youtubeRegex);
-    const videoId = match ? match[1] : null;
+    // 1. YouTube ID Extraction Logic (only if mediaType is 'url')
+    if (payload.mediaType === 'url') {
+        const youtubeRegex = /(?:youtube\.com\/(?:[^\s]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\s]{11})/i;
+        const match = payload.contentUrl?.match(youtubeRegex);
+        const videoId = match ? match[1] : null;
 
-    // 2. Thumbnail Hierarchy Logic
-    // Priority 1: Already set (handled by Cloudinary in controller)
-    // Priority 2: YouTube Thumbnail (if it's a YT link)
-    if (!payload.thumbnailImage && videoId) {
-        payload.thumbnailImage = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        // 2. Thumbnail Hierarchy Logic
+        if (!payload.thumbnailImage && videoId) {
+            payload.thumbnailImage = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        }
     }
 
     // Priority 3: Final Fallback Placeholder
@@ -40,42 +40,44 @@ const createMediaIntoDB = async (payload: Partial<IMedia>) => {
  * Logic: Implements precise pagination math, text search, and multi-field filtering.
  */
 const getAllMediaFromDB = async (query: Record<string, unknown>) => {
-    const { searchTerm, mediaType, isFeatured, isPublished, page = 1, limit = 10 } = query;
-
+    const { searchTerm, mediaType, category, isFeatured, isPublished, page = 1, limit = 10 } = query;
     const queryBuilder: any = {};
 
-    // Logic 1: Search Logic (Partial match on title or description)
+    // Logic 1: Enhanced Search (Now includes Category)
     if (searchTerm) {
         queryBuilder.$or = [
             { title: { $regex: searchTerm, $options: 'i' } },
             { description: { $regex: searchTerm, $options: 'i' } },
+            { category: { $regex: searchTerm, $options: 'i' } }, // Now searches category names too
         ];
     }
 
     // Logic 2: Filter Logic
-    // Matches the exact enum types: 'video' | 'podcast' | 'event-recording' etc.
     if (mediaType) {
-        queryBuilder.mediaType = mediaType;
+        const mediaTypes = (mediaType as string).split(',').map(t => t.trim());
+        queryBuilder.mediaType = { $in: mediaTypes };
     }
 
-    // Handle boolean strings from URL query params safely
+    if (category) {
+        const categories = (category as string).split(',').map(c => c.trim());
+        queryBuilder.category = { $in: categories };
+    }
+
+    // Logic 3: Status Filtering
     if (isFeatured !== undefined) {
         queryBuilder.isFeatured = isFeatured === 'true';
     }
-
     if (isPublished !== undefined) {
         queryBuilder.isPublished = isPublished === 'true';
     }
 
-    // Logic 3: Elite Pagination Math
-    // Use Math.abs to ensure numbers are positive; fallback to defaults if NaN
+    // Logic 4: Pagination & Execution
     const currentPage = Math.abs(Number(page)) || 1;
     const currentLimit = Math.abs(Number(limit)) || 10;
     const skip = (currentPage - 1) * currentLimit;
 
-    // Optimized execution: lean() removes Mongoose overhead for read-only ops
     const result = await Media.find(queryBuilder)
-        .sort({ createdAt: -1 }) // Newest content first
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(currentLimit)
         .lean();
@@ -97,42 +99,14 @@ const getAllMediaFromDB = async (query: Record<string, unknown>) => {
 
 /**
  * Service: Update Media
- * Logic: Re-calculates thumbnails if URL changes and ensures data consistency.
  */
 const updateMediaInDB = async (id: string, payload: Partial<IMedia>): Promise<IMedia | null> => {
-    // Logic 1: Check if the media exists first
     const isExist = await Media.findById(id);
     if (!isExist) {
         throw new AppError('Media post not found', httpStatus.NOT_FOUND);
     }
 
-    // Logic 2: Re-run YouTube Thumbnail Logic if contentUrl is updated
-    if (payload.contentUrl || payload.sourceType) {
-        const finalUrl = payload.contentUrl || isExist.contentUrl;
-        const finalSourceType = payload.sourceType || isExist.sourceType;
-
-        const youtubeRegex = /(?:youtube\.com\/(?:[^]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\s]{11})/i;
-
-        if (finalSourceType === 'URL') {
-            const match = finalUrl.match(youtubeRegex);
-            const videoId = match ? match[1] : null;
-
-            // Only auto-update thumbnail if the URL changed and no new thumbnail was provided
-            if (videoId && !payload.thumbnailImage) {
-                payload.thumbnailImage = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-            }
-        }
-
-        // Logic 3: Consistency Check for File updates
-        // if (finalSourceType === 'FILE' && !finalUrl.startsWith('http')) {
-        //     throw new AppError(
-        //         'A valid cloud storage URL is required for FILE source types.',
-        //         httpStatus.BAD_REQUEST,
-        //     );
-        // }
-    }
-
-    // Logic 4: Handle Title Duplicates (if title is being changed)
+    // Handle Title Duplicates
     if (payload.title && payload.title !== isExist.title) {
         const isTitleTaken = await Media.findOne({ title: payload.title });
         if (isTitleTaken) {
