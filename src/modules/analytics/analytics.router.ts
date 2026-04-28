@@ -23,6 +23,7 @@ const router = Router();
 router.get("/course", analyticsController.getCourserAnalytics);
 router.get("/dashboard", analyticsController.dashboardAnalytics);
 router.get("/chat", analyticsController.chatAnalytics);
+router.get("/activity", analyticsController.recentActivity);
 
 const analyticsRouter = router;
 export default analyticsRouter;

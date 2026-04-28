@@ -36,10 +36,24 @@ const chatAnalytics = catchAsync(async (req, res) => {
   });
 });
 
+
+const recentActivity = catchAsync(async (req, res) => {
+  const result = await analyticsService.recentActivity();
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Courses retrieved successfully",
+    data: result,
+  });
+});
+
+
 const analyticsController = {
   getCourserAnalytics,
   dashboardAnalytics,
   chatAnalytics,
+  recentActivity,
 };
 
 export default analyticsController;
