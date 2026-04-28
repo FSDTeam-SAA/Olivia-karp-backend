@@ -186,80 +186,62 @@ const dashboardAnalytics = async () => {
 
 const chatAnalytics = async (query: any) => {
   const type = query.type || "monthly";
+  const selectedYear = Number(query.year) || new Date().getFullYear();
+
   const now = new Date();
 
   let startDate: Date;
-  let labels: string[] = [];
+  let endDate: Date;
+
   let groupStage: any;
-  let formatKey = "month";
 
-
+  // ===============================
+  // WEEKLY
+  // ===============================
   if (type === "weekly") {
-    startDate = new Date();
-    startDate.setDate(now.getDate() - 7);
-
-    labels = [
-      "sunday",
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-    ];
+    startDate = new Date(selectedYear, 0, 1); // Jan 1
+    endDate = new Date(selectedYear, 11, 31, 23, 59, 59, 999); // Dec 31
 
     groupStage = {
       day: { $dayOfWeek: "$createdAt" },
     };
-
-    formatKey = "day";
   }
 
-
+  // ===============================
+  // YEARLY
+  // ===============================
   else if (type === "yearly") {
-    startDate = new Date();
-    startDate.setFullYear(now.getFullYear() - 5);
+    startDate = new Date(selectedYear - 5, 0, 1);
+    endDate = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
 
     groupStage = {
       year: { $year: "$createdAt" },
     };
-
-    formatKey = "year";
   }
 
-
+  // ===============================
+  // MONTHLY
+  // ===============================
   else {
-    startDate = new Date(now.getFullYear(), 0, 1);
-
-    labels = [
-      "january",
-      "february",
-      "march",
-      "april",
-      "may",
-      "june",
-      "july",
-      "august",
-      "september",
-      "october",
-      "november",
-      "december",
-    ];
+    startDate = new Date(selectedYear, 0, 1);
+    endDate = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
 
     groupStage = {
       month: { $month: "$createdAt" },
     };
-
-    formatKey = "month";
   }
 
+  // যদি future year হয়
+  if (selectedYear > now.getFullYear()) {
+    endDate = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
+  }
 
   const rawData = await User.aggregate([
     {
       $match: {
         createdAt: {
           $gte: startDate,
-          $lte: now,
+          $lte: endDate,
         },
       },
     },
@@ -271,9 +253,11 @@ const chatAnalytics = async (query: any) => {
     },
   ]);
 
-
   const result: any = {};
 
+  // ===============================
+  // WEEKLY
+  // ===============================
   if (type === "weekly") {
     const weekMap = [
       "sunday",
@@ -294,6 +278,9 @@ const chatAnalytics = async (query: any) => {
     });
   }
 
+  // ===============================
+  // MONTHLY
+  // ===============================
   else if (type === "monthly") {
     const monthMap = [
       "january",
@@ -315,21 +302,27 @@ const chatAnalytics = async (query: any) => {
 
       result[month] = {
         totalUser: found ? found.totalUser : 0,
-        year: now.getFullYear(),
+        year: selectedYear,
       };
     });
   }
 
+  // ===============================
+  // YEARLY
+  // ===============================
   else if (type === "yearly") {
-    rawData.forEach((item: any) => {
-      result[item._id.year] = {
-        totalUser: item.totalUser,
+    for (let year = selectedYear - 5; year <= selectedYear; year++) {
+      const found = rawData.find((d: any) => d._id.year === year);
+
+      result[year] = {
+        totalUser: found ? found.totalUser : 0,
       };
-    });
+    }
   }
 
   return {
     type,
+    year: selectedYear,
     data: result,
   };
 };
