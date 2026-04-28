@@ -1,4 +1,6 @@
+import { ApplyBlog } from "../applyBlog/applyBlog.model";
 import Course from "../course/course.model";
+import { CourseIdea } from "../courseIdea/courseIdea.model";
 import EnrollCourse from "../enrollCourse/enrollCourse.model";
 import Job from "../job/job.model";
 import JoinMentorCoach from "../JoinMentorsAndCoache/JoinMentorsAndCoach.model";
@@ -195,9 +197,7 @@ const chatAnalytics = async (query: any) => {
 
   let groupStage: any;
 
-  // ===============================
-  // WEEKLY
-  // ===============================
+
   if (type === "weekly") {
     startDate = new Date(selectedYear, 0, 1); // Jan 1
     endDate = new Date(selectedYear, 11, 31, 23, 59, 59, 999); // Dec 31
@@ -327,10 +327,113 @@ const chatAnalytics = async (query: any) => {
   };
 };
 
+
+const recentActivity = async () => {
+  const limitPerCollection = 10;
+
+  const [blogs, courseIdeas, jobs] = await Promise.all([
+    // =====================================
+    // BLOG => ONLY PENDING
+    // =====================================
+    ApplyBlog.find({
+      status: { $regex: /^pending$/i },
+    })
+      .sort({ createdAt: -1 })
+      .limit(limitPerCollection)
+      .populate("user", "fullName firstName lastName name")
+      .lean(),
+
+    // =====================================
+    // COURSE => ONLY PENDING
+    // =====================================
+    CourseIdea.find({
+      status: { $regex: /^pending$/i },
+    })
+      .sort({ createdAt: -1 })
+      .limit(limitPerCollection)
+      .populate("submittedBy", "fullName firstName lastName name")
+      .lean(),
+
+    // =====================================
+    // JOB / MENTOR => ONLY NOT APPROVED
+    // =====================================
+    JoinMentorCoach.find({
+      isApproved: false,
+    })
+      .sort({ createdAt: -1 })
+      .limit(limitPerCollection)
+      .lean(),
+  ]);
+
+  // =====================================
+  // BLOG FORMAT
+  // =====================================
+  const blogActivities = blogs.map((item: any) => ({
+    _id: item._id,
+    title: item.title,
+    type: "Blog",
+    submittedBy:
+      item.user?.fullName ||
+      item.user?.name ||
+      `${item.user?.firstName || ""} ${item.user?.lastName || ""}`.trim() ||
+      "Unknown User",
+    date: item.createdAt,
+    status: "Pending",
+  }));
+
+  // =====================================
+  // COURSE FORMAT
+  // =====================================
+  const courseActivities = courseIdeas.map((item: any) => ({
+    _id: item._id,
+    title: item.title,
+    type: "Course",
+    submittedBy:
+      item.submittedBy?.fullName ||
+      item.submittedBy?.name ||
+      `${item.submittedBy?.firstName || ""} ${
+        item.submittedBy?.lastName || ""
+      }`.trim() ||
+      item.yourName ||
+      "Unknown User",
+    date: item.createdAt,
+    status: "Pending",
+  }));
+
+  // =====================================
+  // JOB FORMAT
+  // =====================================
+  const jobActivities = jobs.map((item: any) => ({
+    _id: item._id,
+    title: `${item.type === "mentor" ? "Mentor" : "Coach"} Application`,
+    type: "Job",
+    submittedBy: `${item.firstName || ""} ${item.lastName || ""}`.trim(),
+    date: item.createdAt,
+    status: "Pending",
+  }));
+
+  // =====================================
+  // MERGE + SORT
+  // =====================================
+  const merged = [
+    ...blogActivities,
+    ...courseActivities,
+    ...jobActivities,
+  ].sort(
+    (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
+
+  // latest 5 only
+  return merged.slice(0, 5);
+};
+
+
+
 const analyticsService = {
   getCourserAnalytics,
   dashboardAnalytics,
   chatAnalytics,
+  recentActivity,
 };
 
 export default analyticsService;
