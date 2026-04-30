@@ -332,9 +332,6 @@ const recentActivity = async () => {
   const limitPerCollection = 10;
 
   const [blogs, courseIdeas, jobs] = await Promise.all([
-    // =====================================
-    // BLOG => ONLY PENDING
-    // =====================================
     ApplyBlog.find({
       status: { $regex: /^pending$/i },
     })
@@ -343,9 +340,7 @@ const recentActivity = async () => {
       .populate("user", "fullName firstName lastName name")
       .lean(),
 
-    // =====================================
-    // COURSE => ONLY PENDING
-    // =====================================
+
     CourseIdea.find({
       status: { $regex: /^pending$/i },
     })
@@ -354,9 +349,6 @@ const recentActivity = async () => {
       .populate("submittedBy", "fullName firstName lastName name")
       .lean(),
 
-    // =====================================
-    // JOB / MENTOR => ONLY NOT APPROVED
-    // =====================================
     JoinMentorCoach.find({
       isApproved: false,
     })
@@ -365,9 +357,6 @@ const recentActivity = async () => {
       .lean(),
   ]);
 
-  // =====================================
-  // BLOG FORMAT
-  // =====================================
   const blogActivities = blogs.map((item: any) => ({
     _id: item._id,
     title: item.title,
@@ -381,9 +370,6 @@ const recentActivity = async () => {
     status: "Pending",
   }));
 
-  // =====================================
-  // COURSE FORMAT
-  // =====================================
   const courseActivities = courseIdeas.map((item: any) => ({
     _id: item._id,
     title: item.title,
@@ -400,9 +386,6 @@ const recentActivity = async () => {
     status: "Pending",
   }));
 
-  // =====================================
-  // JOB FORMAT
-  // =====================================
   const jobActivities = jobs.map((item: any) => ({
     _id: item._id,
     title: `${item.type === "mentor" ? "Mentor" : "Coach"} Application`,
@@ -412,9 +395,7 @@ const recentActivity = async () => {
     status: "Pending",
   }));
 
-  // =====================================
-  // MERGE + SORT
-  // =====================================
+
   const merged = [
     ...blogActivities,
     ...courseActivities,
@@ -423,7 +404,6 @@ const recentActivity = async () => {
     (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
-  // latest 5 only
   return merged.slice(0, 5);
 };
 

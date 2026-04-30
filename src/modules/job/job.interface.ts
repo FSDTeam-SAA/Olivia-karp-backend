@@ -42,4 +42,7 @@ export interface IJob {
     currency: string;
     period: "hour" | "day" | "month" | "year";
   };
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }

@@ -210,12 +210,34 @@ const toggleJobStatus = async (jobId: string, payload: { status: string }) => {
   return updatedJob;
 };
 
+
+const toggleToDeleted = async (jobId: string) => {
+  const job = await Job.findById(jobId);
+
+  if (!job) {
+    throw new AppError("Job not found", StatusCodes.NOT_FOUND);
+  }
+
+  const updatedJob = await Job.findByIdAndUpdate(
+    jobId,
+    {
+      isDeleted: !job.isDeleted,
+    },
+    { new: true, runValidators: true },
+  );
+
+  return updatedJob;
+};
+
+
+
 const JobService = {
   createNewJob,
   getAllJobs,
   getSingleJob,
   updateJob,
   toggleJobStatus,
+  toggleToDeleted,
 };
 
 export default JobService;
