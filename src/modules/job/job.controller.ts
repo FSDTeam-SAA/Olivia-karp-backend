@@ -88,12 +88,27 @@ const toggleJobStatus = catchAsync(async (req, res) => {
   });
 });
 
+
+const toggleToDeleted = catchAsync(async (req, res) => {
+  const { jobId } = req.params;
+  const result = await JobService.toggleToDeleted(jobId);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Job deleted successfully",
+    data: result,
+  });
+});
+
+
 const JobController = {
   createNewJob,
   getAllJobs,
   getSingleJob,
   updateJob,
   toggleJobStatus,
+  toggleToDeleted,
 };
 
 export default JobController;

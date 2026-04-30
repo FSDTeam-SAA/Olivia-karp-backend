@@ -94,9 +94,14 @@ const getAllJobs = async (query: Record<string, any>) => {
       }
     : {};
 
+  const finalQuery = {
+    ...searchCondition,
+    isDeleted: false, 
+  };
+
   const [jobs, total] = await Promise.all([
-    Job.find(searchCondition).skip(skip).limit(limit).lean(),
-    Job.countDocuments(searchCondition),
+    Job.find(finalQuery).skip(skip).limit(limit).lean(),
+    Job.countDocuments(finalQuery),
   ]);
 
   return {
@@ -210,12 +215,34 @@ const toggleJobStatus = async (jobId: string, payload: { status: string }) => {
   return updatedJob;
 };
 
+
+const toggleToDeleted = async (jobId: string) => {
+  const job = await Job.findById(jobId);
+
+  if (!job) {
+    throw new AppError("Job not found", StatusCodes.NOT_FOUND);
+  }
+
+  const updatedJob = await Job.findByIdAndUpdate(
+    jobId,
+    {
+      isDeleted: !job.isDeleted,
+    },
+    { new: true, runValidators: true },
+  );
+
+  return updatedJob;
+};
+
+
+
 const JobService = {
   createNewJob,
   getAllJobs,
   getSingleJob,
   updateJob,
   toggleJobStatus,
+  toggleToDeleted,
 };
 
 export default JobService;

@@ -55,6 +55,7 @@ const jobSchema = new Schema<IJob>(
         required: true,
       },
     },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true, versionKey: false },
 );

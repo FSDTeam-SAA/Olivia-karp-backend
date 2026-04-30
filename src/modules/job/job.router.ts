@@ -200,6 +200,7 @@ router.put(
  *         description: Job status updated successfully
  */
 router.put("/:jobId", JobController.toggleJobStatus);
+router.put("/delete/:jobId", JobController.toggleToDeleted);
 
 const jobRouter = router;
 export default jobRouter;
