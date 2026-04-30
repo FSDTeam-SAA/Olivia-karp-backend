@@ -94,9 +94,14 @@ const getAllJobs = async (query: Record<string, any>) => {
       }
     : {};
 
+  const finalQuery = {
+    ...searchCondition,
+    isDeleted: false, 
+  };
+
   const [jobs, total] = await Promise.all([
-    Job.find(searchCondition).skip(skip).limit(limit).lean(),
-    Job.countDocuments(searchCondition),
+    Job.find(finalQuery).skip(skip).limit(limit).lean(),
+    Job.countDocuments(finalQuery),
   ]);
 
   return {
