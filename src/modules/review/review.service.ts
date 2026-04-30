@@ -93,17 +93,25 @@ const getAllReviewsFromDB = async (query: Record<string, unknown>) => {
 /**
  * Update Review (Approval/Featured status)
  */
-const updateReviewInDB = async (reviewId: string, payload: Partial<IReview>) => {
-    const isExist = await Review.findById(reviewId);
-    if (!isExist) {
-        throw new AppError('Review not found', httpStatus.NOT_FOUND);
-    }
+const updateReviewInDB = async (reviewId: string) => {
+  const review = await Review.findById(reviewId);
 
-    const result = await Review.findByIdAndUpdate(reviewId, payload, {
-        new: true,
-        runValidators: true,
-    });
-    return result;
+  if (!review) {
+    throw new AppError("Review not found", httpStatus.NOT_FOUND);
+  }
+
+  const result = await Review.findByIdAndUpdate(
+    reviewId,
+    {
+      isApproved: !review.isApproved,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  return result;
 };
 
 /**
