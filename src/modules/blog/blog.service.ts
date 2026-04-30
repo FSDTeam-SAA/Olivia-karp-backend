@@ -176,16 +176,6 @@ const deleteBlogFromDB = async (blogId: string): Promise<IBlog | null> => {
         throw new AppError('Blog post not found', httpStatus.NOT_FOUND);
     }
 
-    // Clean up Thumbnail from Cloudinary
-    if (isExist.thumbnailImage?.public_id) {
-        await deleteFromCloudinary(isExist.thumbnailImage.public_id);
-    }
-
-    // Clean up Author Profile Image from Cloudinary
-    if (isExist.author?.profileImage?.public_id) {
-        await deleteFromCloudinary(isExist.author.profileImage.public_id);
-    }
-
     return await Blog.findByIdAndDelete(blogId);
 };
 
