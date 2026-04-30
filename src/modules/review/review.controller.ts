@@ -61,15 +61,16 @@ const getAllReviews = catchAsync(async (req: Request, res: Response) => {
  * Admin: Update review status (Approve or Feature)
  */
 const updateReviewStatus = catchAsync(async (req: Request, res: Response) => {
-    const { reviewId } = req.params;
-    const result = await ReviewService.updateReviewInDB(reviewId, req.body);
+  const { reviewId } = req.params;
 
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: 'Review updated successfully.',
-        data: result,
-    });
+  const result = await ReviewService.updateReviewInDB(reviewId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Review status toggled successfully.",
+    data: result,
+  });
 });
 
 /**
