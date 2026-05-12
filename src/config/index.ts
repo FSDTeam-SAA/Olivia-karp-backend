@@ -38,6 +38,12 @@ export default {
     beehiiv_publication_id: process.env.BEEHIIV_PUBLICATION_ID,
   },
 
+  mighty: {
+    mighty_webhook_secret: process.env.MIGHTY_WEBHOOK_SECRET,
+    mighty_api_key: process.env.MIGHTY_API_KEY,
+    mighty_community_url: process.env.MIGHTY_COMMUNITY_URL,
+  },
+
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,

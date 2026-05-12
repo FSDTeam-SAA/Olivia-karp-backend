@@ -18,6 +18,9 @@ export interface IUser {
   postalCode: string;
   dateOfBirth: Date;
   role: string;
+  mightyMemberId?: string; // New: To link to MN account
+  memberSince?: Date;      // New: To track upgrade date
+  last_mn_sync?: Date;
   image: {
     public_id: string;
     url: string;

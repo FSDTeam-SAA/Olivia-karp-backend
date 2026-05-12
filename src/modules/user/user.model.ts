@@ -43,6 +43,19 @@ const userSchema = new Schema<IUser>(
       enum: ["admin", "non-member", "member"],
       default: "non-member",
     },
+    // ⬇️ ADD THESE TWO FIELDS ⬇️
+    mightyMemberId: {
+      type: String,
+      default: null,
+    },
+    memberSince: {
+      type: Date,
+      default: null,
+    },
+    last_mn_sync: {
+      type: Date,
+      default: null,
+    },
     image: {
       public_id: {
         type: String, 

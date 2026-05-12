@@ -26,6 +26,7 @@ import analyticsRouter from "../modules/analytics/analytics.router";
 import notificationRouter from "../modules/notification/notification.router";
 import { OpportunityRoutes } from "../modules/oppurtunity/opportunity.routes";
 import teamRoutes from "../modules/team/team.routes";
+import { mightyRoutes } from "../modules/mighty/mighty.route";
 
 
 const router = Router();
@@ -134,8 +135,11 @@ const moduleRoutes = [
   {
     path: "/team",
     route: teamRoutes,
+  },
+  {
+    path: "/mighty",
+    route: mightyRoutes,
   }
-
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
