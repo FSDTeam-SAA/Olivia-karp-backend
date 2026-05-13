@@ -8,7 +8,6 @@ export type TMediaType = 'url' | 'audio' | 'files';
 
 export type TCategory =
     | 'video'
-    | 'interest-a-being-speaker'
     | 'event-recording'
     | 'expert-interview'
     | 'insight'
