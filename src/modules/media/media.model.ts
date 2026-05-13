@@ -17,7 +17,6 @@ const mediaSchema = new Schema<IMedia>(
             type: String,
             enum: [
                 'video',
-                'interest-being-speaker',
                 'event-recording',
                 'expert-interview',
                 'insight',

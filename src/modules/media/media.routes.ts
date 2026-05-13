@@ -37,7 +37,7 @@ const router = express.Router();
  *         name: category
  *         schema:
  *           type: string
- *           enum: ['video', 'podcast', 'event-recording', 'expert-interview', 'insight', 'blog', 'resource']
+ *           enum: ['video', 'event-recording', 'expert-interview', 'insight', 'community']
  *         description: Filter by category
  *       - in: query
  *         name: isFeatured
@@ -109,7 +109,7 @@ router.get('/get-single-media/:mediaId', MediaController.getSingleMedia);
  *                 enum: ['url', 'audio', 'files']
  *               category:
  *                 type: string
- *                 enum: ['video', 'podcast', 'event-recording', 'expert-interview', 'insight', 'blog', 'resource']
+ *                 enum: ['video', 'event-recording', 'expert-interview', 'insight', 'community']
  *               contentUrl:
  *                 type: string
  *                 description: Required if mediaType is 'url'
@@ -168,7 +168,7 @@ router.post(
  *                 enum: ['url', 'audio', 'files']
  *               category:
  *                 type: string
- *                 enum: ['video', 'podcast', 'event-recording', 'expert-interview', 'insight', 'blog', 'resource']
+ *                 enum: ['video', 'event-recording', 'expert-interview', 'insight', 'community']
  *               contentUrl:
  *                 type: string
  *               mediaFile:

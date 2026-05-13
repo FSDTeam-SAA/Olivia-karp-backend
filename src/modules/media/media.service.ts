@@ -54,21 +54,25 @@ const getAllMediaFromDB = async (query: Record<string, unknown>) => {
 
     // Logic 2: Filter Logic
     if (mediaType) {
-        const mediaTypes = (mediaType as string).split(',').map(t => t.trim());
+        const mediaTypes = Array.isArray(mediaType)
+            ? mediaType
+            : (mediaType as string).split(',').map((t) => t.trim());
         queryBuilder.mediaType = { $in: mediaTypes };
     }
 
     if (category) {
-        const categories = (category as string).split(',').map(c => c.trim());
+        const categories = Array.isArray(category)
+            ? category
+            : (category as string).split(',').map((c) => c.trim());
         queryBuilder.category = { $in: categories };
     }
 
     // Logic 3: Status Filtering
     if (isFeatured !== undefined) {
-        queryBuilder.isFeatured = isFeatured === 'true';
+        queryBuilder.isFeatured = String(isFeatured) === 'true';
     }
     if (isPublished !== undefined) {
-        queryBuilder.isPublished = isPublished === 'true';
+        queryBuilder.isPublished = String(isPublished) === 'true';
     }
 
     // Logic 4: Pagination & Execution

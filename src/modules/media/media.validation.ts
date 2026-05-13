@@ -6,12 +6,10 @@ const createMediaValidationSchema = z.object({
         mediaType: z.enum(['url', 'audio', 'files']),
         category: z.enum([
             'video',
-            'podcast',
             'event-recording',
             'expert-interview',
             'insight',
-            'blog',
-            'resource'
+            'community'
         ]),
         contentUrl: z.string().optional(),
         description: z.string({ required_error: 'Description is required' }),
@@ -26,8 +24,11 @@ const updateMediaValidationSchema = z.object({
         title: z.string().optional(),
         mediaType: z.enum(['url', 'audio', 'files']).optional(),
         category: z.enum([
-            'video', 'podcast', 'event-recording',
-            'expert-interview', 'insight', 'blog', 'resource'
+            'video',
+            'event-recording',
+            'expert-interview',
+            'insight',
+            'community'
         ]).optional(),
         contentUrl: z.string().optional(),
         description: z.string().optional(),
