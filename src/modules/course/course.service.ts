@@ -132,9 +132,21 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
     finalData = data.map((course: any) => {
       const price = course.price || 0;
       const isEnrolled = enrolledCourseIds.includes(course._id.toString());
+      const isLocked = price > 0 && !isEnrolled && !hasFreeCourseAccess;
+
+      const lockedLessons = course.lessons
+        ? course.lessons.map((lesson: any) => {
+            if (isLocked) {
+              return { ...lesson, videoUrl: "LOCKED" };
+            }
+            return lesson;
+          })
+        : [];
+
       return {
         ...course,
-        isLocked: price > 0 && !isEnrolled && !hasFreeCourseAccess,
+        lessons: lockedLessons,
+        isLocked,
       };
     });
   }
@@ -181,15 +193,13 @@ const getSingleCourse = async (id: string, user?: any) => {
     }
   }
 
-  result.isLocked = !hasAccess && (result.price || 0) > 0;
+  const isLocked = !hasAccess && (result.price || 0) > 0;
+  result.isLocked = isLocked;
 
-  if (!hasAccess) {
+  if (isLocked) {
     if (result.lessons) {
       result.lessons = result.lessons.map((lesson: any) => {
-        // Assume true unless explicitly set to false to secure old courses!
-        if (lesson.isLocked !== false) {
-          lesson.videoUrl = "LOCKED";
-        }
+        lesson.videoUrl = "LOCKED";
         return lesson;
       });
     }
