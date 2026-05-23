@@ -45,7 +45,7 @@ const registerUser = async (payload: IUser) => {
       ...payload,
       otp: hashedOtp,
       otpExpires,
-      isVerified: false,
+      isVerified: true,
     });
   }
 
