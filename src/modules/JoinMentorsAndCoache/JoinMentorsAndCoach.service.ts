@@ -194,7 +194,8 @@ const toggleMentorAndCoachActive = async (id: string) => {
 };
 
 const bulkUploadMentorsAndCoaches = async (file: Express.Multer.File) => {
-  const csvText = fs.readFileSync(file.path, "utf-8");
+  const rawCsvText = fs.readFileSync(file.path, "utf-8");
+  const csvText = rawCsvText.replace(/^\uFEFF/, "");
 
   // Clean up the uploaded temp file after reading
   try {
@@ -211,7 +212,45 @@ const bulkUploadMentorsAndCoaches = async (file: Express.Multer.File) => {
     );
   }
 
-  const headers = rows[0].map((h) => h.trim());
+  // Header normalization configuration
+  const normalizeKey = (key: string): string => {
+    return key.toLowerCase().replace(/[^a-z0-9]/g, "");
+  };
+
+  const headerMapping: Record<string, string> = {
+    firstname: "firstName",
+    lastname: "lastName",
+    email: "email",
+    phone: "phone",
+    address: "address",
+    designation: "designation",
+    bio: "bio",
+    about: "about",
+    imageurl: "imageUrl",
+    image: "imageUrl",
+    type: "type",
+    skills: "skills",
+    languages: "languages",
+    experienceyears: "experienceYears",
+    yearsofexperience: "experienceYears",
+    linkedin: "linkedin",
+    website: "website",
+    ispaidsession: "isPaidSession",
+    paidsession: "isPaidSession",
+    hourlyrate: "hourlyRate",
+    bookinglink: "bookingLink",
+    motivation: "motivation",
+    goal: "goal",
+    support: "support",
+    experience: "experience",
+  };
+
+  const headers = rows[0].map((h) => {
+    const cleanHeader = h.trim();
+    const normalized = normalizeKey(cleanHeader);
+    return headerMapping[normalized] || cleanHeader;
+  });
+
   const dataRows = rows.slice(1);
 
   const errors: string[] = [];
@@ -277,9 +316,9 @@ const bulkUploadMentorsAndCoaches = async (file: Express.Multer.File) => {
 
       // Parse isPaidSession
       const isPaidSession =
-        rawData.isPaidSession.toLowerCase() === "true" ||
-        rawData.isPaidSession === "1" ||
-        rawData.isPaidSession.toLowerCase() === "yes";
+        String(rawData.isPaidSession).toLowerCase() === "true" ||
+        String(rawData.isPaidSession) === "1" ||
+        String(rawData.isPaidSession).toLowerCase() === "yes";
 
       // Parse arrays (skills, languages)
       const skills = rawData.skills
