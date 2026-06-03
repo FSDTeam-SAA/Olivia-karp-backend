@@ -251,7 +251,7 @@ router.put(
  *                       type: array
  *                       items:
  *                         type: string
- *                         example: Row 3: Missing required field "firstName"
+ *                         example: 'Row 3: Missing required field "firstName"'
  */
 router.post(
   "/bulk-upload",
