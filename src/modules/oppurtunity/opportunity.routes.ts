@@ -16,10 +16,8 @@ const router = express.Router();
  * @swagger
  * /api/v1/opportunity/submit:
  *   post:
- *     summary: Submit a new opportunity (Member/Non-Member)
+ *     summary: Submit a new opportunity (Public)
  *     tags: [Opportunity]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -57,12 +55,9 @@ const router = express.Router();
  *     responses:
  *       201:
  *         description: Opportunity submitted successfully for review
- *       401:
- *         description: Unauthorized
  */
 router.post(
     "/submit",
-    // auth(USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
     opportunityController.submitOpportunity
 );
 

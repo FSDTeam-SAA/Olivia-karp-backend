@@ -5,7 +5,7 @@ import { opportunityService } from "./opportunity.service";
 import httpStatus from "http-status";
 
 const submitOpportunity = catchAsync(async (req: Request, res: Response) => {
-    const userId = (req.user as any)._id; // From auth middleware
+    const userId = (req as any).user?._id; // From auth middleware if present
     const result = await opportunityService.submitOpportunityIntoDB({
         ...req.body,
         submittedBy: userId,
