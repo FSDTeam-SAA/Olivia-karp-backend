@@ -62,7 +62,7 @@ const router = express.Router();
  */
 router.post(
     "/submit",
-    auth(USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+    // auth(USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
     opportunityController.submitOpportunity
 );
 
