@@ -1,20 +1,20 @@
-import { StatusCodes } from "http-status-codes";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import courseService from "./course.service";
-import httpStatus from "http-status";
-import { Request, Response } from "express";
+import { StatusCodes } from 'http-status-codes';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import courseService from './course.service';
+import httpStatus from 'http-status';
+import { Request, Response } from 'express';
 
 const CreateNewCourse = catchAsync(async (req: Request, res: Response) => {
   // Cast req.files to the Record type for .fields() support
   const files = req.files as Record<string, Express.Multer.File[]>;
-  
+
   const result = await courseService.CreateNewCourse(req.body, files);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: "Course created successfully",
+    message: 'Course created successfully',
     data: result,
   });
 });
@@ -24,7 +24,18 @@ const getAllCourses = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Courses retrieved successfully",
+    message: 'Courses retrieved successfully',
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
+const getAllCoursesAdmin = catchAsync(async (req: Request, res: Response) => {
+  const result = await courseService.getAllCoursesAdmin(req.query, (req as any).user);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Courses retrieved successfully',
     meta: result.meta,
     data: result.data,
   });
@@ -35,7 +46,7 @@ const getSingleCourse = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Course retrieved successfully",
+    message: 'Course retrieved successfully',
     data: result,
   });
 });
@@ -46,7 +57,7 @@ const updateCourse = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Course updated successfully",
+    message: 'Course updated successfully',
     data: result,
   });
 });
@@ -56,7 +67,7 @@ const updateCourseAvailability = catchAsync(async (req: Request, res: Response) 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Availability toggled successfully",
+    message: 'Availability toggled successfully',
     data: result,
   });
 });
@@ -67,5 +78,6 @@ const courseController = {
   getSingleCourse,
   updateCourse,
   updateCourseAvailability,
+  getAllCoursesAdmin,
 };
 export default courseController;
