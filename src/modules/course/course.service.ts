@@ -6,6 +6,40 @@ import { ICourse, IImage, ILesson } from './course.interface';
 import Course from './course.model';
 import purchaseSubscriptionService from '../purchaseSubscription/purchaseSubscription.service';
 
+const COMPLETED_ENROLLMENT_STATUSES = ['completed', 'free'];
+
+const getCourseDurationMinutes = (lessons: ILesson[] = []) =>
+  lessons.reduce((total, lesson) => {
+    const duration = Number.parseInt(String(lesson.duration || '0'), 10);
+    return total + (Number.isNaN(duration) ? 0 : duration);
+  }, 0);
+
+const formatCourseDuration = (minutes: number, fallbackHours?: number) => {
+  if (minutes > 0) {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      return remainingMinutes ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
+    }
+    return `${minutes} min`;
+  }
+
+  if (fallbackHours && fallbackHours > 0) {
+    return `${fallbackHours}h`;
+  }
+
+  return '0 min';
+};
+
+const serializeCourse = (course: any) => {
+  const lessons = course.lessons || [];
+  return {
+    ...course,
+    lessonCount: lessons.length,
+    totalDuration: formatCourseDuration(getCourseDurationMinutes(lessons), course.durationHours),
+  };
+};
+
 const CreateNewCourse = async (
   payload: any,
   files: Record<string, Express.Multer.File[]> | undefined,
@@ -86,6 +120,10 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
 
   const filter: any = {};
 
+  if (user?.role !== 'admin') {
+    filter.isAvailable = true;
+  }
+
   // 1. Efficient Search: Use Text Index if searchTerm exists
   if (searchTerm) {
     filter.$or = [
@@ -116,7 +154,7 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
   let finalData: any = data;
 
   if (user && user.role === 'admin') {
-    finalData = data.map((course: any) => ({ ...course, isLocked: false }));
+    finalData = data.map((course: any) => ({ ...serializeCourse(course), isLocked: false }));
   } else {
     let enrolledCourseIds: string[] = [];
     let hasFreeCourseAccess = false;
@@ -124,7 +162,7 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
     if (user) {
       const enrollments = await EnrollCourse.find({
         userId: user._id || user.id,
-        paymentStatus: 'completed',
+        paymentStatus: { $in: COMPLETED_ENROLLMENT_STATUSES },
       });
       enrolledCourseIds = enrollments.map((e) => e.courseId.toString());
 
@@ -158,9 +196,10 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
         : [];
 
       return {
-        ...course,
+        ...serializeCourse(course),
         lessons: lockedLessons,
         isLocked,
+        isEnrolled,
       };
     });
   }
@@ -180,18 +219,24 @@ const getSingleCourse = async (id: string, user?: any) => {
   const result = await Course.findById(id).lean();
   if (!result) throw new AppError('Course not found', httpStatus.NOT_FOUND);
 
+  if (!result.isAvailable && user?.role !== 'admin') {
+    throw new AppError('Course is not available', httpStatus.NOT_FOUND);
+  }
+
   let hasAccess = false;
+  let isEnrolled = false;
 
   if (user && user.role === 'admin') {
     hasAccess = true;
   } else if (user) {
-    const isEnrolled = await EnrollCourse.findOne({
+    const enrollment = await EnrollCourse.findOne({
       userId: user._id || user.id,
       courseId: id,
-      paymentStatus: 'completed',
+      paymentStatus: { $in: COMPLETED_ENROLLMENT_STATUSES },
     });
-    if (isEnrolled) {
+    if (enrollment) {
       hasAccess = true;
+      isEnrolled = true;
     } else {
       try {
         const benefits = await purchaseSubscriptionService.getUserBenefits(
@@ -211,6 +256,7 @@ const getSingleCourse = async (id: string, user?: any) => {
 
   const isLocked = !hasAccess && (result.price || 0) > 0;
   result.isLocked = isLocked;
+  (result as any).isEnrolled = isEnrolled;
 
   if (isLocked) {
     if (result.lessons) {
@@ -221,7 +267,7 @@ const getSingleCourse = async (id: string, user?: any) => {
     }
   }
 
-  return result;
+  return serializeCourse(result);
 };
 
 const updateCourse = async (

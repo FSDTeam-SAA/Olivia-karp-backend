@@ -39,7 +39,14 @@ const router = Router();
  */
 router.post(
   "/create",
-  auth(USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.MEMBER,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER,
+  ),
   enrollCourseController.createEnrollCourse,
 );
 /**
@@ -52,7 +59,18 @@ router.post(
  *        200:
  *          description: Successfully retrieved user's enrollments
  */
-router.get("/my-enrollments", auth(USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER), enrollCourseController.getMyEnrollments);
+router.get(
+  "/my-enrollments",
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.MEMBER,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER,
+  ),
+  enrollCourseController.getMyEnrollments,
+);
 
 /**
  * @swagger
@@ -74,11 +92,17 @@ router.get("/my-enrollments", auth(USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER), enro
  */
 router.get(
   "/verify-payment",
-  auth(USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.MEMBER,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER,
+  ),
   enrollCourseController.verifyPayment,
 );
 
 const enrollCourseRouter = router;
 export default enrollCourseRouter;
-
 
