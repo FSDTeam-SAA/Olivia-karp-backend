@@ -1,4 +1,6 @@
 import { StatusCodes } from "http-status-codes";
+import httpStatus from "http-status";
+import AppError from "../../errors/AppError";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import enrollCourseService from "./enrollCourse.service";
@@ -33,7 +35,10 @@ const verifyPayment = catchAsync(async (req, res) => {
   const { session_id } = req.query;
 
   if (!session_id) {
-    throw new Error("Session ID is required for verification.");
+    throw new AppError(
+      "Session ID is required for verification.",
+      httpStatus.BAD_REQUEST,
+    );
   }
 
   const result = await enrollCourseService.verifyPaymentStatus(session_id as string);
