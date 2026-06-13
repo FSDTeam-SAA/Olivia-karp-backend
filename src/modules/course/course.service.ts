@@ -8,7 +8,9 @@ import purchaseSubscriptionService from '../purchaseSubscription/purchaseSubscri
 
 const COMPLETED_ENROLLMENT_STATUSES = ['completed', 'free'];
 
-const getCourseDurationMinutes = (lessons: ILesson[] = []) =>
+type ILessonWithDuration = ILesson & { duration?: number | string };
+
+const getCourseDurationMinutes = (lessons: ILessonWithDuration[] = []) =>
   lessons.reduce((total, lesson) => {
     const duration = Number.parseInt(String(lesson.duration || '0'), 10);
     return total + (Number.isNaN(duration) ? 0 : duration);
