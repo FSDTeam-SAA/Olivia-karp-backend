@@ -7,20 +7,13 @@ import hpp from "hpp";
 
 // Global rate limiter
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
-  max: 150,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: "Too many requests, try again later.",
+  windowMs: 15 * 60 * 1000,
+  max: 100000,
 });
 
-// Login-specific rate limiter
 export const loginLimiter = rateLimit({
   windowMs: 20 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: "Too many login attempts, try again later.",
+  max: 100000,
 });
 
 // CORS options
