@@ -83,9 +83,6 @@ const CreateNewCourse = async (
   const lessonsData: ILesson[] = lessons.map((lesson) => ({
     title: lesson.title,
     videoUrl: lesson.videoUrl,
-    duration: lesson.duration,
-    level: lesson.level,
-    isLocked: lesson.isLocked ?? true,
   }));
 
   /* ---------------- Final Course Payload ---------------- */
@@ -104,6 +101,7 @@ const CreateNewCourse = async (
     price: Number(payload.price) || 0,
     currency: payload.currency || 'CAD',
     totalEnrolled: 0,
+    courseBoxUrl: payload.courseBoxUrl || '',
   };
 
   /* ---------------- Save ---------------- */
@@ -112,6 +110,105 @@ const CreateNewCourse = async (
 };
 
 const getAllCourses = async (query: Record<string, any>, user?: any) => {
+  const { page = 1, limit = 10, searchTerm, category, sort } = query;
+
+  const pageNumber = Math.max(Number(page), 1);
+  const limitNumber = Math.max(Number(limit), 1);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const filter: any = { isAvailable: true };
+
+  // 1. Efficient Search: Use Text Index if searchTerm exists
+  if (searchTerm) {
+    filter.$or = [
+      { title: { $regex: searchTerm, $options: 'i' } },
+      { category: { $regex: searchTerm, $options: 'i' } },
+    ];
+  }
+
+  // 2. Exact Category Filter: Avoid regex for fixed categories
+  if (category && !['all', 'all courses'].includes(category.toLowerCase())) {
+    // Standardize: "Business Courses" -> "Business"
+    const cleanCategory = category.replace(/\s*courses$/i, '').trim();
+
+    // Exact match is much faster than regex
+    filter.category = new RegExp(`^${cleanCategory}$`, 'i');
+  }
+
+  // 3. Optimized Execution: Lean queries and parallel counting
+  const [data, total] = await Promise.all([
+    Course.find(filter)
+      .sort(sort ? sort : { createdAt: -1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .lean(),
+    Course.countDocuments(filter),
+  ]);
+
+  let finalData: any = data;
+
+  if (user && user.role === 'admin') {
+    finalData = data.map((course: any) => ({ ...course, isLocked: false }));
+  } else {
+    let enrolledCourseIds: string[] = [];
+    let hasFreeCourseAccess = false;
+
+    if (user) {
+      const enrollments = await EnrollCourse.find({
+        userId: user._id || user.id,
+        paymentStatus: 'completed',
+      });
+      enrolledCourseIds = enrollments.map((e) => e.courseId.toString());
+
+      try {
+        const benefits = await purchaseSubscriptionService.getUserBenefits(
+          (user._id || user.id).toString(),
+        );
+        if (benefits.hasActiveSubscription) {
+          const accessStatus = benefits.accessLevels?.courses;
+          if (accessStatus === 'free_access' || accessStatus === 'free_unlimited') {
+            hasFreeCourseAccess = true;
+          }
+        }
+      } catch (err) {
+        // Log error and fallback gracefully
+      }
+    }
+
+    finalData = data.map((course: any) => {
+      const price = course.price || 0;
+      const isEnrolled = enrolledCourseIds.includes(course._id.toString());
+      const isLocked = price > 0 && !isEnrolled && !hasFreeCourseAccess;
+
+      const lockedLessons = course.lessons
+        ? course.lessons.map((lesson: any) => {
+            if (isLocked) {
+              return { ...lesson, videoUrl: 'LOCKED' };
+            }
+            return lesson;
+          })
+        : [];
+
+      return {
+        ...course,
+        lessons: lockedLessons,
+        isLocked,
+      };
+    });
+  }
+
+  return {
+    data: finalData,
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPage: Math.ceil(total / limitNumber),
+    },
+  };
+};
+
+const getAllCoursesAdmin = async (query: Record<string, any>, user?: any) => {
   const { page = 1, limit = 10, searchTerm, category, sort } = query;
 
   const pageNumber = Math.max(Number(page), 1);
@@ -282,7 +379,7 @@ const updateCourse = async (
   }
 
   /* ---------------- Lessons Update ---------------- */
-  let lessonsData: ILesson[] = course.lessons;
+  let lessonsData: ILesson[] = course.lessons ?? [];
 
   if (payload.lessons) {
     const lessons: ILesson[] =
@@ -291,9 +388,6 @@ const updateCourse = async (
     lessonsData = lessons.map((lesson) => ({
       title: lesson.title,
       videoUrl: lesson.videoUrl,
-      duration: lesson.duration,
-      level: lesson.level,
-      isLocked: lesson.isLocked ?? true,
     }));
   }
 
@@ -349,6 +443,8 @@ const updateCourse = async (
       payload.isAvailable !== undefined
         ? payload.isAvailable === 'true' || payload.isAvailable === true
         : course.isAvailable,
+
+    courseBoxUrl: payload.courseBoxUrl || course.courseBoxUrl,
   };
 
   /* ---------------- Update DB ---------------- */
@@ -373,5 +469,6 @@ const courseService = {
   getSingleCourse,
   updateCourse,
   updateCourseAvailability,
+  getAllCoursesAdmin,
 };
 export default courseService;

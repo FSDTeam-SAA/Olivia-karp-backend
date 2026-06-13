@@ -107,6 +107,7 @@ router.post(
  *                     type: object
  */
 router.get('/all', optionalAuth(), courseController.getAllCourses);
+router.get('/all-courses', auth(USER_ROLE.ADMIN), courseController.getAllCoursesAdmin);
 
 /**
  * @swagger
