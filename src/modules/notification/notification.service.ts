@@ -1,13 +1,5 @@
-
-import { Server } from "socket.io";
 import mongoose from "mongoose";
-import Notification from "../modules/notification/notification.model";
-
-let io: Server | null = null;
-
-export const initNotificationSocket = (socketIO: Server) => {
-  io = socketIO;
-};
+import Notification from "./notification.model";
 
 export const createNotification = async ({
   to,
@@ -29,11 +21,6 @@ export const createNotification = async ({
     id,
     title,
   });
-
-  // Emit live notification
-  if (io) {
-    io.to(to.toString()).emit("newNotification", notification);
-  }
 
   return notification;
 };
