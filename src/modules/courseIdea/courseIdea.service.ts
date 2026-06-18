@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
-import { createNotification } from "../../socket/notification.service";
+import { createNotification } from "../notification/notification.service";
 import { User } from "../user/user.model";
 import { ICourseIdea } from "./courseIdea.interface";
 import { CourseIdea } from "./courseIdea.model";
