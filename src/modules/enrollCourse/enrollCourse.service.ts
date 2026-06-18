@@ -1,37 +1,74 @@
 import Stripe from "stripe";
+import httpStatus from "http-status";
+import AppError from "../../errors/AppError";
 import Course from "../course/course.model";
 import { User } from "../user/user.model";
 import { IEnrollCourse } from "./enrollCourse.interface";
 import EnrollCourse from "./enrollCourse.model";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const COMPLETED_ENROLLMENT_STATUSES = ["completed", "free"];
 
 const createEnrollCourse = async (payload: IEnrollCourse, email: string) => {
   const user = await User.findOne({ email });
   if (!user) {
-    throw new Error("No account found with the provided credentials.");
+    throw new AppError(
+      "No account found with the provided credentials.",
+      httpStatus.UNAUTHORIZED,
+    );
   }
 
   const course = await Course.findById(payload.courseId);
   if (!course) {
-    throw new Error("Course not found.");
+    throw new AppError("Course not found.", httpStatus.NOT_FOUND);
+  }
+
+  if (!course.isAvailable) {
+    throw new AppError("Course is not available.", httpStatus.BAD_REQUEST);
   }
 
   // Verify if already enrolled
   const existingEnrollment = await EnrollCourse.findOne({
     userId: user._id,
     courseId: course._id,
-    paymentStatus: "completed",
+    paymentStatus: { $in: COMPLETED_ENROLLMENT_STATUSES },
   });
 
   if (existingEnrollment) {
-    throw new Error("You are already enrolled in this course.");
+    throw new AppError(
+      "You are already enrolled in this course.",
+      httpStatus.CONFLICT,
+    );
+  }
+
+  const pendingEnrollment = await EnrollCourse.findOne({
+    userId: user._id,
+    courseId: course._id,
+    paymentStatus: "pending",
+  });
+
+  if (pendingEnrollment?.transactionId) {
+    const session = await stripe.checkout.sessions.retrieve(pendingEnrollment.transactionId);
+
+    if (session.url && session.status === "open") {
+      return { result: pendingEnrollment, checkoutUrl: session.url };
+    }
   }
 
   const price = course.price || 0;
 
   if (price <= 0) {
-    throw new Error("Course price must be greater than 0 to generate a Stripe checkout URL.");
+    const result = await EnrollCourse.create({
+      userId: user._id,
+      courseId: course._id,
+      paymentStatus: "free",
+    });
+
+    await Course.findByIdAndUpdate(course._id, {
+      $inc: { totalEnrolled: 1 },
+    });
+
+    return { result, checkoutUrl: null };
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -71,7 +108,7 @@ const getMyEnrollments = async (userId: string) => {
   // Optimized: Directly filter by userId from token
   const enrollments = await EnrollCourse.find({
     userId,
-    paymentStatus: "completed",
+    paymentStatus: { $in: COMPLETED_ENROLLMENT_STATUSES },
   })
   .populate("courseId")
   .sort({ createdAt: -1 });
@@ -84,7 +121,10 @@ const verifyPaymentStatus = async (sessionId: string) => {
   const enrollment = await EnrollCourse.findOne({ transactionId: sessionId }).populate("courseId");
   
   if (!enrollment) {
-    throw new Error("Enrollment record not found for this session.");
+    throw new AppError(
+      "Enrollment record not found for this session.",
+      httpStatus.NOT_FOUND,
+    );
   }
 
   // 2. If already marked as completed by Cron, return immediately

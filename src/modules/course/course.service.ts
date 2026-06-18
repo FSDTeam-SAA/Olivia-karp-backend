@@ -6,6 +6,42 @@ import { ICourse, IImage, ILesson } from './course.interface';
 import Course from './course.model';
 import purchaseSubscriptionService from '../purchaseSubscription/purchaseSubscription.service';
 
+const COMPLETED_ENROLLMENT_STATUSES = ['completed', 'free'];
+
+type ILessonWithDuration = ILesson & { duration?: number | string };
+
+const getCourseDurationMinutes = (lessons: ILessonWithDuration[] = []) =>
+  lessons.reduce((total, lesson) => {
+    const duration = Number.parseInt(String(lesson.duration || '0'), 10);
+    return total + (Number.isNaN(duration) ? 0 : duration);
+  }, 0);
+
+const formatCourseDuration = (minutes: number, fallbackHours?: number) => {
+  if (minutes > 0) {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      return remainingMinutes ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
+    }
+    return `${minutes} min`;
+  }
+
+  if (fallbackHours && fallbackHours > 0) {
+    return `${fallbackHours}h`;
+  }
+
+  return '0 min';
+};
+
+const serializeCourse = (course: any) => {
+  const lessons = course.lessons || [];
+  return {
+    ...course,
+    lessonCount: lessons.length,
+    totalDuration: formatCourseDuration(getCourseDurationMinutes(lessons), course.durationHours),
+  };
+};
+
 const CreateNewCourse = async (
   payload: any,
   files: Record<string, Express.Multer.File[]> | undefined,
@@ -49,9 +85,6 @@ const CreateNewCourse = async (
   const lessonsData: ILesson[] = lessons.map((lesson) => ({
     title: lesson.title,
     videoUrl: lesson.videoUrl,
-    duration: lesson.duration,
-    level: lesson.level,
-    isLocked: lesson.isLocked ?? true,
   }));
 
   /* ---------------- Final Course Payload ---------------- */
@@ -70,6 +103,7 @@ const CreateNewCourse = async (
     price: Number(payload.price) || 0,
     currency: payload.currency || 'CAD',
     totalEnrolled: 0,
+    courseBoxUrl: payload.courseBoxUrl || '',
   };
 
   /* ---------------- Save ---------------- */
@@ -84,7 +118,7 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
   const limitNumber = Math.max(Number(limit), 1);
   const skip = (pageNumber - 1) * limitNumber;
 
-  const filter: any = {};
+  const filter: any = { isAvailable: true };
 
   // 1. Efficient Search: Use Text Index if searchTerm exists
   if (searchTerm) {
@@ -176,22 +210,132 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
   };
 };
 
+const getAllCoursesAdmin = async (query: Record<string, any>, user?: any) => {
+  const { page = 1, limit = 10, searchTerm, category, sort } = query;
+
+  const pageNumber = Math.max(Number(page), 1);
+  const limitNumber = Math.max(Number(limit), 1);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const filter: any = {};
+
+  if (user?.role !== 'admin') {
+    filter.isAvailable = true;
+  }
+
+  // 1. Efficient Search: Use Text Index if searchTerm exists
+  if (searchTerm) {
+    filter.$or = [
+      { title: { $regex: searchTerm, $options: 'i' } },
+      { category: { $regex: searchTerm, $options: 'i' } },
+    ];
+  }
+
+  // 2. Exact Category Filter: Avoid regex for fixed categories
+  if (category && !['all', 'all courses'].includes(category.toLowerCase())) {
+    // Standardize: "Business Courses" -> "Business"
+    const cleanCategory = category.replace(/\s*courses$/i, '').trim();
+
+    // Exact match is much faster than regex
+    filter.category = new RegExp(`^${cleanCategory}$`, 'i');
+  }
+
+  // 3. Optimized Execution: Lean queries and parallel counting
+  const [data, total] = await Promise.all([
+    Course.find(filter)
+      .sort(sort ? sort : { createdAt: -1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .lean(),
+    Course.countDocuments(filter),
+  ]);
+
+  let finalData: any = data;
+
+  if (user && user.role === 'admin') {
+    finalData = data.map((course: any) => ({ ...serializeCourse(course), isLocked: false }));
+  } else {
+    let enrolledCourseIds: string[] = [];
+    let hasFreeCourseAccess = false;
+
+    if (user) {
+      const enrollments = await EnrollCourse.find({
+        userId: user._id || user.id,
+        paymentStatus: { $in: COMPLETED_ENROLLMENT_STATUSES },
+      });
+      enrolledCourseIds = enrollments.map((e) => e.courseId.toString());
+
+      try {
+        const benefits = await purchaseSubscriptionService.getUserBenefits(
+          (user._id || user.id).toString(),
+        );
+        if (benefits.hasActiveSubscription) {
+          const accessStatus = benefits.accessLevels?.courses;
+          if (accessStatus === 'free_access' || accessStatus === 'free_unlimited') {
+            hasFreeCourseAccess = true;
+          }
+        }
+      } catch (err) {
+        // Log error and fallback gracefully
+      }
+    }
+
+    finalData = data.map((course: any) => {
+      const price = course.price || 0;
+      const isEnrolled = enrolledCourseIds.includes(course._id.toString());
+      const isLocked = price > 0 && !isEnrolled && !hasFreeCourseAccess;
+
+      const lockedLessons = course.lessons
+        ? course.lessons.map((lesson: any) => {
+            if (isLocked) {
+              return { ...lesson, videoUrl: 'LOCKED' };
+            }
+            return lesson;
+          })
+        : [];
+
+      return {
+        ...serializeCourse(course),
+        lessons: lockedLessons,
+        isLocked,
+        isEnrolled,
+      };
+    });
+  }
+
+  return {
+    data: finalData,
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPage: Math.ceil(total / limitNumber),
+    },
+  };
+};
+
 const getSingleCourse = async (id: string, user?: any) => {
   const result = await Course.findById(id).lean();
   if (!result) throw new AppError('Course not found', httpStatus.NOT_FOUND);
 
+  if (!result.isAvailable && user?.role !== 'admin') {
+    throw new AppError('Course is not available', httpStatus.NOT_FOUND);
+  }
+
   let hasAccess = false;
+  let isEnrolled = false;
 
   if (user && user.role === 'admin') {
     hasAccess = true;
   } else if (user) {
-    const isEnrolled = await EnrollCourse.findOne({
+    const enrollment = await EnrollCourse.findOne({
       userId: user._id || user.id,
       courseId: id,
-      paymentStatus: 'completed',
+      paymentStatus: { $in: COMPLETED_ENROLLMENT_STATUSES },
     });
-    if (isEnrolled) {
+    if (enrollment) {
       hasAccess = true;
+      isEnrolled = true;
     } else {
       try {
         const benefits = await purchaseSubscriptionService.getUserBenefits(
@@ -211,6 +355,7 @@ const getSingleCourse = async (id: string, user?: any) => {
 
   const isLocked = !hasAccess && (result.price || 0) > 0;
   result.isLocked = isLocked;
+  (result as any).isEnrolled = isEnrolled;
 
   if (isLocked) {
     if (result.lessons) {
@@ -221,7 +366,7 @@ const getSingleCourse = async (id: string, user?: any) => {
     }
   }
 
-  return result;
+  return serializeCourse(result);
 };
 
 const updateCourse = async (
@@ -236,7 +381,7 @@ const updateCourse = async (
   }
 
   /* ---------------- Lessons Update ---------------- */
-  let lessonsData: ILesson[] = course.lessons;
+  let lessonsData: ILesson[] = course.lessons ?? [];
 
   if (payload.lessons) {
     const lessons: ILesson[] =
@@ -245,9 +390,6 @@ const updateCourse = async (
     lessonsData = lessons.map((lesson) => ({
       title: lesson.title,
       videoUrl: lesson.videoUrl,
-      duration: lesson.duration,
-      level: lesson.level,
-      isLocked: lesson.isLocked ?? true,
     }));
   }
 
@@ -303,6 +445,8 @@ const updateCourse = async (
       payload.isAvailable !== undefined
         ? payload.isAvailable === 'true' || payload.isAvailable === true
         : course.isAvailable,
+
+    courseBoxUrl: payload.courseBoxUrl || course.courseBoxUrl,
   };
 
   /* ---------------- Update DB ---------------- */
@@ -327,5 +471,6 @@ const courseService = {
   getSingleCourse,
   updateCourse,
   updateCourseAvailability,
+  getAllCoursesAdmin,
 };
 export default courseService;

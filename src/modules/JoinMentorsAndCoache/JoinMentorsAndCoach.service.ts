@@ -1,11 +1,11 @@
-import { StatusCodes } from "http-status-codes";
-import AppError from "../../errors/AppError";
-import { uploadToCloudinary } from "../../utils/cloudinary";
-import { User } from "../user/user.model";
-import { IJoinMentorsAndCoach } from "./JoinMentorsAndCoach.interface";
-import JoinMentorCoach from "./JoinMentorsAndCoach.model";
-import fs from "fs";
-import { parseCSV } from "../../utils/csvParser";
+import { StatusCodes } from 'http-status-codes';
+import AppError from '../../errors/AppError';
+import { uploadToCloudinary } from '../../utils/cloudinary';
+import { User } from '../user/user.model';
+import { IJoinMentorsAndCoach } from './JoinMentorsAndCoach.interface';
+import JoinMentorCoach from './JoinMentorsAndCoach.model';
+import fs from 'fs';
+// import { parseCSV } from '../../utils/csvParser';
 
 const createJoinMentorsAndCoachIntoDB = async (
   file: Express.Multer.File,
@@ -14,54 +14,48 @@ const createJoinMentorsAndCoachIntoDB = async (
 ) => {
   const user = await User.findOne({ email });
   if (!user) {
-    throw new AppError(
-      "No account found with the provided credentials.",
-      StatusCodes.NOT_FOUND,
-    );
+    throw new AppError('No account found with the provided credentials.', StatusCodes.NOT_FOUND);
   }
 
   const existingUser = await JoinMentorCoach.findOne({
     userId: user._id,
     isApproved: true,
   });
-if (existingUser && user.role !== "admin") {
-  throw new AppError(
-    `You are already join as a ${existingUser.type}`,
-    StatusCodes.BAD_REQUEST,
-  );
-}
+  if (existingUser && user.role !== 'admin') {
+    throw new AppError(`You are already join as a ${existingUser.type}`, StatusCodes.BAD_REQUEST);
+  }
 
   const existingEmail = await JoinMentorCoach.findOne({
     userId: user._id,
     isApproved: false,
   });
-if (existingEmail && user.role !== "admin") {
-  throw new AppError(
-    `You have already applied as a ${existingEmail.type}, please wait for admin approval`,
-    StatusCodes.BAD_REQUEST,
-  );
-}
+  if (existingEmail && user.role !== 'admin') {
+    throw new AppError(
+      `You have already applied as a ${existingEmail.type}, please wait for admin approval`,
+      StatusCodes.BAD_REQUEST,
+    );
+  }
 
   const emailExists = await JoinMentorCoach.findOne({ email: payload.email });
   if (emailExists) {
-    throw new AppError("This email already exists", StatusCodes.BAD_REQUEST);
+    throw new AppError('This email already exists', StatusCodes.BAD_REQUEST);
   }
 
   if (file) {
-    const imageData = await uploadToCloudinary(file.path, "mentors-coaches");
+    const imageData = await uploadToCloudinary(file.path, 'mentors-coaches');
 
     payload.image = {
       url: imageData.secure_url,
       public_id: imageData.public_id,
     };
   } else {
-    throw new AppError("Image is required", StatusCodes.BAD_REQUEST);
+    throw new AppError('Image is required', StatusCodes.BAD_REQUEST);
   }
 
   const result = await JoinMentorCoach.create({
     ...payload,
     userId: user._id,
-    isApproved: user.role === "admin" ? true : false,
+    isApproved: user.role === 'admin' ? true : false,
   });
 
   return result;
@@ -80,9 +74,9 @@ const getAllJoinMentorsAndCoaches = async (query: any) => {
   // search
   if (searchTerm) {
     filter.$or = [
-      { firstName: { $regex: searchTerm, $options: "i" } },
-      { lastName: { $regex: searchTerm, $options: "i" } },
-      { skills: { $regex: searchTerm, $options: "i" } },
+      { firstName: { $regex: searchTerm, $options: 'i' } },
+      { lastName: { $regex: searchTerm, $options: 'i' } },
+      { skills: { $regex: searchTerm, $options: 'i' } },
     ];
   }
 
@@ -121,9 +115,9 @@ const getApprovedJoinMentorsAndCoaches = async (query: any) => {
   // search
   if (searchTerm) {
     filter.$or = [
-      { firstName: { $regex: searchTerm, $options: "i" } },
-      { lastName: { $regex: searchTerm, $options: "i" } },
-      { skills: { $regex: searchTerm, $options: "i" } },
+      { firstName: { $regex: searchTerm, $options: 'i' } },
+      { lastName: { $regex: searchTerm, $options: 'i' } },
+      { skills: { $regex: searchTerm, $options: 'i' } },
     ];
   }
 
@@ -152,10 +146,7 @@ const getApprovedJoinMentorsAndCoaches = async (query: any) => {
 const getSingleJoinMentorsAndCoach = async (id: string) => {
   const result = await JoinMentorCoach.findById(id);
   if (!result) {
-    throw new AppError(
-      "Join mentors and coaches not found",
-      StatusCodes.NOT_FOUND,
-    );
+    throw new AppError('Join mentors and coaches not found', StatusCodes.NOT_FOUND);
   }
 
   return result;
@@ -164,26 +155,16 @@ const getSingleJoinMentorsAndCoach = async (id: string) => {
 const approvedJoinMentorsAndCoach = async (id: string) => {
   const result = await JoinMentorCoach.findById(id);
   if (!result) {
-    throw new AppError(
-      "Join mentors and coaches not found",
-      StatusCodes.NOT_FOUND,
-    );
+    throw new AppError('Join mentors and coaches not found', StatusCodes.NOT_FOUND);
   }
 
-  await JoinMentorCoach.findByIdAndUpdate(
-    { _id: id },
-    { isApproved: true },
-    { new: true },
-  );
+  await JoinMentorCoach.findByIdAndUpdate({ _id: id }, { isApproved: true }, { new: true });
 };
 
 const toggleMentorAndCoachActive = async (id: string) => {
   const result = await JoinMentorCoach.findById(id);
   if (!result) {
-    throw new AppError(
-      "Join mentors and coaches not found",
-      StatusCodes.NOT_FOUND,
-    );
+    throw new AppError('Join mentors and coaches not found', StatusCodes.NOT_FOUND);
   }
 
   await JoinMentorCoach.findByIdAndUpdate(
@@ -193,65 +174,308 @@ const toggleMentorAndCoachActive = async (id: string) => {
   );
 };
 
-const bulkUploadMentorsAndCoaches = async (file: Express.Multer.File) => {
-  const rawCsvText = fs.readFileSync(file.path, "utf-8");
-  const csvText = rawCsvText.replace(/^\uFEFF/, "");
+// ---------------------------------------------------------------------------
+// Minimal RFC-4180-compliant CSV parser (handles quoted fields with commas
+// and embedded newlines, which Airtable exports heavily use).
+// ---------------------------------------------------------------------------
+function parseCSV(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let inQuotes = false;
+  let i = 0;
 
-  // Clean up the uploaded temp file after reading
+  while (i < text.length) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (inQuotes) {
+      if (ch === '"' && next === '"') {
+        // Escaped quote inside a quoted field
+        field += '"';
+        i += 2;
+        continue;
+      } else if (ch === '"') {
+        inQuotes = false;
+        i++;
+        continue;
+      } else {
+        field += ch;
+        i++;
+        continue;
+      }
+    }
+
+    if (ch === '"') {
+      inQuotes = true;
+      i++;
+      continue;
+    }
+
+    if (ch === ',') {
+      row.push(field);
+      field = '';
+      i++;
+      continue;
+    }
+
+    if (ch === '\r' && next === '\n') {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+      i += 2;
+      continue;
+    }
+
+    if (ch === '\n' || ch === '\r') {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+      i++;
+      continue;
+    }
+
+    field += ch;
+    i++;
+  }
+
+  // Push last field / row
+  if (field !== '' || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+// ---------------------------------------------------------------------------
+// Normalize a header string to a compact lowercase key for fuzzy matching.
+// ---------------------------------------------------------------------------
+function normalizeKey(key: string): string {
+  return key.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// ---------------------------------------------------------------------------
+// Split a full name into { firstName, lastName }.
+// Everything before the last whitespace-separated token is firstName;
+// the last token is lastName.  If there is only one word it becomes
+// firstName and lastName is set to an empty string.
+// ---------------------------------------------------------------------------
+function splitFullName(fullName: string): { firstName: string; lastName: string } {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: '' };
+  }
+  const lastName = parts.pop()!;
+  const firstName = parts.join(' ');
+  return { firstName, lastName };
+}
+
+// ---------------------------------------------------------------------------
+// Map of normalised header key → internal field name.
+//
+// This table covers BOTH the old camelCase headers (in case someone uploads
+// a previously-exported CSV) AND the verbose Airtable / form-style headers
+// that the current CSV uses.
+// ---------------------------------------------------------------------------
+const HEADER_MAP: Record<string, string> = {
+  // ── Full name (Airtable export style) ──────────────────────────────────
+  fullname: 'fullName',
+  name: 'fullName',
+
+  // ── Separate first / last (legacy uploads) ─────────────────────────────
+  firstname: 'firstName',
+  lastname: 'lastName',
+
+  // ── Contact ────────────────────────────────────────────────────────────
+  email: 'email',
+  whatisyouremail: 'email',
+  whatsyouremail: 'email',
+
+  phone: 'phone',
+  address: 'address',
+
+  // ── Profile image ──────────────────────────────────────────────────────
+  headshot: 'imageUrl',
+  image: 'imageUrl',
+  imageurl: 'imageUrl',
+  photo: 'imageUrl',
+  profilepicture: 'imageUrl',
+
+  // ── Type (mentor / coach) ──────────────────────────────────────────────
+  type: 'type',
+  role: 'type',
+  supportstyle: 'type', // "Mentor" or "Coach" in Airtable
+  areyouamentororacoach: 'type',
+
+  // ── Skills / focus areas ───────────────────────────────────────────────
+  skills: 'skills',
+  whataresome: 'skills', // partial match – extended below
+  'whataresome ofyourtopskills': 'skills',
+  whatareyourtopskills: 'skills',
+  expertfocus: 'skills',
+  topskills: 'skills',
+  areasofexpertise: 'skills',
+
+  // ── Languages ──────────────────────────────────────────────────────────
+  languages: 'languages',
+  languagesyouspeak: 'languages',
+  languageyouspeak: 'languages',
+  whatisyourlanguage: 'languages',
+
+  // ── Bio / About ────────────────────────────────────────────────────────
+  bio: 'bio',
+  about: 'about',
+  wheredoesyourexpertisecomefrm: 'about',
+  wheredoesyourexpertisecomefrom: 'about',
+  expertise: 'about',
+
+  // ── Who should book / motivation ───────────────────────────────────────
+  whoshouldbook: 'motivation',
+  whoshouldbooked: 'motivation',
+  whoshouldbooka: 'motivation',
+  motivation: 'motivation',
+  goal: 'goal',
+
+  // ── Experience ─────────────────────────────────────────────────────────
+  experienceyears: 'experienceYears',
+  yearsofexperience: 'experienceYears',
+  experience: 'experience',
+
+  // ── Designation ────────────────────────────────────────────────────────
+  designation: 'designation',
+  jobtitle: 'designation',
+  title: 'designation',
+
+  // ── Social / booking ───────────────────────────────────────────────────
+  linkedin: 'linkedin',
+  website: 'website',
+  bookinglink: 'bookingLink',
+  bookalink: 'bookingLink',
+  bookaSessionLink: 'bookingLink',
+  bookasessionlink: 'bookingLink',
+  schedulinglink: 'bookingLink',
+
+  // ── Paid session ───────────────────────────────────────────────────────
+  ispaid: 'isPaidSession',
+  'ispaid session': 'isPaidSession',
+  ispaidsession: 'isPaidSession',
+  doyoucharge: 'isPaidSession',
+  doyouchargea: 'isPaidSession',
+  doyouchargeafee: 'isPaidSession',
+  doyouchargeafeeforyoursessions: 'isPaidSession',
+  chargeafee: 'isPaidSession',
+  paid: 'isPaidSession',
+
+  // ── Hourly rate ────────────────────────────────────────────────────────
+  hourlyrate: 'hourlyRate',
+  rate: 'hourlyRate',
+  pricerange: 'hourlyRate',
+  whatisyourpricerange: 'hourlyRate',
+  whatisyourpricerengeforyoursessions: 'hourlyRate',
+  whatisyourpricerangeforyoursessions: 'hourlyRate',
+  price: 'hourlyRate',
+  priceranges: 'hourlyRate',
+
+  // ── Contact method (used to derive bookingLink fallback) ───────────────
+  bestwaytocntact: 'contactMethod',
+  whatisthebestway: 'contactMethod',
+  whatisthebestwaytocontact: 'contactMethod',
+  contactmethod: 'contactMethod',
+
+  // ── Support ────────────────────────────────────────────────────────────
+  support: 'support',
+};
+
+// Extra fuzzy patterns for very long Airtable headers
+const FUZZY_PATTERNS: Array<{ pattern: RegExp; field: string }> = [
+  { pattern: /top\s*skill/i, field: 'skills' },
+  { pattern: /expert\s*focus/i, field: 'skills' },
+  { pattern: /language/i, field: 'languages' },
+  { pattern: /expertise\s*come\s*from/i, field: 'about' },
+  { pattern: /book\s*a\s*session/i, field: 'bookingLink' },
+  { pattern: /book.*call.*with\s*me/i, field: 'motivation' },
+  { pattern: /who\s*should\s*book/i, field: 'motivation' },
+  { pattern: /charge.*fee/i, field: 'isPaidSession' },
+  { pattern: /price\s*rang/i, field: 'hourlyRate' },
+  { pattern: /support\s*style/i, field: 'type' },
+  { pattern: /best\s*way.*contact/i, field: 'contactMethod' },
+  { pattern: /^headshot$/i, field: 'imageUrl' },
+  { pattern: /full\s*name/i, field: 'fullName' },
+  { pattern: /^email/i, field: 'email' },
+];
+
+function resolveHeader(raw: string): string {
+  const trimmed = raw.trim();
+  const nk = normalizeKey(trimmed);
+
+  // 1. Exact normalised match
+  if (HEADER_MAP[nk]) return HEADER_MAP[nk];
+
+  // 2. Fuzzy regex match
+  for (const { pattern, field } of FUZZY_PATTERNS) {
+    if (pattern.test(trimmed)) return field;
+  }
+
+  // 3. Return the original (trimmed) header as fallback
+  return trimmed;
+}
+
+// ---------------------------------------------------------------------------
+// Extract a URL from a cell that may look like:
+//   "filename.jpg (https://cdn.example.com/...)"
+//   or just a plain URL
+// ---------------------------------------------------------------------------
+function extractUrl(cell: string): string {
+  if (!cell) return '';
+  const urlMatch = cell.match(/https?:\/\/[^\s)]+/);
+  return urlMatch ? urlMatch[0] : cell.trim();
+}
+
+// ---------------------------------------------------------------------------
+// Determine whether a row has enough non-empty columns to be a real data row
+// (skips the lookup / metadata rows at the top of the Airtable export).
+// We require at least 4 non-empty cells AND a non-empty first column (name).
+// ---------------------------------------------------------------------------
+function isDataRow(row: string[]): boolean {
+  if (!row[0]?.trim()) return false;
+  const nonEmpty = row.filter((c) => c.trim() !== '').length;
+  return nonEmpty >= 4;
+}
+
+// ---------------------------------------------------------------------------
+// Main service function
+// ---------------------------------------------------------------------------
+export const bulkUploadMentorsAndCoaches = async (file: Express.Multer.File) => {
+  const rawCsvText = fs.readFileSync(file.path, 'utf-8');
+  // Strip UTF-8 BOM if present
+  const csvText = rawCsvText.replace(/^\uFEFF/, '');
+
   try {
     fs.unlinkSync(file.path);
   } catch (err) {
-    console.error("Failed to delete temp file:", err);
+    console.error('Failed to delete temp file:', err);
   }
 
   const rows = parseCSV(csvText);
   if (rows.length < 2) {
-    throw new AppError(
-      "CSV file is empty or missing data rows",
-      StatusCodes.BAD_REQUEST,
-    );
+    throw new Error('CSV file is empty or missing data rows');
   }
 
-  // Header normalization configuration
-  const normalizeKey = (key: string): string => {
-    return key.toLowerCase().replace(/[^a-z0-9]/g, "");
-  };
+  // ── Resolve headers ───────────────────────────────────────────────────
+  const rawHeaders = rows[0];
+  const headers = rawHeaders.map(resolveHeader);
 
-  const headerMapping: Record<string, string> = {
-    firstname: "firstName",
-    lastname: "lastName",
-    email: "email",
-    phone: "phone",
-    address: "address",
-    designation: "designation",
-    bio: "bio",
-    about: "about",
-    imageurl: "imageUrl",
-    image: "imageUrl",
-    type: "type",
-    skills: "skills",
-    languages: "languages",
-    experienceyears: "experienceYears",
-    yearsofexperience: "experienceYears",
-    linkedin: "linkedin",
-    website: "website",
-    ispaidsession: "isPaidSession",
-    paidsession: "isPaidSession",
-    hourlyrate: "hourlyRate",
-    bookinglink: "bookingLink",
-    motivation: "motivation",
-    goal: "goal",
-    support: "support",
-    experience: "experience",
-  };
+  // ── Filter to real data rows only ────────────────────────────────────
+  // Airtable often puts lookup values below the header (rows 2-N with only
+  // the 3rd column filled, etc.).  We skip those.
+  const dataRows = rows.slice(1).filter(isDataRow);
 
-  const headers = rows[0].map((h) => {
-    const cleanHeader = h.trim();
-    const normalized = normalizeKey(cleanHeader);
-    return headerMapping[normalized] || cleanHeader;
-  });
-
-  const dataRows = rows.slice(1);
+  if (dataRows.length === 0) {
+    throw new Error('No valid data rows found in the CSV after filtering metadata rows');
+  }
 
   const errors: string[] = [];
   let createdCount = 0;
@@ -259,177 +483,214 @@ const bulkUploadMentorsAndCoaches = async (file: Express.Multer.File) => {
 
   for (let idx = 0; idx < dataRows.length; idx++) {
     const row = dataRows[idx];
-    if (row.length === 0 || (row.length === 1 && row[0] === "")) {
-      continue; // Skip empty rows
-    }
+    // CSV row number in the original file (approximate; for error messages)
+    const rowNum = idx + 2;
 
-    // Map row columns to object by headers
-    const rawData: any = {};
+    // Map columns → rawData object
+    const rawData: Record<string, string> = {};
     headers.forEach((header, colIdx) => {
-      rawData[header] = row[colIdx] !== undefined ? row[colIdx].trim() : "";
+      rawData[header] = row[colIdx] !== undefined ? row[colIdx].trim() : '';
     });
 
-    const rowNum = idx + 2; // CSV is 1-indexed, header is row 1
-
     try {
-      // Validate required fields
-      const requiredFields = [
-        "firstName",
-        "lastName",
-        "email",
-        "bio",
-        "about",
-        "type",
-        "experienceYears",
-        "isPaidSession",
-        "bookingLink",
-      ];
-      for (const field of requiredFields) {
-        if (!rawData[field]) {
-          throw new Error(`Row ${rowNum}: Missing required field "${field}"`);
-        }
+      // ── Resolve firstName / lastName ─────────────────────────────────
+      let firstName = rawData['firstName'] || '';
+      let lastName = rawData['lastName'] || '';
+
+      if ((!firstName || !lastName) && rawData['fullName']) {
+        const split = splitFullName(rawData['fullName']);
+        if (!firstName) firstName = split.firstName;
+        if (!lastName) lastName = split.lastName;
       }
 
-      const email = rawData.email.toLowerCase();
-
-      // Validate type
-      if (rawData.type !== "mentor" && rawData.type !== "coach") {
+      if (!firstName) {
         throw new Error(
-          `Row ${rowNum}: Invalid type "${rawData.type}". Must be 'mentor' or 'coach'`,
+          `Row ${rowNum}: Could not determine firstName (checked "firstName" and "fullName" columns)`,
         );
       }
 
-      // Parse experienceYears
-      const experienceYears = parseInt(rawData.experienceYears, 10);
-      if (isNaN(experienceYears)) {
-        throw new Error(`Row ${rowNum}: experienceYears must be a valid number`);
+      // ── Resolve type (mentor / coach) ────────────────────────────────
+      // The Airtable "Support Style" column may contain "Mentor", "Coach",
+      // or comma-separated "Mentor,Coach".  We pick the first valid value.
+      let type = '';
+      const rawType = rawData['type'] || '';
+      const typeCandidates = rawType.split(',').map((t) => t.trim().toLowerCase());
+      for (const candidate of typeCandidates) {
+        if (candidate === 'mentor' || candidate === 'coach') {
+          type = candidate;
+          break;
+        }
+      }
+      if (!type) {
+        // Default to 'mentor' if the cell is non-empty but unrecognised
+        if (rawType) {
+          type = 'mentor';
+          console.warn(`Row ${rowNum}: Unrecognised type "${rawType}", defaulting to "mentor"`);
+        } else {
+          throw new Error(
+            `Row ${rowNum}: Missing required field "type" (Support Style must be "Mentor" or "Coach")`,
+          );
+        }
       }
 
-      // Parse hourlyRate
+      // ── Resolve email ─────────────────────────────────────────────────
+      const email = (rawData['email'] || '').toLowerCase().trim();
+      if (!email) {
+        throw new Error(`Row ${rowNum}: Missing required field "email"`);
+      }
+
+      // ── Bio / About ───────────────────────────────────────────────────
+      // In the Airtable export "Bio" maps to the 4th column (index 3) and
+      // "About / expertise" maps to the 8th column (index 7).
+      // If only one of them is present we use it for both.
+      const bio = rawData['bio'] || rawData['about'] || '';
+      const about = rawData['about'] || rawData['bio'] || '';
+
+      if (!bio) {
+        throw new Error(`Row ${rowNum}: Missing required field "bio"`);
+      }
+
+      // ── Booking link ──────────────────────────────────────────────────
+      // May be a real URL or a placeholder like "I will share after approval"
+      let bookingLink = rawData['bookingLink'] || '';
+      if (!bookingLink) {
+        // Try to fall back to the contactMethod column
+        const contactMethod = rawData['contactMethod'] || '';
+        if (/booking\s*link/i.test(contactMethod)) {
+          bookingLink = 'Booking Link (to be provided)';
+        } else if (/email/i.test(contactMethod)) {
+          bookingLink = `mailto:${email}`;
+        } else if (contactMethod) {
+          bookingLink = contactMethod;
+        } else {
+          bookingLink = `mailto:${email}`; // last resort
+        }
+      }
+
+      // ── Skills ────────────────────────────────────────────────────────
+      const skills = rawData['skills']
+        ? rawData['skills']
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+
+      // ── Languages ─────────────────────────────────────────────────────
+      const languages = rawData['languages']
+        ? rawData['languages']
+            .split(',')
+            .map((l) => l.trim())
+            .filter(Boolean)
+        : [];
+
+      // ── Experience years ──────────────────────────────────────────────
+      // Not present in this CSV; default to 0
+      let experienceYears = 0;
+      if (rawData['experienceYears']) {
+        const parsed = parseInt(rawData['experienceYears'], 10);
+        if (!isNaN(parsed)) experienceYears = parsed;
+      }
+
+      // ── Hourly rate ───────────────────────────────────────────────────
+      // The CSV stores free-text price ranges like "$100 to $250 per session"
+      // We extract the first number we find, or default to 0.
       let hourlyRate = 0;
-      if (rawData.hourlyRate) {
-        hourlyRate = parseFloat(rawData.hourlyRate);
-        if (isNaN(hourlyRate)) {
-          throw new Error(`Row ${rowNum}: hourlyRate must be a number`);
+      if (rawData['hourlyRate']) {
+        const numMatch = rawData['hourlyRate'].match(/[\d]+(?:[.,]\d+)?/);
+        if (numMatch) {
+          hourlyRate = parseFloat(numMatch[0].replace(',', '.'));
         }
       }
 
-      // Parse isPaidSession
+      // ── isPaidSession ─────────────────────────────────────────────────
+      const isPaidRaw = String(rawData['isPaidSession'] || '')
+        .toLowerCase()
+        .trim();
       const isPaidSession =
-        String(rawData.isPaidSession).toLowerCase() === "true" ||
-        String(rawData.isPaidSession) === "1" ||
-        String(rawData.isPaidSession).toLowerCase() === "yes";
+        isPaidRaw === 'true' || isPaidRaw === '1' || isPaidRaw === 'yes' || isPaidRaw === 'y';
 
-      // Parse arrays (skills, languages)
-      const skills = rawData.skills
-        ? rawData.skills
-            .split(",")
-            .map((s: string) => s.trim())
-            .filter(Boolean)
-        : [];
-      const languages = rawData.languages
-        ? rawData.languages
-            .split(",")
-            .map((l: string) => l.trim())
-            .filter(Boolean)
-        : [];
-
-      // Parse JSON sub-arrays if present, otherwise default to empty arrays
-      let support = [];
-      if (rawData.support) {
+      // ── JSON sub-arrays ───────────────────────────────────────────────
+      let support: Array<{ title: string; description: string }> = [];
+      if (rawData['support']) {
         try {
-          support = JSON.parse(rawData.support);
-        } catch (e) {
-          // Fallback
+          support = JSON.parse(rawData['support']);
+        } catch {
+          // Not JSON – ignore
         }
       }
 
-      let experience = [];
-      if (rawData.experience) {
+      let experience: Array<{ title: string; description: string }> = [];
+      if (rawData['experience']) {
         try {
-          experience = JSON.parse(rawData.experience);
-        } catch (e) {
-          // Fallback
+          experience = JSON.parse(rawData['experience']);
+        } catch {
+          // Not JSON – ignore
         }
       }
 
-      // Retrieve or create User profile to associate userId
+      // ── Image URL ─────────────────────────────────────────────────────
+      const imageUrl = extractUrl(rawData['imageUrl'] || '');
+
+      // ── Upsert User ───────────────────────────────────────────────────
       let user = await User.findOne({ email });
       if (!user) {
-        // Create a non-member user
         user = await User.create({
-          firstName: rawData.firstName,
-          lastName: rawData.lastName,
-          email: email,
-          phone: rawData.phone || undefined,
-          role: "non-member",
+          firstName,
+          lastName,
+          email,
+          phone: rawData['phone'] || undefined,
+          role: 'non-member',
           isVerified: true,
         });
       }
 
-      // Build payload for JoinMentorCoach
-      const payload: any = {
+      // ── Build payload ─────────────────────────────────────────────────
+      const payload: Record<string, unknown> = {
         userId: user._id,
-        firstName: rawData.firstName,
-        lastName: rawData.lastName,
-        email: email,
-        phone: rawData.phone || undefined,
-        address: rawData.address || undefined,
-        designation: rawData.designation || undefined,
-        bio: rawData.bio,
-        about: rawData.about,
-        type: rawData.type,
+        firstName,
+        lastName,
+        email,
+        phone: rawData['phone'] || undefined,
+        address: rawData['address'] || undefined,
+        designation: rawData['designation'] || undefined,
+        bio,
+        about,
+        type,
         skills,
         languages,
         experienceYears,
-        linkedin: rawData.linkedin || "",
-        website: rawData.website || "",
+        linkedin: rawData['linkedin'] || '',
+        website: rawData['website'] || '',
         isPaidSession,
         hourlyRate,
-        bookingLink: rawData.bookingLink,
-        motivation: rawData.motivation || "",
-        goal: rawData.goal || "",
-        isApproved: true, // Auto-approved because the admin is uploading them
+        bookingLink,
+        motivation: rawData['motivation'] || '',
+        goal: rawData['goal'] || '',
+        isApproved: true,
         isActive: true,
         support,
         experience,
+        image: {
+          url: imageUrl || 'https://res.cloudinary.com/default-placeholder-mentor-coach.png',
+          public_id: '',
+        },
       };
 
-      if (rawData.imageUrl) {
-        payload.image = {
-          url: rawData.imageUrl,
-          public_id: "",
-        };
-      } else {
-        payload.image = {
-          url: "https://res.cloudinary.com/default-placeholder-mentor-coach.png",
-          public_id: "",
-        };
-      }
-
-      // Upsert into JoinMentorCoach based on email
-      const existingMentorCoach = await JoinMentorCoach.findOne({ email });
-      if (existingMentorCoach) {
-        await JoinMentorCoach.findByIdAndUpdate(
-          existingMentorCoach._id,
-          payload,
-          { new: true },
-        );
+      // ── Upsert JoinMentorCoach ────────────────────────────────────────
+      const existing = await JoinMentorCoach.findOne({ email });
+      if (existing) {
+        await JoinMentorCoach.findByIdAndUpdate(existing._id, payload, { new: true });
         updatedCount++;
       } else {
         await JoinMentorCoach.create(payload);
         createdCount++;
       }
-    } catch (err: any) {
-      errors.push(err.message || String(err));
+    } catch (err: unknown) {
+      errors.push(err instanceof Error ? err.message : String(err));
     }
   }
 
-  return {
-    createdCount,
-    updatedCount,
-    errors,
-  };
+  return { total: createdCount + updatedCount, createdCount, updatedCount, errors };
 };
 
 const JoinMentorsAndCoachService = {
