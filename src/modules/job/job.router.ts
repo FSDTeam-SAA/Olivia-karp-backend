@@ -45,6 +45,10 @@ const router = Router();
  *                 type: string
  *               companyName:
  *                 type: string
+ *               companyURL:
+ *                 type: string
+ *               applyUrl:
+ *                 type: string
  *               jobType:
  *                 type: string
  *               location:
@@ -153,6 +157,10 @@ router.get("/single/:jobId", JobController.getSingleJob);
  *               title:
  *                 type: string
  *               companyName:
+ *                 type: string
+ *               companyURL:
+ *                 type: string
+ *               applyUrl:
  *                 type: string
  *     responses:
  *       200:
