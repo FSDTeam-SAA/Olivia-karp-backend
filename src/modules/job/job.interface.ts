@@ -13,6 +13,7 @@ export interface IJob {
   skill: string;
   companyName: string;
   companyURL: string;
+  applyUrl?: string;
   companyLogo: {
     url: string;
     public_id: string;

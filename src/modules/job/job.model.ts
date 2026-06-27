@@ -18,6 +18,7 @@ const jobSchema = new Schema<IJob>(
     skill: { type: String, required: true },
     companyName: { type: String, required: true },
     companyURL: { type: String },
+    applyUrl: { type: String },
     companyLogo: {
       url: { type: String },
       public_id: { type: String },
