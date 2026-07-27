@@ -54,9 +54,11 @@ const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
         queryBuilder.isFeatured = isFeatured === 'true';
     }
 
-    if (isPublished !== undefined) {
-        queryBuilder.isPublished = isPublished === 'true';
-    }
+    // The public endpoint must not expose submissions awaiting admin review.
+    // The admin dashboard can explicitly request either state via isPublished.
+    queryBuilder.isPublished = isPublished === undefined
+        ? true
+        : String(isPublished) === 'true';
 
     const currentPage = Math.abs(Number(page)) || 1;
     const currentLimit = Math.abs(Number(limit)) || 10;

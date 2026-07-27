@@ -11,6 +11,13 @@ const createBlog = catchAsync(async (req: Request, res: Response) => {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     const payload = req.body;
 
+    // A user submission must always go through the admin review queue.  This
+    // intentionally overrides a crafted `isPublished: true` request body.
+    const requesterRole = (req.user as { role?: string } | undefined)?.role;
+    if (requesterRole !== 'admin') {
+        payload.isPublished = false;
+    }
+
     // 1. Handle Thumbnail Image (Match the Schema Object)
     if (files?.thumbnailImage?.[0]) {
         const uploadResult = await uploadToCloudinary(

@@ -83,7 +83,7 @@ router.get(
  * @swagger
  * /api/v1/blog/create-blog:
  *   post:
- *     summary: Create a new blog post (Admin Only)
+ *     summary: Create a new blog post (Admin or authenticated user)
  *     tags: [Blog]
  *     security:
  *       - bearerAuth: []
@@ -110,7 +110,14 @@ router.get(
  */
 router.post(
     '/create-blog',
-    auth(USER_ROLE.ADMIN),
+    auth(
+        USER_ROLE.ADMIN,
+        USER_ROLE.NON_MEMBER,
+        USER_ROLE.MEMBER,
+        USER_ROLE.ANNUAL_MEMBER,
+        USER_ROLE.MONTHLY_MEMBER,
+        USER_ROLE.BEGINNER_MEMBER,
+    ),
     upload.fields([
         { name: 'thumbnailImage', maxCount: 1 },
         { name: 'profileImage', maxCount: 1 },
