@@ -72,11 +72,9 @@ const createNewTeamMember = async (
 };
 
 const getAllTeamMembers = async (query: Record<string, any>) => {
-  const { page = 1, limit = 10, searchTerm, sort } = query;
+  const { page = 1, limit, searchTerm, sort } = query;
 
   const pageNumber = Math.max(Number(page), 1);
-  const limitNumber = Math.max(Number(limit), 1);
-  const skip = (pageNumber - 1) * limitNumber;
 
   const filter: any = {};
 
@@ -87,12 +85,16 @@ const getAllTeamMembers = async (query: Record<string, any>) => {
     ];
   }
 
+  const queryObj = Team.find(filter).sort(sort ? sort : { createdAt: -1 });
+
+  if (limit) {
+    const limitNumber = Math.max(Number(limit), 1);
+    const skip = (pageNumber - 1) * limitNumber;
+    queryObj.skip(skip).limit(limitNumber);
+  }
+
   const [data, total] = await Promise.all([
-    Team.find(filter)
-      .sort(sort ? sort : { createdAt: -1 })
-      .skip(skip)
-      .limit(limitNumber)
-      .lean(),
+    queryObj.lean(),
     Team.countDocuments(filter),
   ]);
 
@@ -100,9 +102,9 @@ const getAllTeamMembers = async (query: Record<string, any>) => {
     data,
     meta: {
       page: pageNumber,
-      limit: limitNumber,
+      limit: limit ? Number(limit) : total,
       total,
-      totalPage: Math.ceil(total / limitNumber),
+      totalPage: limit ? Math.ceil(total / Number(limit)) : 1,
     },
   };
 };

@@ -95,7 +95,7 @@ router.post(
  *         name: limit
  *         schema:
  *           type: integer
- *           default: 10
+ *         description: Limit number of results (defaults to all if not provided)
  *       - in: query
  *         name: sort
  *         style: deepObject
