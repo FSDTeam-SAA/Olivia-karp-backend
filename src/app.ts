@@ -23,6 +23,15 @@ app.use(
 
 app.set("trust proxy", 1);
 
+// Stripe delivers webhook events with POST. This GET response makes it clear
+// that the public endpoint is online when it is opened in a browser.
+app.get("/api/v1/main", (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Stripe webhook endpoint is online. Send Stripe events with POST.",
+  });
+});
+
 app.post(
   "/api/v1/main",
   express.raw({ type: "application/json" }),
