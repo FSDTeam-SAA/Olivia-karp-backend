@@ -10,6 +10,8 @@ const joinMentorCoachSchema = new Schema<IJoinMentorsAndCoach>(
     phone: { type: String },
     address: { type: String },
     designation: { type: String },
+    roleFunction: { type: String, default: '' },
+    industry: { type: String, default: '' },
     bio: { type: String, required: true },
     about: { type: String, required: true },
     image: {

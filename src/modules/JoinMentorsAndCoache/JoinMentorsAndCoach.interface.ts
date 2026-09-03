@@ -8,6 +8,8 @@ export interface IJoinMentorsAndCoach {
   phone?: string;
   address?: string;
   designation?: string;
+  roleFunction?: string;
+  industry?: string;
   bio: string;
   about: string;
   image: {

@@ -136,6 +136,11 @@ router.get(
   JoinMentorsAndCoachController.getApprovedJoinMentorsAndCoaches,
 );
 
+router.get(
+  "/filters",
+  JoinMentorsAndCoachController.getFilterOptions,
+);
+
 /**
  * @swagger
  * /api/v1/mentors-coaches/{joinMentorsAndCoachId}:

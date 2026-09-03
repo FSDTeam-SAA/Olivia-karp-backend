@@ -62,13 +62,19 @@ const createJoinMentorsAndCoachIntoDB = async (
 };
 
 const getAllJoinMentorsAndCoaches = async (query: any) => {
-  const { searchTerm, type, page = 1, limit = 10 } = query;
+  const { searchTerm, type, roleFunction, industry, page = 1, limit = 10 } = query;
 
   const filter: any = {};
 
   // filter mentor / coach
   if (type) {
     filter.type = type;
+  }
+  if (roleFunction) {
+    filter.roleFunction = roleFunction;
+  }
+  if (industry) {
+    filter.industry = industry;
   }
 
   // search
@@ -77,6 +83,8 @@ const getAllJoinMentorsAndCoaches = async (query: any) => {
       { firstName: { $regex: searchTerm, $options: 'i' } },
       { lastName: { $regex: searchTerm, $options: 'i' } },
       { skills: { $regex: searchTerm, $options: 'i' } },
+      { roleFunction: { $regex: searchTerm, $options: 'i' } },
+      { industry: { $regex: searchTerm, $options: 'i' } },
     ];
   }
 
@@ -103,13 +111,19 @@ const getAllJoinMentorsAndCoaches = async (query: any) => {
 };
 
 const getApprovedJoinMentorsAndCoaches = async (query: any) => {
-  const { searchTerm, type, page = 1, limit = 10 } = query;
+  const { searchTerm, type, roleFunction, industry, page = 1, limit = 10 } = query;
 
   const filter: any = { isApproved: true, isActive: true };
 
   // filter mentor / coach
   if (type) {
     filter.type = type;
+  }
+  if (roleFunction) {
+    filter.roleFunction = roleFunction;
+  }
+  if (industry) {
+    filter.industry = industry;
   }
 
   // search
@@ -118,6 +132,8 @@ const getApprovedJoinMentorsAndCoaches = async (query: any) => {
       { firstName: { $regex: searchTerm, $options: 'i' } },
       { lastName: { $regex: searchTerm, $options: 'i' } },
       { skills: { $regex: searchTerm, $options: 'i' } },
+      { roleFunction: { $regex: searchTerm, $options: 'i' } },
+      { industry: { $regex: searchTerm, $options: 'i' } },
     ];
   }
 
@@ -387,10 +403,20 @@ const HEADER_MAP: Record<string, string> = {
 
   // ── Support ────────────────────────────────────────────────────────────
   support: 'support',
+
+  // ── Role / Function & Industry ─────────────────────────────────────────
+  rolefunction: 'roleFunction',
+  'role/function': 'roleFunction',
+  function: 'roleFunction',
+  roleandfunction: 'roleFunction',
+  industry: 'industry',
 };
 
 // Extra fuzzy patterns for very long Airtable headers
 const FUZZY_PATTERNS: Array<{ pattern: RegExp; field: string }> = [
+  { pattern: /role\s*\/\s*function/i, field: 'roleFunction' },
+  { pattern: /role\s*function/i, field: 'roleFunction' },
+  { pattern: /industry/i, field: 'industry' },
   { pattern: /top\s*skill/i, field: 'skills' },
   { pattern: /expert\s*focus/i, field: 'skills' },
   { pattern: /language/i, field: 'languages' },
@@ -653,6 +679,8 @@ export const bulkUploadMentorsAndCoaches = async (file: Express.Multer.File) => 
         phone: rawData['phone'] || undefined,
         address: rawData['address'] || undefined,
         designation: rawData['designation'] || undefined,
+        roleFunction: rawData['roleFunction'] || undefined,
+        industry: rawData['industry'] || undefined,
         bio,
         about,
         type,
@@ -693,6 +721,24 @@ export const bulkUploadMentorsAndCoaches = async (file: Express.Multer.File) => 
   return { total: createdCount + updatedCount, createdCount, updatedCount, errors };
 };
 
+const getFilterOptions = async () => {
+  const roleFunctions = await JoinMentorCoach.distinct('roleFunction', {
+    isApproved: true,
+    isActive: true,
+    roleFunction: { $ne: '' },
+  });
+  const industries = await JoinMentorCoach.distinct('industry', {
+    isApproved: true,
+    isActive: true,
+    industry: { $ne: '' },
+  });
+
+  return {
+    roleFunctions: roleFunctions.filter(Boolean),
+    industries: industries.filter(Boolean),
+  };
+};
+
 const JoinMentorsAndCoachService = {
   createJoinMentorsAndCoachIntoDB,
   getAllJoinMentorsAndCoaches,
@@ -701,6 +747,7 @@ const JoinMentorsAndCoachService = {
   toggleMentorAndCoachActive,
   getApprovedJoinMentorsAndCoaches,
   bulkUploadMentorsAndCoaches,
+  getFilterOptions,
 };
 
 export default JoinMentorsAndCoachService;

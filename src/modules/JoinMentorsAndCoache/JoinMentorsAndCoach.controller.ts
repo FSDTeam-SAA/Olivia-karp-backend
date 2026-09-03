@@ -111,6 +111,17 @@ const bulkUploadMentorsAndCoaches = catchAsync(async (req, res) => {
   });
 });
 
+const getFilterOptions = catchAsync(async (req, res) => {
+  const result = await JoinMentorsAndCoachService.getFilterOptions();
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Filter options retrieved successfully",
+    data: result,
+  });
+});
+
 const JoinMentorsAndCoachController = {
   createJoinMentorsAndCoachIntoDB,
   getAllJoinMentorsAndCoaches,
@@ -119,6 +130,7 @@ const JoinMentorsAndCoachController = {
   toggleMentorAndCoachActive,
   getApprovedJoinMentorsAndCoaches,
   bulkUploadMentorsAndCoaches,
+  getFilterOptions,
 };
 
 export default JoinMentorsAndCoachController;
