@@ -1,12 +1,16 @@
 import cron from "node-cron";
+import mongoose from "mongoose";
 import Stripe from "stripe";
 import EnrollCourse from "./enrollCourse.model";
 import Course from "../course/course.model";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 
 // Run every 10 seconds
 cron.schedule("*/10 * * * * *", async () => {
+  if (mongoose.connection.readyState !== 1) {
+    return;
+  }
   try {
     const pendingEnrollments = await EnrollCourse.find({ paymentStatus: "pending" });
 
