@@ -19,7 +19,7 @@ const blogSchema = new Schema<IBlog>(
         },
         category: {
             type: String,
-            enum: ['Expert Insights', 'Climate Careers', 'Research', 'Toolkit', 'Renewable Energy'],
+            enum: ['Expert Insights', 'Climate Careers', 'Research', 'Toolkit', 'Community'],
             required: true
         },
         thumbnailImage: {
