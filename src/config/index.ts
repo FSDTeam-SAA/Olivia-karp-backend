@@ -42,6 +42,8 @@ export default {
     mighty_webhook_secret: process.env.MIGHTY_WEBHOOK_SECRET,
     mighty_api_key: process.env.MIGHTY_API_KEY,
     mighty_community_url: process.env.MIGHTY_COMMUNITY_URL,
+    mighty_network_id: process.env.MIGHTY_NETWORK_ID || "21482781",
+    mighty_api_url: process.env.MIGHTY_NETWORK_API_URL || "https://api.mn.co/admin/v1",
   },
 
   google: {

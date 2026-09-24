@@ -28,6 +28,7 @@ import notificationRouter from "../modules/notification/notification.router";
 import { OpportunityRoutes } from "../modules/oppurtunity/opportunity.routes";
 import teamRoutes from "../modules/team/team.routes";
 import { mightyRoutes } from "../modules/mighty/mighty.route";
+import { meetClimatePeopleRoutes } from "../modules/meetClimatePeople/meetClimatePeople.routes";
 
 
 const router = Router();
@@ -144,6 +145,10 @@ const moduleRoutes = [
   {
     path: "/mighty",
     route: mightyRoutes,
+  },
+  {
+    path: "/meet-climate-people",
+    route: meetClimatePeopleRoutes,
   }
 ];
 

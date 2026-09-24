@@ -6,7 +6,7 @@ import { User } from "../user/user.model";
 import { IEnrollCourse } from "./enrollCourse.interface";
 import EnrollCourse from "./enrollCourse.model";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 const COMPLETED_ENROLLMENT_STATUSES = ["completed", "free"];
 
 const createEnrollCourse = async (payload: IEnrollCourse, email: string) => {

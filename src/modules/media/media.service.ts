@@ -137,7 +137,7 @@ const getSingleMediaFromDB = async (mediaId: string): Promise<IMedia> => {
         throw new AppError('Media post not found', httpStatus.NOT_FOUND);
     }
 
-    return result;
+    return result as unknown as IMedia;
 };
 
 /**

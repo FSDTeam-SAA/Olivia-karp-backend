@@ -15,7 +15,7 @@ import PurchaseRecord from "../purchaseRecord/purchaseRecord.model";
 import EnrollCourse from "../enrollCourse/enrollCourse.model";
 
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 
 const createPaymentForSubscription = async (
   subscriptionPlanId: string,

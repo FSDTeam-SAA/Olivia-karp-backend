@@ -165,7 +165,7 @@ const getSingleBlogFromDB = async (blogId: string): Promise<IBlog> => {
     if (!result) {
         throw new AppError('Blog post not found', httpStatus.NOT_FOUND);
     }
-    return result;
+    return result as unknown as IBlog;
 };
 
 /**

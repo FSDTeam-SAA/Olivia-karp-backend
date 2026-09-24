@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import cookieParser from "cookie-parser";
 import express, { Application } from "express";
 import expressSession from "express-session";
