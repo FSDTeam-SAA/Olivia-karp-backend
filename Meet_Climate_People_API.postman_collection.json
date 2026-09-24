@@ -1,0 +1,281 @@
+{
+  "info": {
+    "_postman_id": "8f3b2d10-74a9-4c8e-9d21-9a7c3b2e5f11",
+    "name": "Meet Climate People API",
+    "description": "Postman Collection for Meet Climate People directory and Mighty Networks sync endpoints in Act on Climate backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "YOUR_ADMIN_JWT_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "webhookSecret",
+      "value": "Olivia_Karp_mighty_networks",
+      "type": "string"
+    },
+    {
+      "key": "profileId",
+      "value": "40896761",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Public Directory",
+      "item": [
+        {
+          "name": "Get All Profiles (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people?page=1&limit=12&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "12"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Fetch public active member directory with pagination and default sorting."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Profiles (Keyword)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people?search=Olivia",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Olivia"
+                }
+              ]
+            },
+            "description": "Search across member names, professional titles, organizations, skills, and climate interests."
+          },
+          "response": []
+        },
+        {
+          "name": "Filter by Climate Interest Tag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people?climateInterest=Climate Action",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people"],
+              "query": [
+                {
+                  "key": "climateInterest",
+                  "value": "Climate Action"
+                }
+              ]
+            },
+            "description": "Filter directory profiles by specific climate interest tag."
+          },
+          "response": []
+        },
+        {
+          "name": "Filter by Professional Area & Looking For",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people?professionalArea=Climate Impact&lookingFor=Networking",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people"],
+              "query": [
+                {
+                  "key": "professionalArea",
+                  "value": "Climate Impact"
+                },
+                {
+                  "key": "lookingFor",
+                  "value": "Networking"
+                }
+              ]
+            },
+            "description": "Filter directory profiles by career goals and collaboration preferences."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Profile by ID / Mighty ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/{{profileId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "{{profileId}}"]
+            },
+            "description": "Retrieve full public profile details for a specific member using MongoDB ObjectId or Mighty Networks member ID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Management",
+      "item": [
+        {
+          "name": "Get Sync Status & Telemetry",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/sync/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "sync", "status"]
+            },
+            "description": "Admin endpoint to check directory profile counts (total, visible, hidden) and latest Mighty Networks sync timestamps."
+          },
+          "response": []
+        },
+        {
+          "name": "Trigger Sync from Mighty Networks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "sync"]
+            },
+            "description": "Admin endpoint that triggers a real-time sync against the Mighty Networks Admin REST API and merges profile and survey data."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Profiles Including Hidden (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people?all=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people"],
+              "query": [
+                {
+                  "key": "all",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Fetch all profiles including hidden ones for admin moderation."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile Visibility",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isVisible\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/{{profileId}}/visibility",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "{{profileId}}", "visibility"]
+            },
+            "description": "Toggle profile visibility in the public directory."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Mighty Networks Inbound Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"MemberUpdated\",\n  \"data\": {\n    \"member\": {\n      \"id\": 36131918,\n      \"first_name\": \"Olivia\",\n      \"last_name\": \"Karp\",\n      \"email\": \"info@actonclimate.net\",\n      \"location\": \"Toronto, Canada\",\n      \"bio\": \"Passionate about building climate solutions.\",\n      \"avatar\": \"https://media2-production.mightynetworks.com/asset/52f35146-5e38-4341-b5eb-42085857357f/tempImageL6eBs5.png\",\n      \"permalink\": \"https://act-on-climate-community.mn.co/members/36131918\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "webhook"]
+            },
+            "description": "Webhook endpoint to receive real-time member updates/joins/leaves from Mighty Networks or Zapier."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
