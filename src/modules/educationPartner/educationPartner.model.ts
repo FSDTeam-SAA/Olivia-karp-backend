@@ -297,7 +297,7 @@ const CourseClickSchema = new Schema<ICourseClick, ICourseClickModel>(
   {
     courseId: {
       type: Schema.Types.ObjectId,
-      ref: "PartnerCourse",
+      ref: "Course",
       required: true,
     },
     partnerId: {

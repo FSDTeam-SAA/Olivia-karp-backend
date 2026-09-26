@@ -90,7 +90,7 @@
           }
         },
         {
-          "name": "Search & Filter Public Climate Courses",
+          "name": "Search & Filter Public Climate Courses (Partner & Admin)",
           "request": {
             "method": "GET",
             "header": [],
@@ -107,6 +107,24 @@
                 { "key": "sortBy", "value": "featured" },
                 { "key": "page", "value": "1" },
                 { "key": "limit", "value": "12" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Unified Main Course Directory (/course/all)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/course/all?page=1&limit=10&source=PARTNER&category=all courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["course", "all"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "source", "value": "PARTNER", "description": "Optional: 'ADMIN' or 'PARTNER'" },
+                { "key": "category", "value": "all courses" }
               ]
             }
           }

@@ -6,6 +6,7 @@ import AppError from "../../errors/AppError";
 import logger from "../../logger";
 import { uploadToCloudinary } from "../../utils/cloudinary";
 import sendEmail from "../../utils/sendEmail";
+import Course from "../course/course.model";
 import { User } from "../user/user.model";
 import {
   CourseClick,
@@ -556,15 +557,26 @@ const submitCourse = async (
     coverData = { public_id: uploaded.public_id, url: uploaded.secure_url };
   }
 
-  const slug = await generateSlug(payload.title, PartnerCourse);
+  const slug = await generateSlug(payload.title, Course);
 
-  const newCourse = await PartnerCourse.create({
-    partnerId: profile._id,
+  const categories = Array.isArray(payload.categories)
+    ? payload.categories
+    : payload.categories
+    ? [payload.categories]
+    : [];
+
+  const newCourse = await Course.create({
+    providerId: profile._id,
     userId: new Types.ObjectId(userId),
-    ...payload,
-    slug,
-    coverImage: coverData,
+    source: "PARTNER",
     status: "submitted",
+    isAvailable: false,
+    ...payload,
+    category: categories[0] || payload.category || "Educational Courses",
+    categories,
+    slug,
+    image: coverData,
+    coverImage: coverData,
   });
 
   await PartnerProfile.findByIdAndUpdate(profile._id, {
@@ -587,7 +599,7 @@ const getMyCourses = async (userId: string, query: any) => {
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const filter: any = { partnerId: profile._id };
+  const filter: any = { providerId: profile._id };
 
   if (query.status) {
     filter.status = query.status;
@@ -596,16 +608,17 @@ const getMyCourses = async (userId: string, query: any) => {
     filter.$or = [
       { title: { $regex: query.search, $options: "i" } },
       { summary: { $regex: query.search, $options: "i" } },
+      { description: { $regex: query.search, $options: "i" } },
       { categories: { $regex: query.search, $options: "i" } },
     ];
   }
 
   const [courses, total] = await Promise.all([
-    PartnerCourse.find(filter)
+    Course.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
-    PartnerCourse.countDocuments(filter),
+    Course.countDocuments(filter),
   ]);
 
   return {
@@ -620,8 +633,8 @@ const getMyCourses = async (userId: string, query: any) => {
 };
 
 const getCourseById = async (userId: string, courseId: string) => {
-  const course = await PartnerCourse.findById(courseId).populate(
-    "partnerId",
+  const course = await Course.findById(courseId).populate(
+    "providerId",
     "organizationName slug website logo isVerifiedPartner"
   );
 
@@ -630,7 +643,7 @@ const getCourseById = async (userId: string, courseId: string) => {
   }
 
   // Ensure owner or admin can view draft/submitted details
-  if (course.userId.toString() !== userId) {
+  if (course.userId?.toString() !== userId) {
     const user = await User.findById(userId);
     if (user?.role !== "admin") {
       throw new AppError("Unauthorized to view this course", StatusCodes.UNAUTHORIZED);
@@ -646,12 +659,12 @@ const updateCourse = async (
   payload: any,
   file?: Express.Multer.File
 ) => {
-  const course = await PartnerCourse.findById(courseId);
+  const course = await Course.findById(courseId);
   if (!course) {
     throw new AppError("Course not found", StatusCodes.NOT_FOUND);
   }
 
-  if (course.userId.toString() !== userId) {
+  if (course.userId?.toString() !== userId) {
     throw new AppError(
       "You are not authorized to update this course",
       StatusCodes.UNAUTHORIZED
@@ -667,12 +680,13 @@ const updateCourse = async (
       public_id: uploaded.public_id,
       url: uploaded.secure_url,
     };
+    payload.image = payload.coverImage;
   }
 
   if (payload.title && payload.title !== course.title) {
     payload.slug = await generateSlug(
       payload.title,
-      PartnerCourse,
+      Course,
       course._id as Types.ObjectId
     );
   }
@@ -680,6 +694,7 @@ const updateCourse = async (
   // If re-submitting after revision requested
   if (payload.resubmit) {
     payload.status = "submitted";
+    payload.isAvailable = false;
   }
 
   Object.assign(course, payload);
@@ -688,27 +703,29 @@ const updateCourse = async (
 };
 
 const deleteCourse = async (userId: string, courseId: string) => {
-  const course = await PartnerCourse.findById(courseId);
+  const course = await Course.findById(courseId);
   if (!course) {
     throw new AppError("Course not found", StatusCodes.NOT_FOUND);
   }
 
-  if (course.userId.toString() !== userId) {
+  if (course.userId?.toString() !== userId) {
     throw new AppError(
       "You are not authorized to delete this course",
       StatusCodes.UNAUTHORIZED
     );
   }
 
-  await PartnerCourse.findByIdAndDelete(courseId);
+  await Course.findByIdAndDelete(courseId);
   await CourseClick.deleteMany({ courseId: course._id });
 
-  await PartnerProfile.findByIdAndUpdate(course.partnerId, {
-    $inc: {
-      totalCoursesCount: -1,
-      ...(course.status === "approved" ? { approvedCoursesCount: -1 } : {}),
-    },
-  });
+  if (course.providerId) {
+    await PartnerProfile.findByIdAndUpdate(course.providerId, {
+      $inc: {
+        totalCoursesCount: -1,
+        ...(course.status === "approved" ? { approvedCoursesCount: -1 } : {}),
+      },
+    });
+  }
 
   return { message: "Course deleted successfully" };
 };
@@ -726,10 +743,10 @@ const getPartnerAnalytics = async (userId: string) => {
   }
 
   const [totalCourses, approvedCourses, totalClicks, courses] = await Promise.all([
-    PartnerCourse.countDocuments({ partnerId: profile._id }),
-    PartnerCourse.countDocuments({ partnerId: profile._id, status: "approved" }),
+    Course.countDocuments({ providerId: profile._id }),
+    Course.countDocuments({ providerId: profile._id, status: "approved" }),
     CourseClick.countDocuments({ partnerId: profile._id }),
-    PartnerCourse.find({ partnerId: profile._id })
+    Course.find({ providerId: profile._id })
       .select("title slug status isFree price currency viewCount clickCount createdAt")
       .sort({ clickCount: -1 }),
   ]);
@@ -845,12 +862,13 @@ const getPublicPartnerBySlug = async (slug: string) => {
     throw new AppError("Education partner not found", StatusCodes.NOT_FOUND);
   }
 
-  const courses = await PartnerCourse.find({
-    partnerId: partner._id,
+  const courses = await Course.find({
+    providerId: partner._id,
     status: "approved",
+    isAvailable: true,
   })
     .select(
-      "title slug summary categories format duration isFree price currency hasCertificate coverImage isFeatured viewCount clickCount createdAt"
+      "title slug summary categories category format duration isFree price currency hasCertificate image coverImage isFeatured viewCount clickCount createdAt"
     )
     .sort({ isFeatured: -1, createdAt: -1 });
 
@@ -867,10 +885,18 @@ const getAllPublicCourses = async (query: any) => {
 
   const filter: any = {
     status: "approved",
+    isAvailable: true,
   };
 
+  if (query.source) {
+    filter.source = query.source.toUpperCase();
+  }
+
   if (query.category) {
-    filter.categories = { $regex: query.category, $options: "i" };
+    filter.$or = [
+      { category: { $regex: query.category, $options: "i" } },
+      { categories: { $regex: query.category, $options: "i" } },
+    ];
   }
   if (query.format) {
     filter.format = query.format;
@@ -885,7 +911,7 @@ const getAllPublicCourses = async (query: any) => {
   if (query.partnerSlug) {
     const partner = await PartnerProfile.findOne({ slug: query.partnerSlug });
     if (partner) {
-      filter.partnerId = partner._id;
+      filter.providerId = partner._id;
     }
   }
 
@@ -894,6 +920,7 @@ const getAllPublicCourses = async (query: any) => {
       { title: { $regex: query.search, $options: "i" } },
       { summary: { $regex: query.search, $options: "i" } },
       { description: { $regex: query.search, $options: "i" } },
+      { category: { $regex: query.search, $options: "i" } },
       { categories: { $regex: query.search, $options: "i" } },
       { targetAudience: { $regex: query.search, $options: "i" } },
     ];
@@ -913,12 +940,12 @@ const getAllPublicCourses = async (query: any) => {
   }
 
   const [courses, total] = await Promise.all([
-    PartnerCourse.find(filter)
-      .populate("partnerId", "organizationName slug logo isVerifiedPartner website")
+    Course.find(filter)
+      .populate("providerId", "organizationName slug logo isVerifiedPartner website")
       .sort(sort)
       .skip(skip)
       .limit(limit),
-    PartnerCourse.countDocuments(filter),
+    Course.countDocuments(filter),
   ]);
 
   return {
@@ -933,12 +960,12 @@ const getAllPublicCourses = async (query: any) => {
 };
 
 const getPublicCourseBySlug = async (slug: string) => {
-  const course = await PartnerCourse.findOneAndUpdate(
-    { slug: slug.toLowerCase(), status: "approved" },
+  const course = await Course.findOneAndUpdate(
+    { slug: slug.toLowerCase(), status: "approved", isAvailable: true },
     { $inc: { viewCount: 1 } },
     { new: true }
   ).populate(
-    "partnerId",
+    "providerId",
     "organizationName slug website logo coverImage tagline bio areasOfExpertise isVerifiedPartner"
   );
 
@@ -953,16 +980,16 @@ const trackCourseOutboundClick = async (
   courseId: string,
   reqMeta?: { userId?: string; ip?: string; userAgent?: string; referrer?: string }
 ) => {
-  const course = await PartnerCourse.findById(courseId);
+  const course = await Course.findById(courseId);
   if (!course) {
     throw new AppError("Course not found", StatusCodes.NOT_FOUND);
   }
 
   await Promise.all([
-    PartnerCourse.findByIdAndUpdate(courseId, { $inc: { clickCount: 1 } }),
+    Course.findByIdAndUpdate(courseId, { $inc: { clickCount: 1 } }),
     CourseClick.create({
       courseId: course._id,
-      partnerId: course.partnerId,
+      partnerId: course.providerId || course.userId,
       userId: reqMeta?.userId ? new Types.ObjectId(reqMeta.userId) : undefined,
       ipAddress: reqMeta?.ip,
       userAgent: reqMeta?.userAgent,
@@ -973,7 +1000,7 @@ const trackCourseOutboundClick = async (
   return {
     courseId: course._id,
     title: course.title,
-    enrollmentUrl: course.enrollmentUrl,
+    enrollmentUrl: course.enrollmentUrl || course.courseBoxUrl,
   };
 };
 
@@ -985,7 +1012,7 @@ const getAdminReviewQueue = async (query: any) => {
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const filter: any = {};
+  const filter: any = { source: "PARTNER" };
   if (query.status) {
     filter.status = query.status;
   } else {
@@ -996,17 +1023,18 @@ const getAdminReviewQueue = async (query: any) => {
     filter.$or = [
       { title: { $regex: query.search, $options: "i" } },
       { summary: { $regex: query.search, $options: "i" } },
+      { description: { $regex: query.search, $options: "i" } },
     ];
   }
 
   const [courses, total] = await Promise.all([
-    PartnerCourse.find(filter)
-      .populate("partnerId", "organizationName slug website contactEmail isVerifiedPartner membershipStatus")
+    Course.find(filter)
+      .populate("providerId", "organizationName slug website contactEmail isVerifiedPartner membershipStatus")
       .populate("userId", "firstName lastName email")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
-    PartnerCourse.countDocuments(filter),
+    Course.countDocuments(filter),
   ]);
 
   return {
@@ -1030,13 +1058,21 @@ const adminReviewCourse = async (
     featuredOrder?: number;
   }
 ) => {
-  const course = await PartnerCourse.findById(courseId);
+  const course = await Course.findById(courseId);
   if (!course) {
     throw new AppError("Course not found", StatusCodes.NOT_FOUND);
   }
 
   const previousStatus = course.status;
   course.status = payload.status;
+  // If approved, automatically make available in directory and set published date
+  if (payload.status === "approved") {
+    course.isAvailable = true;
+    course.publishedAt = new Date();
+  } else if (payload.status === "rejected" || payload.status === "archived") {
+    course.isAvailable = false;
+  }
+
   if (payload.adminReviewNotes !== undefined) {
     course.adminReviewNotes = payload.adminReviewNotes;
   }
@@ -1052,14 +1088,16 @@ const adminReviewCourse = async (
   await course.save();
 
   // Adjust approved course counter on PartnerProfile
-  if (previousStatus !== "approved" && payload.status === "approved") {
-    await PartnerProfile.findByIdAndUpdate(course.partnerId, {
-      $inc: { approvedCoursesCount: 1 },
-    });
-  } else if (previousStatus === "approved" && payload.status !== "approved") {
-    await PartnerProfile.findByIdAndUpdate(course.partnerId, {
-      $inc: { approvedCoursesCount: -1 },
-    });
+  if (course.providerId) {
+    if (previousStatus !== "approved" && payload.status === "approved") {
+      await PartnerProfile.findByIdAndUpdate(course.providerId, {
+        $inc: { approvedCoursesCount: 1 },
+      });
+    } else if (previousStatus === "approved" && payload.status !== "approved") {
+      await PartnerProfile.findByIdAndUpdate(course.providerId, {
+        $inc: { approvedCoursesCount: -1 },
+      });
+    }
   }
 
   return course;
