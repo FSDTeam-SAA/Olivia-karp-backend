@@ -86,6 +86,21 @@ const createMembershipCheckout = catchAsync(async (req: Request, res: Response) 
   });
 });
 
+const confirmMembershipPayment = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
+  const result = await educationPartnerService.confirmMembershipPayment(
+    userId,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Payment confirmed successfully. Application is pending admin approval.",
+    data: result,
+  });
+});
+
 const createStripeConnectOnboard = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.createStripeConnectOnboardingLink(
@@ -371,6 +386,7 @@ export const educationPartnerController = {
   getMyProfile,
   updateMyProfile,
   createMembershipCheckout,
+  confirmMembershipPayment,
   createStripeConnectOnboard,
   getStripeConnectStatus,
   createStripeConnectDashboardLink,

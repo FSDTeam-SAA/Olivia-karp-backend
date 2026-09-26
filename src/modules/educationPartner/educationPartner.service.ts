@@ -1340,6 +1340,7 @@ export const educationPartnerService = {
   updateMyPartnerProfile,
   createMembershipCheckoutSession,
   activatePartnerMembership,
+  confirmMembershipPayment,
   createStripeConnectOnboardingLink,
   getStripeConnectStatus,
   createStripeConnectDashboardLink,
