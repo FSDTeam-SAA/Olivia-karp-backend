@@ -65,7 +65,14 @@ const auth = (...roles: string[]) => {
       }
 
       // Otherwise, treat it as a standard user JWT
-      const verifyUserData = verifyToken(token, config.JWT_SECRET as string);
+      const verifyUserData: any = verifyToken(token, config.JWT_SECRET as string);
+      if (verifyUserData) {
+        if (verifyUserData.id && !verifyUserData._id) {
+          verifyUserData._id = verifyUserData.id;
+        } else if (verifyUserData._id && !verifyUserData.id) {
+          verifyUserData.id = verifyUserData._id;
+        }
+      }
       req.user = verifyUserData as any;
 
       if (roles.length && !roles.includes(verifyUserData.role)) {

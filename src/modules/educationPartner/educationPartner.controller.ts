@@ -21,7 +21,7 @@ const getProgramInfo = catchAsync(async (_req: Request, res: Response) => {
 // 2. Survey & Partner Profile
 // ==========================================
 const submitSurvey = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   const result = await educationPartnerService.createOrUpdateSurvey(
@@ -39,7 +39,7 @@ const submitSurvey = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyProfile = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.getMyPartnerProfile(userId);
 
   sendResponse(res, {
@@ -51,7 +51,7 @@ const getMyProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   const result = await educationPartnerService.updateMyPartnerProfile(
@@ -72,7 +72,7 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
 // 3. Membership Checkout ($50/year)
 // ==========================================
 const createMembershipCheckout = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.createMembershipCheckoutSession(
     userId,
     req.body
@@ -87,7 +87,7 @@ const createMembershipCheckout = catchAsync(async (req: Request, res: Response) 
 });
 
 const createStripeConnectOnboard = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.createStripeConnectOnboardingLink(
     userId,
     req.body
@@ -102,7 +102,7 @@ const createStripeConnectOnboard = catchAsync(async (req: Request, res: Response
 });
 
 const getStripeConnectStatus = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.getStripeConnectStatus(userId);
 
   sendResponse(res, {
@@ -114,7 +114,7 @@ const getStripeConnectStatus = catchAsync(async (req: Request, res: Response) =>
 });
 
 const createStripeConnectDashboardLink = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.createStripeConnectDashboardLink(userId);
 
   sendResponse(res, {
@@ -129,7 +129,7 @@ const createStripeConnectDashboardLink = catchAsync(async (req: Request, res: Re
 // 4. Course Submissions & Management
 // ==========================================
 const submitCourse = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const file = req.file;
 
   const result = await educationPartnerService.submitCourse(
@@ -147,7 +147,7 @@ const submitCourse = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyCourses = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.getMyCourses(userId, req.query);
 
   sendResponse(res, {
@@ -160,7 +160,7 @@ const getMyCourses = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getCourseById = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
   const result = await educationPartnerService.getCourseById(userId, id);
 
@@ -173,7 +173,7 @@ const getCourseById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateCourse = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
   const file = req.file;
 
@@ -193,7 +193,7 @@ const updateCourse = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteCourse = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
   const result = await educationPartnerService.deleteCourse(userId, id);
 
@@ -209,7 +209,7 @@ const deleteCourse = catchAsync(async (req: Request, res: Response) => {
 // 5. Partner Analytics
 // ==========================================
 const getPartnerAnalytics = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.getPartnerAnalytics(userId);
 
   sendResponse(res, {
@@ -273,7 +273,7 @@ const getPublicCourseBySlug = catchAsync(async (req: Request, res: Response) => 
 
 const trackCourseOutboundClick = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const userId = (req.user as any)?._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const ip = req.ip || req.headers["x-forwarded-for"]?.toString();
   const userAgent = req.headers["user-agent"];
   const referrer = req.headers["referer"];
@@ -309,7 +309,7 @@ const getAdminReviewQueue = catchAsync(async (req: Request, res: Response) => {
 });
 
 const adminReviewCourse = catchAsync(async (req: Request, res: Response) => {
-  const adminId = (req.user as any)._id;
+  const adminId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
 
   const result = await educationPartnerService.adminReviewCourse(

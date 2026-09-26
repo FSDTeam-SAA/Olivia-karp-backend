@@ -10,7 +10,14 @@ const optionalAuth = () => {
       const token = extractedToken?.split(" ")[1];
       
       if (token) {
-        const verifyUserData = verifyToken(token, config.JWT_SECRET as string);
+        const verifyUserData: any = verifyToken(token, config.JWT_SECRET as string);
+        if (verifyUserData) {
+          if (verifyUserData.id && !verifyUserData._id) {
+            verifyUserData._id = verifyUserData.id;
+          } else if (verifyUserData._id && !verifyUserData.id) {
+            verifyUserData.id = verifyUserData._id;
+          }
+        }
         req.user = verifyUserData as any;
       }
     } catch (error: any) {
