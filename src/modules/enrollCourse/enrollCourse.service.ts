@@ -5,6 +5,7 @@ import Course from "../course/course.model";
 import { User } from "../user/user.model";
 import { IEnrollCourse } from "./enrollCourse.interface";
 import EnrollCourse from "./enrollCourse.model";
+import { PartnerProfile } from "../educationPartner/educationPartner.model";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 const COMPLETED_ENROLLMENT_STATUSES = ["completed", "free"];
@@ -71,6 +72,24 @@ const createEnrollCourse = async (payload: IEnrollCourse, email: string) => {
     return { result, checkoutUrl: null };
   }
 
+  // If course is an Education Partner course, check Stripe Connect destination
+  let paymentIntentData: Stripe.Checkout.SessionCreateParams.PaymentIntentData | undefined = undefined;
+
+  if (course.source === "PARTNER" && course.providerId) {
+    const partnerProfile = await PartnerProfile.findById(course.providerId);
+    if (
+      partnerProfile?.stripeConnectAccountId &&
+      partnerProfile.stripeChargesEnabled
+    ) {
+      paymentIntentData = {
+        application_fee_amount: 0, // 0% platform fee - partner keeps 100% of price
+        transfer_data: {
+          destination: partnerProfile.stripeConnectAccountId,
+        },
+      };
+    }
+  }
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
@@ -78,17 +97,19 @@ const createEnrollCourse = async (payload: IEnrollCourse, email: string) => {
     line_items: [
       {
         price_data: {
-          currency: course.currency || "cad",
+          currency: (course.currency || "cad").toLowerCase(),
           product_data: { name: course.title },
           unit_amount: Math.round(price * 100),
         },
         quantity: 1,
       },
     ],
+    ...(paymentIntentData ? { payment_intent_data: paymentIntentData } : {}),
     metadata: {
       userId: user._id.toString(),
       courseId: course._id.toString(),
       isCourseEnrollment: "true",
+      ...(paymentIntentData ? { isPartnerCoursePurchase: "true" } : {}),
     },
     success_url: `${process.env.FRONT_END_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.FRONT_END_URL}/payment/cancel`,

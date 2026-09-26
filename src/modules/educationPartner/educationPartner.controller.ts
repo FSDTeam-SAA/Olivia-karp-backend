@@ -86,9 +86,9 @@ const createMembershipCheckout = catchAsync(async (req: Request, res: Response) 
   });
 });
 
-const confirmMembershipPayment = catchAsync(async (req: Request, res: Response) => {
+const createStripeConnectOnboard = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any)?._id || (req.user as any)?.id;
-  const result = await educationPartnerService.confirmMembershipPayment(
+  const result = await educationPartnerService.createStripeConnectOnboardingLink(
     userId,
     req.body
   );
@@ -96,7 +96,31 @@ const confirmMembershipPayment = catchAsync(async (req: Request, res: Response) 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Payment confirmed successfully. Application is pending admin approval.",
+    message: "Stripe Connect onboarding link created successfully",
+    data: result,
+  });
+});
+
+const getStripeConnectStatus = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
+  const result = await educationPartnerService.getStripeConnectStatus(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Stripe Connect status retrieved successfully",
+    data: result,
+  });
+});
+
+const createStripeConnectDashboardLink = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
+  const result = await educationPartnerService.createStripeConnectDashboardLink(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Stripe Connect login link created successfully",
     data: result,
   });
 });
@@ -105,7 +129,7 @@ const confirmMembershipPayment = catchAsync(async (req: Request, res: Response) 
 // 4. Course Submissions & Management
 // ==========================================
 const submitCourse = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const file = req.file;
 
   const result = await educationPartnerService.submitCourse(
@@ -123,7 +147,7 @@ const submitCourse = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyCourses = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.getMyCourses(userId, req.query);
 
   sendResponse(res, {
@@ -136,7 +160,7 @@ const getMyCourses = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getCourseById = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
   const result = await educationPartnerService.getCourseById(userId, id);
 
@@ -149,7 +173,7 @@ const getCourseById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateCourse = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
   const file = req.file;
 
@@ -169,7 +193,7 @@ const updateCourse = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteCourse = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
   const result = await educationPartnerService.deleteCourse(userId, id);
 
@@ -185,7 +209,7 @@ const deleteCourse = catchAsync(async (req: Request, res: Response) => {
 // 5. Partner Analytics
 // ==========================================
 const getPartnerAnalytics = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.getPartnerAnalytics(userId);
 
   sendResponse(res, {
@@ -249,7 +273,7 @@ const getPublicCourseBySlug = catchAsync(async (req: Request, res: Response) => 
 
 const trackCourseOutboundClick = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const userId = (req.user as any)?._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const ip = req.ip || req.headers["x-forwarded-for"]?.toString();
   const userAgent = req.headers["user-agent"];
   const referrer = req.headers["referer"];
@@ -285,7 +309,7 @@ const getAdminReviewQueue = catchAsync(async (req: Request, res: Response) => {
 });
 
 const adminReviewCourse = catchAsync(async (req: Request, res: Response) => {
-  const adminId = (req.user as any)._id;
+  const adminId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
 
   const result = await educationPartnerService.adminReviewCourse(
@@ -347,7 +371,9 @@ export const educationPartnerController = {
   getMyProfile,
   updateMyProfile,
   createMembershipCheckout,
-  confirmMembershipPayment,
+  createStripeConnectOnboard,
+  getStripeConnectStatus,
+  createStripeConnectDashboardLink,
   submitCourse,
   getMyCourses,
   getCourseById,

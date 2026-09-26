@@ -14,7 +14,7 @@ import JoinMentorCoach from "../JoinMentorsAndCoache/JoinMentorsAndCoach.model";
 import PurchaseRecord from "../purchaseRecord/purchaseRecord.model";
 import EnrollCourse from "../enrollCourse/enrollCourse.model";
 import { educationPartnerService } from "../educationPartner/educationPartner.service";
-
+import { PartnerProfile } from "../educationPartner/educationPartner.model";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 
@@ -215,6 +215,24 @@ const createGeneralCheckoutForEntity = async (
     };
   }
 
+  // If course is an Education Partner course, check Stripe Connect destination
+  let paymentIntentData: Stripe.Checkout.SessionCreateParams.PaymentIntentData | undefined = undefined;
+
+  if (itemType === "course" && item.source === "PARTNER" && item.providerId) {
+    const partnerProfile = await PartnerProfile.findById(item.providerId);
+    if (
+      partnerProfile?.stripeConnectAccountId &&
+      partnerProfile.stripeChargesEnabled
+    ) {
+      paymentIntentData = {
+        application_fee_amount: 0, // 0% platform fee - partner keeps 100% of price
+        transfer_data: {
+          destination: partnerProfile.stripeConnectAccountId,
+        },
+      };
+    }
+  }
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
@@ -223,7 +241,7 @@ const createGeneralCheckoutForEntity = async (
     line_items: [
       {
         price_data: {
-          currency: "cad",
+          currency: (item.currency || "cad").toLowerCase(),
           product_data: {
             name: title,
           },
@@ -233,11 +251,14 @@ const createGeneralCheckoutForEntity = async (
       },
     ],
 
+    ...(paymentIntentData ? { payment_intent_data: paymentIntentData } : {}),
+
     metadata: {
       userId: user._id.toString(),
       itemType,
       itemId: item._id.toString(),
       isGeneralCheckout: "true",
+      ...(paymentIntentData ? { isPartnerCoursePurchase: "true" } : {}),
     },
 
     success_url: `${process.env.FRONT_END_URL}/payment/success`,
@@ -435,6 +456,43 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
     });
 
     return purchase;
+  }
+
+  // ===============================
+  // 🤝 HANDLE STRIPE CONNECT ACCOUNT UPDATES
+  // ===============================
+  if (event.type === "account.updated") {
+    const account = event.data.object as Stripe.Account;
+    const partner = await PartnerProfile.findOne({
+      stripeConnectAccountId: account.id,
+    });
+
+    if (partner) {
+      const chargesEnabled = Boolean(account.charges_enabled);
+      const payoutsEnabled = Boolean(account.payouts_enabled);
+      const detailsSubmitted = Boolean(account.details_submitted);
+
+      let status: "not_connected" | "pending" | "active" | "restricted" = "pending";
+      if (chargesEnabled && payoutsEnabled) {
+        status = "active";
+      } else if (account.requirements?.disabled_reason) {
+        status = "restricted";
+      } else {
+        status = "pending";
+      }
+
+      partner.stripeChargesEnabled = chargesEnabled;
+      partner.stripePayoutsEnabled = payoutsEnabled;
+      partner.stripeDetailsSubmitted = detailsSubmitted;
+      partner.stripeConnectStatus = status;
+
+      if (status === "active" && !partner.stripeConnectOnboardedAt) {
+        partner.stripeConnectOnboardedAt = new Date();
+      }
+
+      await partner.save();
+      return { message: "Partner Stripe Connect status updated", status };
+    }
   }
 
   return { message: `Unhandled event type: ${event.type}` };

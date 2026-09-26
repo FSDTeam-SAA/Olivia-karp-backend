@@ -162,6 +162,13 @@ const checkoutMembershipSchema = z.object({
   }),
 });
 
+const stripeConnectOnboardSchema = z.object({
+  body: z.object({
+    returnUrl: z.string().url().optional(),
+    refreshUrl: z.string().url().optional(),
+  }),
+});
+
 export const EducationPartnerValidations = {
   createPartnerSurveySchema,
   updatePartnerProfileSchema,
@@ -169,4 +176,6 @@ export const EducationPartnerValidations = {
   updatePartnerCourseSchema,
   reviewCourseSchema,
   checkoutMembershipSchema,
+  stripeConnectOnboardSchema,
 };
+
