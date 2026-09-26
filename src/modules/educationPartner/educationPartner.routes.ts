@@ -340,6 +340,92 @@ router.post(
 
 /**
  * @swagger
+ * /api/v1/education-partner/stripe-connect/onboard:
+ *   post:
+ *     summary: Generate Stripe Connect onboarding link for education partner payout setup
+ *     tags: [Education Partner Program]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               returnUrl:
+ *                 type: string
+ *               refreshUrl:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Stripe Connect onboarding URL returned
+ */
+router.post(
+  "/stripe-connect/onboard",
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER
+  ),
+  validateRequest(EducationPartnerValidations.stripeConnectOnboardSchema),
+  educationPartnerController.createStripeConnectOnboard
+);
+
+/**
+ * @swagger
+ * /api/v1/education-partner/stripe-connect/status:
+ *   get:
+ *     summary: Retrieve real-time Stripe Connect connection and payout status
+ *     tags: [Education Partner Program]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Stripe Connect account status
+ */
+router.get(
+  "/stripe-connect/status",
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER
+  ),
+  educationPartnerController.getStripeConnectStatus
+);
+
+/**
+ * @swagger
+ * /api/v1/education-partner/stripe-connect/dashboard-link:
+ *   get:
+ *     summary: Get single-sign-on link to partner's Stripe Express payout dashboard
+ *     tags: [Education Partner Program]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Express dashboard login URL
+ */
+router.get(
+  "/stripe-connect/dashboard-link",
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER
+  ),
+  educationPartnerController.createStripeConnectDashboardLink
+);
+
+/**
+ * @swagger
  * /api/v1/education-partner/courses:
  *   post:
  *     summary: Submit a new climate course/workshop for review
