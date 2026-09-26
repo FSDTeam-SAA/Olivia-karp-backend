@@ -86,6 +86,45 @@ const createMembershipCheckout = catchAsync(async (req: Request, res: Response) 
   });
 });
 
+const createStripeConnectOnboard = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)._id;
+  const result = await educationPartnerService.createStripeConnectOnboardingLink(
+    userId,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Stripe Connect onboarding link created successfully",
+    data: result,
+  });
+});
+
+const getStripeConnectStatus = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)._id;
+  const result = await educationPartnerService.getStripeConnectStatus(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Stripe Connect status retrieved successfully",
+    data: result,
+  });
+});
+
+const createStripeConnectDashboardLink = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)._id;
+  const result = await educationPartnerService.createStripeConnectDashboardLink(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Stripe Connect login link created successfully",
+    data: result,
+  });
+});
+
 // ==========================================
 // 4. Course Submissions & Management
 // ==========================================
@@ -332,6 +371,9 @@ export const educationPartnerController = {
   getMyProfile,
   updateMyProfile,
   createMembershipCheckout,
+  createStripeConnectOnboard,
+  getStripeConnectStatus,
+  createStripeConnectDashboardLink,
   submitCourse,
   getMyCourses,
   getCourseById,

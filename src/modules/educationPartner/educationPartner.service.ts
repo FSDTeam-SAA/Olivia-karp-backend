@@ -530,8 +530,155 @@ const activatePartnerMembership = async (
 };
 
 // ==========================================
-// 5. Partner Course Submissions & Management
+// 4B. Stripe Connect Payout Onboarding (100% Course Revenue to Partner)
 // ==========================================
+const createStripeConnectOnboardingLink = async (
+  userId: string,
+  clientUrls?: { returnUrl?: string; refreshUrl?: string }
+) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found", StatusCodes.NOT_FOUND);
+  }
+
+  const profile = await PartnerProfile.findOne({ userId: user._id });
+  if (!profile) {
+    throw new AppError(
+      "Please complete your Education Partner profile survey first.",
+      StatusCodes.BAD_REQUEST
+    );
+  }
+
+  const frontendUrl = config.frontendUrl || "http://localhost:3000";
+  const returnUrl =
+    clientUrls?.returnUrl || `${frontendUrl}/partner/stripe/return`;
+  const refreshUrl =
+    clientUrls?.refreshUrl || `${frontendUrl}/partner/stripe/refresh`;
+
+  let accountId = profile.stripeConnectAccountId;
+
+  // If no account exists yet, create an Express connected account
+  if (!accountId) {
+    const businessType =
+      profile.organizationType === "independent_educator"
+        ? "individual"
+        : "company";
+
+    const account = await stripe.accounts.create({
+      type: "express",
+      country: "US", // Default US or can be customized by country if needed
+      email: profile.contactEmail || user.email,
+      business_type: businessType,
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+      metadata: {
+        partnerProfileId: (profile._id as Types.ObjectId).toString(),
+        userId: user._id.toString(),
+        organizationName: profile.organizationName,
+      },
+    });
+
+    accountId = account.id;
+    profile.stripeConnectAccountId = accountId;
+    profile.stripeConnectStatus = "pending";
+    await profile.save();
+  }
+
+  // Create an Account Link for onboarding
+  const accountLink = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: refreshUrl,
+    return_url: returnUrl,
+    type: "account_onboarding",
+  });
+
+  return {
+    onboardingUrl: accountLink.url,
+    stripeConnectAccountId: accountId,
+    expiresAt: accountLink.expires_at,
+  };
+};
+
+const getStripeConnectStatus = async (userId: string) => {
+  const profile = await PartnerProfile.findOne({
+    userId: new Types.ObjectId(userId),
+  });
+
+  if (!profile) {
+    throw new AppError("Partner profile not found", StatusCodes.NOT_FOUND);
+  }
+
+  if (!profile.stripeConnectAccountId) {
+    return {
+      connected: false,
+      status: "not_connected",
+      chargesEnabled: false,
+      payoutsEnabled: false,
+      detailsSubmitted: false,
+    };
+  }
+
+  // Fetch real-time account status from Stripe
+  const account = await stripe.accounts.retrieve(profile.stripeConnectAccountId);
+
+  const chargesEnabled = Boolean(account.charges_enabled);
+  const payoutsEnabled = Boolean(account.payouts_enabled);
+  const detailsSubmitted = Boolean(account.details_submitted);
+
+  let status: "not_connected" | "pending" | "active" | "restricted" = "pending";
+  if (chargesEnabled && payoutsEnabled) {
+    status = "active";
+  } else if (account.requirements?.disabled_reason) {
+    status = "restricted";
+  } else {
+    status = "pending";
+  }
+
+  profile.stripeChargesEnabled = chargesEnabled;
+  profile.stripePayoutsEnabled = payoutsEnabled;
+  profile.stripeDetailsSubmitted = detailsSubmitted;
+  profile.stripeConnectStatus = status;
+
+  if (status === "active" && !profile.stripeConnectOnboardedAt) {
+    profile.stripeConnectOnboardedAt = new Date();
+  }
+
+  await profile.save();
+
+  return {
+    connected: true,
+    stripeConnectAccountId: profile.stripeConnectAccountId,
+    status: profile.stripeConnectStatus,
+    chargesEnabled: profile.stripeChargesEnabled,
+    payoutsEnabled: profile.stripePayoutsEnabled,
+    detailsSubmitted: profile.stripeDetailsSubmitted,
+    stripeConnectOnboardedAt: profile.stripeConnectOnboardedAt,
+  };
+};
+
+const createStripeConnectDashboardLink = async (userId: string) => {
+  const profile = await PartnerProfile.findOne({
+    userId: new Types.ObjectId(userId),
+  });
+
+  if (!profile || !profile.stripeConnectAccountId) {
+    throw new AppError(
+      "No Stripe connected account found for this partner.",
+      StatusCodes.BAD_REQUEST
+    );
+  }
+
+  const loginLink = await stripe.accounts.createLoginLink(
+    profile.stripeConnectAccountId
+  );
+
+  return {
+    url: loginLink.url,
+  };
+};
+
 const submitCourse = async (
   userId: string,
   payload: any,
@@ -1168,6 +1315,9 @@ export const educationPartnerService = {
   updateMyPartnerProfile,
   createMembershipCheckoutSession,
   activatePartnerMembership,
+  createStripeConnectOnboardingLink,
+  getStripeConnectStatus,
+  createStripeConnectDashboardLink,
   submitCourse,
   getMyCourses,
   getCourseById,

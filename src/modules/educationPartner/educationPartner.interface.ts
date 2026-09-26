@@ -73,6 +73,14 @@ export interface IPartnerProfile extends Document {
   isVerifiedPartner: boolean;
   activationEmailSent: boolean;
 
+  // Stripe Connect (Payouts to Partner - 100% Course Sales)
+  stripeConnectAccountId?: string;
+  stripeConnectStatus?: "not_connected" | "pending" | "active" | "restricted";
+  stripeChargesEnabled?: boolean;
+  stripePayoutsEnabled?: boolean;
+  stripeDetailsSubmitted?: boolean;
+  stripeConnectOnboardedAt?: Date;
+
   totalCoursesCount: number;
   approvedCoursesCount: number;
 

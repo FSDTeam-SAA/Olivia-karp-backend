@@ -230,6 +230,53 @@
               "path": ["education-partner", "membership", "checkout"]
             }
           }
+        },
+        {
+          "name": "Step 4: Generate Stripe Connect Onboarding Link (Payouts)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"returnUrl\": \"https://actonclimate.org/partner/stripe/return\",\n  \"refreshUrl\": \"https://actonclimate.org/partner/stripe/refresh\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/stripe-connect/onboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "stripe-connect", "onboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Stripe Connect Status (Charges & Payouts)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/stripe-connect/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "stripe-connect", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Partner Stripe Express Dashboard Login Link",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/stripe-connect/dashboard-link",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "stripe-connect", "dashboard-link"]
+            }
+          }
         }
       ]
     },

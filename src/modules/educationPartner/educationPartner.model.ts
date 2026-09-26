@@ -112,6 +112,18 @@ const PartnerProfileSchema = new Schema<IPartnerProfile, IPartnerProfileModel>(
       default: false,
     },
 
+    // Stripe Connect (Payouts to Partner - 100% Course Sales)
+    stripeConnectAccountId: { type: String },
+    stripeConnectStatus: {
+      type: String,
+      enum: ["not_connected", "pending", "active", "restricted"],
+      default: "not_connected",
+    },
+    stripeChargesEnabled: { type: Boolean, default: false },
+    stripePayoutsEnabled: { type: Boolean, default: false },
+    stripeDetailsSubmitted: { type: Boolean, default: false },
+    stripeConnectOnboardedAt: { type: Date },
+
     totalCoursesCount: {
       type: Number,
       default: 0,
