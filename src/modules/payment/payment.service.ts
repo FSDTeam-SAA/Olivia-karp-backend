@@ -13,6 +13,7 @@ import { Event } from "../event/event.model";
 import JoinMentorCoach from "../JoinMentorsAndCoache/JoinMentorsAndCoach.model";
 import PurchaseRecord from "../purchaseRecord/purchaseRecord.model";
 import EnrollCourse from "../enrollCourse/enrollCourse.model";
+import { educationPartnerService } from "../educationPartner/educationPartner.service";
 
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
@@ -347,6 +348,21 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
       }
 
       return record;
+    }
+
+    // Handle Education Partner annual membership ($50/year) checkouts
+    if (session.metadata?.isEducationPartnerMembership === "true") {
+      const partnerProfileId = session.metadata?.partnerProfileId;
+      if (partnerProfileId) {
+        const activatedPartner = await educationPartnerService.activatePartnerMembership(
+          partnerProfileId,
+          session.id
+        );
+        return {
+          message: "Education partner membership activated successfully",
+          partner: activatedPartner,
+        };
+      }
     }
 
     // Handle normal subscription plan checkouts

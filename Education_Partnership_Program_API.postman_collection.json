@@ -1,0 +1,476 @@
+{
+  "info": {
+    "_postman_id": "a4f81c90-67e2-4d22-8bc1-5d9c22d14871",
+    "name": "Act on Climate — Education Partnership Program API",
+    "description": "Complete Postman collection for the Act on Climate Education Partnership Program ($50/year, 0% commission, direct enrollment links, course submissions, quality reviews, analytics, and partner directory).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "partnerToken",
+      "value": "YOUR_PARTNER_JWT_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "YOUR_ADMIN_JWT_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "partnerSlug",
+      "value": "columbia-climate-school",
+      "type": "string"
+    },
+    {
+      "key": "courseSlug",
+      "value": "climate-finance-and-carbon-markets-masterclass",
+      "type": "string"
+    },
+    {
+      "key": "courseId",
+      "value": "66e2c4a9109f3e0012f45ab1",
+      "type": "string"
+    },
+    {
+      "key": "partnerId",
+      "value": "66e2c4a9109f3e0012f45aa0",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Public & Landing Page",
+      "item": [
+        {
+          "name": "Get Program Landing Page Info & FAQs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "info"]
+            }
+          }
+        },
+        {
+          "name": "Browse Public Education Partners Directory",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/public/partners?page=1&limit=12&organizationType=university&category=Climate Finance&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "public", "partners"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" },
+                { "key": "organizationType", "value": "university" },
+                { "key": "category", "value": "Climate Finance" },
+                { "key": "search", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Partner Public Profile & Courses by Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/public/partners/{{partnerSlug}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "public", "partners", "{{partnerSlug}}"]
+            }
+          }
+        },
+        {
+          "name": "Search & Filter Public Climate Courses (Partner & Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/public/courses?search=Carbon&category=Climate Finance&format=online_cohort&isFree=false&hasCertificate=true&sortBy=featured&page=1&limit=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "public", "courses"],
+              "query": [
+                { "key": "search", "value": "Carbon" },
+                { "key": "category", "value": "Climate Finance" },
+                { "key": "format", "value": "online_cohort" },
+                { "key": "isFree", "value": "false" },
+                { "key": "hasCertificate", "value": "true" },
+                { "key": "sortBy", "value": "featured" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Unified Main Course Directory (/course/all)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/course/all?page=1&limit=10&source=PARTNER&category=all courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["course", "all"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "source", "value": "PARTNER", "description": "Optional: 'ADMIN' or 'PARTNER'" },
+                { "key": "category", "value": "all courses" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Course Details by Slug (Increments View Count)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/public/courses/{{courseSlug}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "public", "courses", "{{courseSlug}}"]
+            }
+          }
+        },
+        {
+          "name": "Track Outbound Click to Partner LMS / Website",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/courses/{{courseId}}/track-click",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "courses", "{{courseId}}", "track-click"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Partner Onboarding & Profile",
+      "item": [
+        {
+          "name": "Step 2: Submit Education Partner Survey (JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationName\": \"Columbia Climate School\",\n  \"organizationType\": \"university\",\n  \"website\": \"https://climate.columbia.edu\",\n  \"tagline\": \"Developing the next generation of climate leaders\",\n  \"bio\": \"The Columbia Climate School provides transdisciplinary education and research to tackle climate change and advance sustainability solutions worldwide.\",\n  \"areasOfExpertise\": [\"Climate Science\", \"Climate Policy\", \"Climate Finance\", \"ESG\"],\n  \"targetAudience\": [\"Graduate Students\", \"Mid-career Professionals\", \"Policymakers\"],\n  \"educationalOfferings\": [\"Master of Science\", \"Executive Certificates\", \"Short Workshops\"],\n  \"typesOfClimateEducation\": [\"Climate Finance\", \"Renewable Energy Transition\", \"Carbon Accounting\"],\n  \"instructorNames\": [\"Dr. Jason Bordoff\", \"Dr. Maureen Raymo\"],\n  \"contactEmail\": \"education@climate.columbia.edu\",\n  \"contactPhone\": \"+1-212-854-1754\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/survey",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "survey"]
+            }
+          }
+        },
+        {
+          "name": "Get Logged-in Partner Profile & Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Partner Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tagline\": \"Empowering global changemakers with rigorous climate education\",\n  \"bio\": \"Updated bio details with comprehensive curriculum and executive education portfolio.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "me"]
+            }
+          }
+        },
+        {
+          "name": "Step 3: Create $50/yr Membership Stripe Checkout Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"successUrl\": \"https://actonclimate.org/partner/membership/success?session_id={CHECKOUT_SESSION_ID}\",\n  \"cancelUrl\": \"https://actonclimate.org/partner/membership/cancel\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/membership/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "membership", "checkout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Partner Course Management & Analytics",
+      "item": [
+        {
+          "name": "Step 5: Submit Course for Review (JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Climate Finance & Carbon Markets Masterclass\",\n  \"summary\": \"Master carbon pricing, voluntary carbon credits, and green bond structuring in this 6-week executive program.\",\n  \"description\": \"This comprehensive program is tailored for finance and sustainability professionals seeking to understand carbon markets, voluntary carbon credit mechanisms, Article 6 of the Paris Agreement, and climate risk disclosures under TCFD and ISSB standards.\",\n  \"learningOutcomes\": [\n    \"Evaluate carbon credit quality and integrity standards\",\n    \"Structure ESG debt and green bond issuances\",\n    \"Navigate compliance and voluntary carbon registries\",\n    \"Model corporate transition financial risks under ISSB standards\"\n  ],\n  \"targetAudience\": \"Finance managers, investment analysts, sustainability directors, and corporate strategists\",\n  \"instructorDetails\": \"Led by Dr. Jason Bordoff and former World Bank climate finance specialists\",\n  \"categories\": [\"Climate Finance\", \"Carbon Markets\", \"ESG\", \"Climate Risk\"],\n  \"format\": \"online_cohort\",\n  \"duration\": \"6 weeks (4 hours/week)\",\n  \"isFree\": false,\n  \"price\": 450,\n  \"currency\": \"USD\",\n  \"hasCertificate\": true,\n  \"certificateDetails\": \"Executive Certificate in Climate Finance from Columbia Climate School\",\n  \"prerequisites\": \"Basic familiarity with corporate finance or sustainability fundamentals\",\n  \"enrollmentUrl\": \"https://climate.columbia.edu/executive-education/climate-finance-masterclass\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "courses"]
+            }
+          }
+        },
+        {
+          "name": "Submit Free Climate Workshop / Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Introduction to Community Climate Action & Advocacy\",\n  \"summary\": \"Learn how local governments, grassroots coalitions, and citizens mobilize for climate resilience and clean energy.\",\n  \"description\": \"A free 2-hour introductory workshop covering municipal climate action plans, participatory budgeting, and community organizing strategies.\",\n  \"learningOutcomes\": [\n    \"Understand municipal climate adaptation plans\",\n    \"Organize community clean energy workshops\"\n  ],\n  \"targetAudience\": \"Community organizers, students, local government staff, and concerned citizens\",\n  \"categories\": [\"Climate Policy\", \"Sustainability\", \"Climate Leadership\"],\n  \"format\": \"workshop\",\n  \"duration\": \"2 hours\",\n  \"isFree\": true,\n  \"price\": 0,\n  \"currency\": \"USD\",\n  \"hasCertificate\": false,\n  \"enrollmentUrl\": \"https://climate.columbia.edu/workshops/community-action\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "courses"]
+            }
+          }
+        },
+        {
+          "name": "Get My Submitted Courses (with Filters)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/courses/my-courses?status=approved&page=1&limit=10&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "courses", "my-courses"],
+              "query": [
+                { "key": "status", "value": "approved" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Course by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/courses/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "courses", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Course / Resubmit after revisions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 399,\n  \"summary\": \"Updated summary with revised syllabus and newly added case studies.\",\n  \"resubmit\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/courses/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "courses", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete / Archive Course",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/courses/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "courses", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Partner Engagement Analytics & Outbound Click Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partnerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "analytics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Admin Moderation & Management",
+      "item": [
+        {
+          "name": "Step 6: Get Courses in Review Queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/admin/courses/review-queue?status=submitted&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "admin", "courses", "review-queue"],
+              "query": [
+                { "key": "status", "value": "submitted" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Review Course — Approve & Set Featured",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"adminReviewNotes\": \"Excellent climate finance syllabus, verified instructor credentials and clear outcomes.\",\n  \"isFeatured\": true,\n  \"featuredOrder\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/admin/courses/{{courseId}}/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "admin", "courses", "{{courseId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "Review Course — Request Revisions",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"revision_requested\",\n  \"adminReviewNotes\": \"Please provide more explicit details on prerequisites and whether credential verification is included.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/admin/courses/{{courseId}}/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "admin", "courses", "{{courseId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "Manage All Partner Organizations",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/admin/partners?membershipStatus=active&isVerified=true&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "admin", "partners"],
+              "query": [
+                { "key": "membershipStatus", "value": "active" },
+                { "key": "isVerified", "value": "true" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Partner Membership Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"membershipStatus\": \"active\",\n  \"isVerifiedPartner\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/admin/partners/{{partnerId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "admin", "partners", "{{partnerId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Manually Activate Partner Membership & Send Activation Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education-partner/admin/partners/{{partnerId}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["education-partner", "admin", "partners", "{{partnerId}}", "activate"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

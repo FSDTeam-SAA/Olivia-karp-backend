@@ -29,6 +29,7 @@ import { OpportunityRoutes } from "../modules/oppurtunity/opportunity.routes";
 import teamRoutes from "../modules/team/team.routes";
 import { mightyRoutes } from "../modules/mighty/mighty.route";
 import { meetClimatePeopleRoutes } from "../modules/meetClimatePeople/meetClimatePeople.routes";
+import { EducationPartnerRoutes } from "../modules/educationPartner/educationPartner.routes";
 
 
 const router = Router();
@@ -149,6 +150,10 @@ const moduleRoutes = [
   {
     path: "/meet-climate-people",
     route: meetClimatePeopleRoutes,
+  },
+  {
+    path: "/education-partner",
+    route: EducationPartnerRoutes,
   }
 ];
 

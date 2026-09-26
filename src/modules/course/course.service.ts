@@ -90,8 +90,8 @@ const CreateNewCourse = async (
   /* ---------------- Final Course Payload ---------------- */
   const courseData: Partial<ICourse> = {
     title: payload.title,
-    category: payload.category,
-    difficulty: payload.difficulty,
+    category: payload.category || 'Educational Courses',
+    difficulty: payload.difficulty || 'Beginner',
     instructorName: payload.instructorName,
     instructorBio: payload.instructorBio,
     instructorImage,
@@ -104,6 +104,9 @@ const CreateNewCourse = async (
     currency: payload.currency || 'CAD',
     totalEnrolled: 0,
     courseBoxUrl: payload.courseBoxUrl || '',
+    source: 'ADMIN',
+    status: 'approved',
+    isAvailable: true,
   };
 
   /* ---------------- Save ---------------- */
@@ -112,19 +115,37 @@ const CreateNewCourse = async (
 };
 
 const getAllCourses = async (query: Record<string, any>, user?: any) => {
-  const { page = 1, limit = 10, searchTerm, category, sort } = query;
+  const { page = 1, limit = 10, searchTerm, category, sort, source, format, isFree } = query;
 
   const pageNumber = Math.max(Number(page), 1);
   const limitNumber = Math.max(Number(limit), 1);
   const skip = (pageNumber - 1) * limitNumber;
 
-  const filter: any = { isAvailable: true };
+  const filter: any = {
+    isAvailable: true,
+    status: 'approved',
+  };
 
-  // 1. Efficient Search: Use Text Index if searchTerm exists
+  if (source) {
+    filter.source = source.toUpperCase();
+  }
+
+  if (format) {
+    filter.format = format;
+  }
+
+  if (isFree !== undefined) {
+    filter.isFree = isFree === 'true' || isFree === true;
+  }
+
+  // 1. Efficient Search: Use Text Index or Regex if searchTerm exists
   if (searchTerm) {
     filter.$or = [
       { title: { $regex: searchTerm, $options: 'i' } },
       { category: { $regex: searchTerm, $options: 'i' } },
+      { categories: { $regex: searchTerm, $options: 'i' } },
+      { summary: { $regex: searchTerm, $options: 'i' } },
+      { description: { $regex: searchTerm, $options: 'i' } },
     ];
   }
 
@@ -133,14 +154,17 @@ const getAllCourses = async (query: Record<string, any>, user?: any) => {
     // Standardize: "Business Courses" -> "Business"
     const cleanCategory = category.replace(/\s*courses$/i, '').trim();
 
-    // Exact match is much faster than regex
-    filter.category = new RegExp(`^${cleanCategory}$`, 'i');
+    filter.$or = [
+      { category: new RegExp(`^${cleanCategory}$`, 'i') },
+      { categories: new RegExp(`^${cleanCategory}$`, 'i') },
+    ];
   }
 
-  // 3. Optimized Execution: Lean queries and parallel counting
+  // 3. Optimized Execution: Lean queries, populate partner details, and parallel counting
   const [data, total] = await Promise.all([
     Course.find(filter)
-      .sort(sort ? sort : { createdAt: -1 })
+      .populate('providerId', 'organizationName slug logo website isVerifiedPartner')
+      .sort(sort ? sort : { isFeatured: -1, createdAt: -1 })
       .skip(skip)
       .limit(limitNumber)
       .lean(),
@@ -221,13 +245,23 @@ const getAllCoursesAdmin = async (query: Record<string, any>, user?: any) => {
 
   if (user?.role !== 'admin') {
     filter.isAvailable = true;
+    filter.status = 'approved';
+  } else {
+    if (query.status) {
+      filter.status = query.status;
+    }
+    if (query.source) {
+      filter.source = query.source.toUpperCase();
+    }
   }
 
-  // 1. Efficient Search: Use Text Index if searchTerm exists
+  // 1. Efficient Search: Use Text Index or Regex if searchTerm exists
   if (searchTerm) {
     filter.$or = [
       { title: { $regex: searchTerm, $options: 'i' } },
       { category: { $regex: searchTerm, $options: 'i' } },
+      { categories: { $regex: searchTerm, $options: 'i' } },
+      { summary: { $regex: searchTerm, $options: 'i' } },
     ];
   }
 
@@ -236,13 +270,17 @@ const getAllCoursesAdmin = async (query: Record<string, any>, user?: any) => {
     // Standardize: "Business Courses" -> "Business"
     const cleanCategory = category.replace(/\s*courses$/i, '').trim();
 
-    // Exact match is much faster than regex
-    filter.category = new RegExp(`^${cleanCategory}$`, 'i');
+    filter.$or = [
+      { category: new RegExp(`^${cleanCategory}$`, 'i') },
+      { categories: new RegExp(`^${cleanCategory}$`, 'i') },
+    ];
   }
 
-  // 3. Optimized Execution: Lean queries and parallel counting
+  // 3. Optimized Execution: Lean queries, populate partner details, and parallel counting
   const [data, total] = await Promise.all([
     Course.find(filter)
+      .populate('providerId', 'organizationName slug logo website isVerifiedPartner')
+      .populate('userId', 'firstName lastName email')
       .sort(sort ? sort : { createdAt: -1 })
       .skip(skip)
       .limit(limitNumber)
@@ -315,10 +353,12 @@ const getAllCoursesAdmin = async (query: Record<string, any>, user?: any) => {
 };
 
 const getSingleCourse = async (id: string, user?: any) => {
-  const result = await Course.findById(id).lean();
+  const result = await Course.findById(id)
+    .populate('providerId', 'organizationName slug logo coverImage website bio isVerifiedPartner')
+    .lean();
   if (!result) throw new AppError('Course not found', httpStatus.NOT_FOUND);
 
-  if (!result.isAvailable && user?.role !== 'admin') {
+  if ((!result.isAvailable || result.status !== 'approved') && user?.role !== 'admin' && String(result.userId) !== String(user?._id || user?.id)) {
     throw new AppError('Course is not available', httpStatus.NOT_FOUND);
   }
 
