@@ -21,7 +21,7 @@ const getProgramInfo = catchAsync(async (_req: Request, res: Response) => {
 // 2. Survey & Partner Profile
 // ==========================================
 const submitSurvey = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   const result = await educationPartnerService.createOrUpdateSurvey(
@@ -39,7 +39,7 @@ const submitSurvey = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyProfile = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.getMyPartnerProfile(userId);
 
   sendResponse(res, {
@@ -51,7 +51,7 @@ const getMyProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   const result = await educationPartnerService.updateMyPartnerProfile(
@@ -72,7 +72,7 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
 // 3. Membership Checkout ($50/year)
 // ==========================================
 const createMembershipCheckout = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as any)._id;
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.createMembershipCheckoutSession(
     userId,
     req.body
@@ -82,6 +82,21 @@ const createMembershipCheckout = catchAsync(async (req: Request, res: Response) 
     statusCode: httpStatus.OK,
     success: true,
     message: "Membership checkout session created successfully",
+    data: result,
+  });
+});
+
+const confirmMembershipPayment = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
+  const result = await educationPartnerService.confirmMembershipPayment(
+    userId,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Payment confirmed successfully. Application is pending admin approval.",
     data: result,
   });
 });
@@ -332,6 +347,7 @@ export const educationPartnerController = {
   getMyProfile,
   updateMyProfile,
   createMembershipCheckout,
+  confirmMembershipPayment,
   submitCourse,
   getMyCourses,
   getCourseById,

@@ -1161,6 +1161,31 @@ const adminUpdatePartnerStatus = async (
   return partner;
 };
 
+const confirmMembershipPayment = async (userId: string, _paymentData?: any) => {
+  const profile = await PartnerProfile.findOne({
+    userId: new Types.ObjectId(userId),
+  });
+
+  if (!profile) {
+    throw new AppError(
+      "Partner profile not found. Complete survey first.",
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  const now = new Date();
+  const nextYear = new Date(now);
+  nextYear.setFullYear(nextYear.getFullYear() + 1);
+
+  profile.membershipStatus = "active";
+  profile.isVerifiedPartner = false; // Remains false pending admin approval!
+  profile.membershipStartDate = now;
+  profile.membershipExpiresAt = nextYear;
+
+  await profile.save();
+  return profile;
+};
+
 export const educationPartnerService = {
   getProgramInfo,
   createOrUpdateSurvey,
@@ -1168,6 +1193,7 @@ export const educationPartnerService = {
   updateMyPartnerProfile,
   createMembershipCheckoutSession,
   activatePartnerMembership,
+  confirmMembershipPayment,
   submitCourse,
   getMyCourses,
   getCourseById,

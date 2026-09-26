@@ -7,6 +7,7 @@ import sendEmail from "../../utils/sendEmail";
 import { createToken, verifyToken } from "../../utils/tokenGenerate";
 import verificationCodeTemplate from "../../utils/verificationCodeTemplate";
 import { User } from "../user/user.model";
+import { PartnerProfile } from "../educationPartner/educationPartner.model";
 
 const login = async (payload: { email: string; password: string }) => {
   const { email, password } = payload;
@@ -24,6 +25,14 @@ const login = async (payload: { email: string; password: string }) => {
   const isPasswordValid = await User.isPasswordMatch(password, user.password);
   if (!isPasswordValid)
     throw new AppError("Invalid password", StatusCodes.UNAUTHORIZED);
+
+  const partnerProfile = await PartnerProfile.findOne({ userId: user._id });
+  if (partnerProfile && !partnerProfile.isVerifiedPartner) {
+    throw new AppError(
+      "Your Education Partner account is pending admin approval. You cannot login until an admin approves your account.",
+      StatusCodes.FORBIDDEN,
+    );
+  }
 
   const tokenPayload = {
     id: user._id,

@@ -338,6 +338,19 @@ router.post(
   educationPartnerController.createMembershipCheckout
 );
 
+router.post(
+  "/membership/confirm-payment",
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER
+  ),
+  educationPartnerController.confirmMembershipPayment
+);
+
 /**
  * @swagger
  * /api/v1/education-partner/courses:
@@ -612,6 +625,12 @@ router.get(
  *         description: Partner status updated
  */
 router.patch(
+  "/admin/partners/:id/status",
+  auth(USER_ROLE.ADMIN),
+  educationPartnerController.adminUpdatePartnerStatus
+);
+
+router.put(
   "/admin/partners/:id/status",
   auth(USER_ROLE.ADMIN),
   educationPartnerController.adminUpdatePartnerStatus
