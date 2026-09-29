@@ -145,11 +145,13 @@ const createStripeConnectDashboardLink = catchAsync(async (req: Request, res: Re
 // ==========================================
 const submitCourse = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any)?._id || (req.user as any)?.id;
+  const files = req.files as Record<string, Express.Multer.File[]> | undefined;
   const file = req.file;
 
   const result = await educationPartnerService.submitCourse(
     userId,
     req.body,
+    files,
     file
   );
 
@@ -190,12 +192,14 @@ const getCourseById = catchAsync(async (req: Request, res: Response) => {
 const updateCourse = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
+  const files = req.files as Record<string, Express.Multer.File[]> | undefined;
   const file = req.file;
 
   const result = await educationPartnerService.updateCourse(
     userId,
     id,
     req.body,
+    files,
     file
   );
 

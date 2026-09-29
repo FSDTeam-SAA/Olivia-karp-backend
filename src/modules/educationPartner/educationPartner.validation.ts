@@ -72,71 +72,59 @@ const updatePartnerProfileSchema = z.object({
 const createPartnerCourseSchema = z.object({
   body: z.object({
     title: z.string({ required_error: "Course title is required" }),
-    summary: z.string({ required_error: "Course summary is required" }),
-    description: z.string({ required_error: "Course description is required" }),
-    learningOutcomes: z
-      .array(z.string())
-      .min(1, "At least one learning outcome is required"),
-    targetAudience: z.string({
-      required_error: "Target audience description is required",
-    }),
+    category: z.string().optional().default("Beginner Courses"),
+    categories: z.union([z.array(z.string()), z.string()]).optional(),
+    difficulty: z.string().optional().default("Beginner"),
+    durationHours: z.union([z.number(), z.string()]).optional(),
+    estimatedWeeks: z.union([z.number(), z.string()]).optional(),
+    price: z.union([z.number(), z.string()]).optional().default(0),
+    courseBoxUrl: z.string().optional(),
+    enrollmentUrl: z.string().optional(),
+    instructorName: z.string().optional(),
+    instructorBio: z.string().optional(),
     instructorDetails: z.string().optional(),
-    categories: z
-      .array(z.string())
-      .min(1, "At least one climate category is required"),
-    format: z.enum(
-      [
-        "online_self_paced",
-        "online_cohort",
-        "in_person",
-        "hybrid",
-        "workshop",
-        "short_course",
-        "certificate_program",
-      ],
-      { required_error: "Course format is required" }
-    ),
-    duration: z.string({ required_error: "Duration is required" }),
-    isFree: z.boolean().optional().default(false),
-    price: z.number().optional().default(0),
+    lessons: z.any().optional(),
+    summary: z.string().optional(),
+    description: z.string().optional(),
+    learningOutcomes: z.union([z.array(z.string()), z.string()]).optional(),
+    targetAudience: z.string().optional(),
+    format: z.string().optional(),
+    duration: z.string().optional(),
+    isFree: z.union([z.boolean(), z.string()]).optional(),
     currency: z.string().optional().default("USD"),
-    hasCertificate: z.boolean().optional().default(false),
+    hasCertificate: z.union([z.boolean(), z.string()]).optional(),
     certificateDetails: z.string().optional(),
     prerequisites: z.string().optional(),
-    enrollmentUrl: z
-      .string({ required_error: "Direct enrollment URL is required" })
-      .url("Invalid enrollment URL"),
   }),
 });
 
 const updatePartnerCourseSchema = z.object({
   body: z.object({
     title: z.string().optional(),
+    category: z.string().optional(),
+    categories: z.union([z.array(z.string()), z.string()]).optional(),
+    difficulty: z.string().optional(),
+    durationHours: z.union([z.number(), z.string()]).optional(),
+    estimatedWeeks: z.union([z.number(), z.string()]).optional(),
+    price: z.union([z.number(), z.string()]).optional(),
+    courseBoxUrl: z.string().optional(),
+    enrollmentUrl: z.string().optional(),
+    instructorName: z.string().optional(),
+    instructorBio: z.string().optional(),
+    instructorDetails: z.string().optional(),
+    lessons: z.any().optional(),
     summary: z.string().optional(),
     description: z.string().optional(),
-    learningOutcomes: z.array(z.string()).optional(),
+    learningOutcomes: z.union([z.array(z.string()), z.string()]).optional(),
     targetAudience: z.string().optional(),
-    instructorDetails: z.string().optional(),
-    categories: z.array(z.string()).optional(),
-    format: z
-      .enum([
-        "online_self_paced",
-        "online_cohort",
-        "in_person",
-        "hybrid",
-        "workshop",
-        "short_course",
-        "certificate_program",
-      ])
-      .optional(),
+    format: z.string().optional(),
     duration: z.string().optional(),
-    isFree: z.boolean().optional(),
-    price: z.number().optional(),
+    isFree: z.union([z.boolean(), z.string()]).optional(),
     currency: z.string().optional(),
-    hasCertificate: z.boolean().optional(),
+    hasCertificate: z.union([z.boolean(), z.string()]).optional(),
     certificateDetails: z.string().optional(),
     prerequisites: z.string().optional(),
-    enrollmentUrl: z.string().url("Invalid enrollment URL").optional(),
+    resubmit: z.union([z.boolean(), z.string()]).optional(),
   }),
 });
 

@@ -551,9 +551,9 @@ const createStripeConnectOnboardingLink = async (
 
   const frontendUrl = config.frontendUrl || "http://localhost:3000";
   const returnUrl =
-    clientUrls?.returnUrl || `${frontendUrl}/partner/stripe/return`;
+    clientUrls?.returnUrl || `${frontendUrl}/partner-dashboard/courses?stripe=return`;
   const refreshUrl =
-    clientUrls?.refreshUrl || `${frontendUrl}/partner/stripe/refresh`;
+    clientUrls?.refreshUrl || `${frontendUrl}/partner-dashboard/courses?stripe=refresh`;
 
   let accountId = profile.stripeConnectAccountId;
 
@@ -621,31 +621,35 @@ const getStripeConnectStatus = async (userId: string) => {
   }
 
   // Fetch real-time account status from Stripe
-  const account = await stripe.accounts.retrieve(profile.stripeConnectAccountId);
+  try {
+    const account = await stripe.accounts.retrieve(profile.stripeConnectAccountId);
 
-  const chargesEnabled = Boolean(account.charges_enabled);
-  const payoutsEnabled = Boolean(account.payouts_enabled);
-  const detailsSubmitted = Boolean(account.details_submitted);
+    const chargesEnabled = Boolean(account.charges_enabled);
+    const payoutsEnabled = Boolean(account.payouts_enabled);
+    const detailsSubmitted = Boolean(account.details_submitted);
 
-  let status: "not_connected" | "pending" | "active" | "restricted" = "pending";
-  if (chargesEnabled && payoutsEnabled) {
-    status = "active";
-  } else if (account.requirements?.disabled_reason) {
-    status = "restricted";
-  } else {
-    status = "pending";
+    let status: "not_connected" | "pending" | "active" | "restricted" = "pending";
+    if (chargesEnabled && payoutsEnabled) {
+      status = "active";
+    } else if (account.requirements?.disabled_reason) {
+      status = "restricted";
+    } else {
+      status = "pending";
+    }
+
+    profile.stripeChargesEnabled = chargesEnabled;
+    profile.stripePayoutsEnabled = payoutsEnabled;
+    profile.stripeDetailsSubmitted = detailsSubmitted;
+    profile.stripeConnectStatus = status;
+
+    if (status === "active" && !profile.stripeConnectOnboardedAt) {
+      profile.stripeConnectOnboardedAt = new Date();
+    }
+
+    await profile.save();
+  } catch (stripeErr) {
+    console.error("Error retrieving Stripe Connect account details:", stripeErr);
   }
-
-  profile.stripeChargesEnabled = chargesEnabled;
-  profile.stripePayoutsEnabled = payoutsEnabled;
-  profile.stripeDetailsSubmitted = detailsSubmitted;
-  profile.stripeConnectStatus = status;
-
-  if (status === "active" && !profile.stripeConnectOnboardedAt) {
-    profile.stripeConnectOnboardedAt = new Date();
-  }
-
-  await profile.save();
 
   return {
     connected: true,
@@ -682,7 +686,8 @@ const createStripeConnectDashboardLink = async (userId: string) => {
 const submitCourse = async (
   userId: string,
   payload: any,
-  file?: Express.Multer.File
+  files?: Record<string, Express.Multer.File[]>,
+  singleFile?: Express.Multer.File
 ) => {
   const profile = await PartnerProfile.findOne({
     userId: new Types.ObjectId(userId),
@@ -695,22 +700,96 @@ const submitCourse = async (
     );
   }
 
+  // Partner must complete Stripe Connect onboarding before publishing courses
+  const isStripeReady = Boolean(
+    profile.stripeConnectAccountId &&
+      (profile.stripeConnectStatus === "active" ||
+        profile.stripePayoutsEnabled ||
+        profile.stripeDetailsSubmitted)
+  );
+
+  if (!isStripeReady) {
+    throw new AppError(
+      "You must complete your Stripe Connect payout account onboarding before you can submit or publish courses.",
+      StatusCodes.BAD_REQUEST
+    );
+  }
+
+  const coverFile = files?.image?.[0] || files?.coverImage?.[0] || singleFile;
+  const instructorFile = files?.instructorImage?.[0];
+
   let coverData = { public_id: "", url: "" };
-  if (file) {
+  if (coverFile) {
     const uploaded = await uploadToCloudinary(
-      file.path,
+      coverFile.path,
       "act_on_climate/partner_course_covers"
     );
     coverData = { public_id: uploaded.public_id, url: uploaded.secure_url };
   }
 
+  let instructorImageData = { public_id: "", url: "" };
+  if (instructorFile) {
+    const uploaded = await uploadToCloudinary(
+      instructorFile.path,
+      "act_on_climate/partner_instructors"
+    );
+    instructorImageData = { public_id: uploaded.public_id, url: uploaded.secure_url };
+  }
+
   const slug = await generateSlug(payload.title, Course);
 
+  // Parse lessons
+  let lessons: any[] = [];
+  if (payload.lessons) {
+    if (typeof payload.lessons === "string") {
+      try {
+        lessons = JSON.parse(payload.lessons);
+      } catch {
+        lessons = [];
+      }
+    } else if (Array.isArray(payload.lessons)) {
+      lessons = payload.lessons;
+    }
+  } else {
+    const lessonMap: Record<number, any> = {};
+    Object.keys(payload).forEach((key) => {
+      const match = key.match(/^lessons\[(\d+)\]\[(\w+)\]$/);
+      if (match) {
+        const idx = Number(match[1]);
+        const prop = match[2];
+        if (!lessonMap[idx]) lessonMap[idx] = {};
+        lessonMap[idx][prop] = payload[key];
+      }
+    });
+    const indices = Object.keys(lessonMap).map(Number).sort((a, b) => a - b);
+    if (indices.length > 0) {
+      lessons = indices.map((i) => lessonMap[i]);
+    }
+  }
+
+  const lessonsData = lessons
+    .filter((l) => l && (l.title || l.videoUrl))
+    .map((l) => ({
+      title: String(l.title || "").trim(),
+      videoUrl: String(l.videoUrl || "").trim(),
+    }));
+
+  const durationHours = Number(payload.durationHours) || 0;
+  const estimatedWeeks = Number(payload.estimatedWeeks) || 0;
+  const price = Number(payload.price) || 0;
+  const isFree = payload.isFree !== undefined ? Boolean(payload.isFree) : price === 0;
+  const category = payload.category || (Array.isArray(payload.categories) && payload.categories[0]) || "Beginner Courses";
   const categories = Array.isArray(payload.categories)
     ? payload.categories
     : payload.categories
     ? [payload.categories]
-    : [];
+    : [category];
+  const difficulty = payload.difficulty || "Beginner";
+  const courseBoxUrl = payload.courseBoxUrl || payload.enrollmentUrl || "";
+  const enrollmentUrl = payload.enrollmentUrl || payload.courseBoxUrl || "";
+  const instructorName = payload.instructorName || "";
+  const instructorBio = payload.instructorBio || payload.instructorDetails || "";
+  const duration = payload.duration || (durationHours ? `${durationHours} hours` : "Self-paced");
 
   const newCourse = await Course.create({
     providerId: profile._id,
@@ -718,9 +797,31 @@ const submitCourse = async (
     source: "PARTNER",
     status: "submitted",
     isAvailable: false,
-    ...payload,
-    category: categories[0] || payload.category || "Educational Courses",
+    title: payload.title,
+    category,
     categories,
+    difficulty,
+    durationHours,
+    estimatedWeeks,
+    duration,
+    price,
+    isFree,
+    currency: payload.currency || "USD",
+    courseBoxUrl,
+    enrollmentUrl,
+    instructorName,
+    instructorBio,
+    instructorDetails: instructorBio || instructorName,
+    instructorImage: instructorImageData.url ? instructorImageData : undefined,
+    description: payload.description || payload.title,
+    summary: payload.summary || payload.title,
+    learningOutcomes: Array.isArray(payload.learningOutcomes) ? payload.learningOutcomes : [],
+    targetAudience: payload.targetAudience || "General learners",
+    format: payload.format || "online_self_paced",
+    hasCertificate: payload.hasCertificate !== undefined ? Boolean(payload.hasCertificate) : false,
+    certificateDetails: payload.certificateDetails || "",
+    prerequisites: payload.prerequisites || "",
+    lessons: lessonsData,
     slug,
     image: coverData,
     coverImage: coverData,
@@ -804,7 +905,8 @@ const updateCourse = async (
   userId: string,
   courseId: string,
   payload: any,
-  file?: Express.Multer.File
+  files?: Record<string, Express.Multer.File[]>,
+  singleFile?: Express.Multer.File
 ) => {
   const course = await Course.findById(courseId);
   if (!course) {
@@ -818,9 +920,12 @@ const updateCourse = async (
     );
   }
 
-  if (file) {
+  const coverFile = files?.image?.[0] || files?.coverImage?.[0] || singleFile;
+  const instructorFile = files?.instructorImage?.[0];
+
+  if (coverFile) {
     const uploaded = await uploadToCloudinary(
-      file.path,
+      coverFile.path,
       "act_on_climate/partner_course_covers"
     );
     payload.coverImage = {
@@ -828,6 +933,73 @@ const updateCourse = async (
       url: uploaded.secure_url,
     };
     payload.image = payload.coverImage;
+  }
+
+  if (instructorFile) {
+    const uploaded = await uploadToCloudinary(
+      instructorFile.path,
+      "act_on_climate/partner_instructors"
+    );
+    payload.instructorImage = {
+      public_id: uploaded.public_id,
+      url: uploaded.secure_url,
+    };
+  }
+
+  if (payload.lessons !== undefined) {
+    let lessons: any[] = [];
+    if (typeof payload.lessons === "string") {
+      try {
+        lessons = JSON.parse(payload.lessons);
+      } catch {
+        lessons = [];
+      }
+    } else if (Array.isArray(payload.lessons)) {
+      lessons = payload.lessons;
+    } else {
+      const lessonMap: Record<number, any> = {};
+      Object.keys(payload).forEach((key) => {
+        const match = key.match(/^lessons\[(\d+)\]\[(\w+)\]$/);
+        if (match) {
+          const idx = Number(match[1]);
+          const prop = match[2];
+          if (!lessonMap[idx]) lessonMap[idx] = {};
+          lessonMap[idx][prop] = payload[key];
+        }
+      });
+      const indices = Object.keys(lessonMap).map(Number).sort((a, b) => a - b);
+      if (indices.length > 0) {
+        lessons = indices.map((i) => lessonMap[i]);
+      }
+    }
+    payload.lessons = lessons
+      .filter((l) => l && (l.title || l.videoUrl))
+      .map((l) => ({
+        title: String(l.title || "").trim(),
+        videoUrl: String(l.videoUrl || "").trim(),
+      }));
+  }
+
+  if (payload.durationHours !== undefined) {
+    payload.durationHours = Number(payload.durationHours) || 0;
+  }
+  if (payload.estimatedWeeks !== undefined) {
+    payload.estimatedWeeks = Number(payload.estimatedWeeks) || 0;
+  }
+  if (payload.price !== undefined) {
+    payload.price = Number(payload.price) || 0;
+  }
+  if (payload.category && !payload.categories) {
+    payload.categories = [payload.category];
+  }
+  if (payload.courseBoxUrl && !payload.enrollmentUrl) {
+    payload.enrollmentUrl = payload.courseBoxUrl;
+  }
+  if (payload.enrollmentUrl && !payload.courseBoxUrl) {
+    payload.courseBoxUrl = payload.enrollmentUrl;
+  }
+  if (payload.instructorBio && !payload.instructorDetails) {
+    payload.instructorDetails = payload.instructorBio;
   }
 
   if (payload.title && payload.title !== course.title) {
@@ -1160,9 +1332,9 @@ const getAdminReviewQueue = async (query: any) => {
   const skip = (page - 1) * limit;
 
   const filter: any = { source: "PARTNER" };
-  if (query.status) {
+  if (query.status && query.status !== "all") {
     filter.status = query.status;
-  } else {
+  } else if (!query.status) {
     filter.status = { $in: ["submitted", "under_review", "revision_requested"] };
   }
 

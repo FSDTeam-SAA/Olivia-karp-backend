@@ -475,7 +475,11 @@ router.post(
     USER_ROLE.MONTHLY_MEMBER,
     USER_ROLE.BEGINNER_MEMBER
   ),
-  upload.single("coverImage"),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
+    { name: "instructorImage", maxCount: 1 },
+  ]),
   parseData,
   validateRequest(EducationPartnerValidations.createPartnerCourseSchema),
   educationPartnerController.submitCourse
@@ -565,7 +569,11 @@ router.put(
     USER_ROLE.MONTHLY_MEMBER,
     USER_ROLE.BEGINNER_MEMBER
   ),
-  upload.single("coverImage"),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
+    { name: "instructorImage", maxCount: 1 },
+  ]),
   parseData,
   validateRequest(EducationPartnerValidations.updatePartnerCourseSchema),
   educationPartnerController.updateCourse
