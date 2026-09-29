@@ -461,21 +461,50 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
   // ===============================
   // 🤝 HANDLE STRIPE CONNECT ACCOUNT UPDATES
   // ===============================
-  if (event.type === "account.updated") {
-    const account = event.data.object as Stripe.Account;
+  if (
+    event.type === "account.updated" ||
+    (event.type as string) === "v2.core.account.updated"
+  ) {
+    const rawAccount = event.data.object as any;
+    const accountId = rawAccount.id;
     const partner = await PartnerProfile.findOne({
-      stripeConnectAccountId: account.id,
+      stripeConnectAccountId: accountId,
     });
 
     if (partner) {
-      const chargesEnabled = Boolean(account.charges_enabled);
-      const payoutsEnabled = Boolean(account.payouts_enabled);
-      const detailsSubmitted = Boolean(account.details_submitted);
+      let chargesEnabled = Boolean(rawAccount.charges_enabled);
+      let payoutsEnabled = Boolean(rawAccount.payouts_enabled);
+      let detailsSubmitted = Boolean(rawAccount.details_submitted);
+
+      // If it's a v2 event without legacy boolean flags, retrieve fresh account status
+      if (
+        rawAccount.charges_enabled === undefined &&
+        rawAccount.payouts_enabled === undefined
+      ) {
+        try {
+          const fresh = await stripe.accounts.retrieve(accountId);
+          chargesEnabled = Boolean(fresh.charges_enabled);
+          payoutsEnabled = Boolean(fresh.payouts_enabled);
+          detailsSubmitted = Boolean(fresh.details_submitted);
+        } catch {
+          const merchantCap =
+            rawAccount.configuration?.merchant?.capabilities?.card_payments
+              ?.status;
+          const recipientCap =
+            rawAccount.configuration?.recipient?.capabilities?.stripe_balance
+              ?.stripe_transfers?.status;
+          chargesEnabled = merchantCap === "active";
+          payoutsEnabled = recipientCap === "active";
+          detailsSubmitted = Boolean(
+            rawAccount.applied_configurations?.length > 0
+          );
+        }
+      }
 
       let status: "not_connected" | "pending" | "active" | "restricted" = "pending";
       if (chargesEnabled && payoutsEnabled) {
         status = "active";
-      } else if (account.requirements?.disabled_reason) {
+      } else if (rawAccount.requirements?.disabled_reason) {
         status = "restricted";
       } else {
         status = "pending";
