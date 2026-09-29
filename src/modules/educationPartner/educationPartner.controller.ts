@@ -140,6 +140,18 @@ const createStripeConnectDashboardLink = catchAsync(async (req: Request, res: Re
   });
 });
 
+const devSkipStripeVerification = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
+  const result = await educationPartnerService.devSkipStripeVerification(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Stripe Connect verification skipped for development mode",
+    data: result,
+  });
+});
+
 // ==========================================
 // 4. Course Submissions & Management
 // ==========================================
@@ -394,6 +406,7 @@ export const educationPartnerController = {
   createStripeConnectOnboard,
   getStripeConnectStatus,
   createStripeConnectDashboardLink,
+  devSkipStripeVerification,
   submitCourse,
   getMyCourses,
   getCourseById,

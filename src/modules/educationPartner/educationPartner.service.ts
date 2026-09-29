@@ -555,6 +555,7 @@ const createStripeConnectOnboardingLink = async (
   const refreshUrl =
     clientUrls?.refreshUrl || `${frontendUrl}/partner-dashboard/courses?stripe=refresh`;
 
+  const isDevelopment = process.env.NODE_ENV === "development" || config.NODE_ENV === "development";
   let accountId = profile.stripeConnectAccountId;
 
   // If no account exists yet, create a Connected Account using Accounts v2 API (POST /v2/core/accounts)
@@ -638,7 +639,24 @@ const createStripeConnectOnboardingLink = async (
     }
 
     profile.stripeConnectAccountId = accountId;
-    profile.stripeConnectStatus = "pending";
+    profile.stripeConnectStatus = isDevelopment ? "active" : "pending";
+    if (isDevelopment) {
+      profile.stripeChargesEnabled = true;
+      profile.stripePayoutsEnabled = true;
+      profile.stripeDetailsSubmitted = true;
+      if (!profile.stripeConnectOnboardedAt) {
+        profile.stripeConnectOnboardedAt = new Date();
+      }
+    }
+    await profile.save();
+  } else if (isDevelopment) {
+    profile.stripeConnectStatus = "active";
+    profile.stripeChargesEnabled = true;
+    profile.stripePayoutsEnabled = true;
+    profile.stripeDetailsSubmitted = true;
+    if (!profile.stripeConnectOnboardedAt) {
+      profile.stripeConnectOnboardedAt = new Date();
+    }
     await profile.save();
   }
 
@@ -675,10 +693,14 @@ const createStripeConnectOnboardingLink = async (
     onboardingUrl,
     stripeConnectAccountId: accountId,
     expiresAt,
+    isDevelopment,
+    autoVerified: isDevelopment,
   };
 };
 
 const getStripeConnectStatus = async (userId: string) => {
+  const isDevelopment = process.env.NODE_ENV === "development" || config.NODE_ENV === "development";
+
   const profile = await PartnerProfile.findOne({
     userId: new Types.ObjectId(userId),
   });
@@ -694,6 +716,7 @@ const getStripeConnectStatus = async (userId: string) => {
       chargesEnabled: false,
       payoutsEnabled: false,
       detailsSubmitted: false,
+      isDevelopment,
     };
   }
 
@@ -702,56 +725,65 @@ const getStripeConnectStatus = async (userId: string) => {
   let detailsSubmitted = false;
   let status: "not_connected" | "pending" | "active" | "restricted" = "pending";
 
-  try {
-    // Fetch real-time account status from Stripe (interoperable across v1 and v2)
-    const account = await stripe.accounts.retrieve(
-      profile.stripeConnectAccountId
-    );
-
-    chargesEnabled = Boolean(account.charges_enabled);
-    payoutsEnabled = Boolean(account.payouts_enabled);
-    detailsSubmitted = Boolean(account.details_submitted);
-
-    if (chargesEnabled && payoutsEnabled) {
-      status = "active";
-    } else if (account.requirements?.disabled_reason) {
-      status = "restricted";
-    } else {
-      status = "pending";
-    }
-  } catch (err) {
-    // Fallback: try v2 retrieval if v1 accounts.retrieve fails
+  if (isDevelopment) {
+    // In development mode, bypass KYC ID and SSN verification blockers
+    chargesEnabled = true;
+    payoutsEnabled = true;
+    detailsSubmitted = true;
+    status = "active";
+  } else {
+    // In production mode, strictly enforce real-time Stripe verification
     try {
-      const v2Acc = await (stripe as any).v2.core.accounts.retrieve(
-        profile.stripeConnectAccountId,
-        {
-          include: [
-            "configuration.merchant",
-            "configuration.recipient",
-            "requirements",
-          ],
-        }
+      // Fetch real-time account status from Stripe (interoperable across v1 and v2)
+      const account = await stripe.accounts.retrieve(
+        profile.stripeConnectAccountId
       );
-      const merchantCap =
-        v2Acc.configuration?.merchant?.capabilities?.card_payments?.status;
-      const recipientCap =
-        v2Acc.configuration?.recipient?.capabilities?.stripe_balance
-          ?.stripe_transfers?.status;
 
-      chargesEnabled = merchantCap === "active";
-      payoutsEnabled = recipientCap === "active";
-      detailsSubmitted = Boolean(
-        v2Acc.applied_configurations &&
-          v2Acc.applied_configurations.length > 0
-      );
+      chargesEnabled = Boolean(account.charges_enabled);
+      payoutsEnabled = Boolean(account.payouts_enabled);
+      detailsSubmitted = Boolean(account.details_submitted);
 
       if (chargesEnabled && payoutsEnabled) {
         status = "active";
+      } else if (account.requirements?.disabled_reason) {
+        status = "restricted";
       } else {
         status = "pending";
       }
-    } catch (v2Err) {
-      console.warn("Could not retrieve account status from Stripe (v1 & v2):", v2Err);
+    } catch (err) {
+      // Fallback: try v2 retrieval if v1 accounts.retrieve fails
+      try {
+        const v2Acc = await (stripe as any).v2.core.accounts.retrieve(
+          profile.stripeConnectAccountId,
+          {
+            include: [
+              "configuration.merchant",
+              "configuration.recipient",
+              "requirements",
+            ],
+          }
+        );
+        const merchantCap =
+          v2Acc.configuration?.merchant?.capabilities?.card_payments?.status;
+        const recipientCap =
+          v2Acc.configuration?.recipient?.capabilities?.stripe_balance
+            ?.stripe_transfers?.status;
+
+        chargesEnabled = merchantCap === "active";
+        payoutsEnabled = recipientCap === "active";
+        detailsSubmitted = Boolean(
+          v2Acc.applied_configurations &&
+            v2Acc.applied_configurations.length > 0
+        );
+
+        if (chargesEnabled && payoutsEnabled) {
+          status = "active";
+        } else {
+          status = "pending";
+        }
+      } catch (v2Err) {
+        console.warn("Could not retrieve account status from Stripe (v1 & v2):", v2Err);
+      }
     }
   }
 
@@ -774,6 +806,50 @@ const getStripeConnectStatus = async (userId: string) => {
     payoutsEnabled: profile.stripePayoutsEnabled,
     detailsSubmitted: profile.stripeDetailsSubmitted,
     stripeConnectOnboardedAt: profile.stripeConnectOnboardedAt,
+    isDevelopment,
+  };
+};
+
+const devSkipStripeVerification = async (userId: string) => {
+  const isDevelopment = process.env.NODE_ENV === "development" || config.NODE_ENV === "development";
+  if (!isDevelopment) {
+    throw new AppError(
+      "Development bypass is only permitted in development mode (NODE_ENV=development).",
+      StatusCodes.FORBIDDEN
+    );
+  }
+
+  const profile = await PartnerProfile.findOne({
+    userId: new Types.ObjectId(userId),
+  });
+
+  if (!profile) {
+    throw new AppError("Partner profile not found.", StatusCodes.NOT_FOUND);
+  }
+
+  if (!profile.stripeConnectAccountId) {
+    profile.stripeConnectAccountId = `acct_test_${Date.now()}`;
+  }
+
+  profile.stripeConnectStatus = "active";
+  profile.stripeChargesEnabled = true;
+  profile.stripePayoutsEnabled = true;
+  profile.stripeDetailsSubmitted = true;
+  if (!profile.stripeConnectOnboardedAt) {
+    profile.stripeConnectOnboardedAt = new Date();
+  }
+
+  await profile.save();
+
+  return {
+    connected: true,
+    stripeConnectAccountId: profile.stripeConnectAccountId,
+    status: "active",
+    chargesEnabled: true,
+    payoutsEnabled: true,
+    detailsSubmitted: true,
+    stripeConnectOnboardedAt: profile.stripeConnectOnboardedAt,
+    isDevelopment: true,
   };
 };
 
@@ -829,9 +905,11 @@ const submitCourse = async (
   }
 
   // Partner must complete Stripe Connect onboarding before publishing courses
+  const isDevelopment = process.env.NODE_ENV === "development" || config.NODE_ENV === "development";
   const isStripeReady = Boolean(
     profile.stripeConnectAccountId &&
-      (profile.stripeConnectStatus === "active" ||
+      (isDevelopment ||
+        profile.stripeConnectStatus === "active" ||
         profile.stripePayoutsEnabled ||
         profile.stripeDetailsSubmitted)
   );
@@ -1644,6 +1722,7 @@ export const educationPartnerService = {
   createStripeConnectOnboardingLink,
   getStripeConnectStatus,
   createStripeConnectDashboardLink,
+  devSkipStripeVerification,
   submitCourse,
   getMyCourses,
   getCourseById,

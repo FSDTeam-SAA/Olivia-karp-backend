@@ -437,6 +437,19 @@ router.get(
   educationPartnerController.createStripeConnectDashboardLink
 );
 
+router.post(
+  "/stripe-connect/dev-skip",
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER
+  ),
+  educationPartnerController.devSkipStripeVerification
+);
+
 /**
  * @swagger
  * /api/v1/education-partner/courses:
