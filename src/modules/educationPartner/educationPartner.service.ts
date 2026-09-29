@@ -557,47 +557,124 @@ const createStripeConnectOnboardingLink = async (
 
   let accountId = profile.stripeConnectAccountId;
 
-  // If no account exists yet, create an Express connected account
+  // If no account exists yet, create a Connected Account using Accounts v2 API (POST /v2/core/accounts)
   if (!accountId) {
-    const businessType =
+    const businessType: "individual" | "company" =
       profile.organizationType === "independent_educator"
         ? "individual"
         : "company";
 
-    const account = await stripe.accounts.create({
-      type: "express",
-      country: "US", // Default US or can be customized by country if needed
-      email: profile.contactEmail || user.email,
-      business_type: businessType,
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      metadata: {
-        partnerProfileId: (profile._id as Types.ObjectId).toString(),
-        userId: user._id.toString(),
-        organizationName: profile.organizationName,
-      },
-    });
+    try {
+      // 1. Primary: Stripe Accounts v2 API (POST /v2/core/accounts)
+      const v2Account = await stripe.v2.core.accounts.create({
+        contact_email: profile.contactEmail || user.email,
+        display_name: profile.organizationName || "Education Partner",
+        identity: {
+          country: "US",
+          entity_type: businessType,
+        },
+        dashboard: "express",
+        defaults: {
+          responsibilities: {
+            fees_collector: "application",
+            losses_collector: "application",
+          },
+        },
+        configuration: {
+          recipient: {
+            capabilities: {
+              stripe_balance: {
+                stripe_transfers: { requested: true },
+              },
+            },
+          },
+          merchant: {
+            capabilities: {
+              card_payments: { requested: true },
+            },
+          },
+        },
+        metadata: {
+          partnerProfileId: (profile._id as Types.ObjectId).toString(),
+          userId: user._id.toString(),
+          organizationName: profile.organizationName || "",
+        },
+      });
 
-    accountId = account.id;
+      accountId = v2Account.id;
+    } catch (v2Error: any) {
+      console.warn(
+        "Stripe Accounts v2 creation failed, attempting fallback:",
+        v2Error?.message || v2Error
+      );
+
+      // 2. Fallback: If v2 API endpoint throws, try controller-based account creation
+      try {
+        const fallbackAccount = await stripe.accounts.create({
+          controller: {
+            stripe_dashboard: { type: "express" },
+            fees: { payer: "application" },
+            losses: { payments: "application" },
+            requirement_collection: "stripe",
+          },
+          country: "US",
+          email: profile.contactEmail || user.email,
+          business_type: businessType,
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true },
+          },
+          metadata: {
+            partnerProfileId: (profile._id as Types.ObjectId).toString(),
+            userId: user._id.toString(),
+            organizationName: profile.organizationName || "",
+          },
+        });
+        accountId = fallbackAccount.id;
+      } catch {
+        // If fallback also fails, throw the original v2 error
+        throw v2Error;
+      }
+    }
+
     profile.stripeConnectAccountId = accountId;
     profile.stripeConnectStatus = "pending";
     await profile.save();
   }
 
-  // Create an Account Link for onboarding
-  const accountLink = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: refreshUrl,
-    return_url: returnUrl,
-    type: "account_onboarding",
-  });
+  // Create an Account Link for onboarding (v2 AccountLinks or standard AccountLinks)
+  let onboardingUrl: string = "";
+  let expiresAt: any = undefined;
+
+  try {
+    const v2Link = await stripe.v2.core.accountLinks.create({
+      account: accountId,
+      use_case: {
+        type: "account_onboarding",
+        account_onboarding: {
+          configurations: ["merchant", "recipient"],
+          refresh_url: refreshUrl,
+          return_url: returnUrl,
+        },
+      },
+    });
+    onboardingUrl = v2Link.url;
+    expiresAt = v2Link.expires_at;
+  } catch {
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: refreshUrl,
+      return_url: returnUrl,
+      type: "account_onboarding",
+    });
+    onboardingUrl = accountLink.url;
+    expiresAt = accountLink.expires_at;
+  }
 
   return {
-    onboardingUrl: accountLink.url,
+    onboardingUrl,
     stripeConnectAccountId: accountId,
-    expiresAt: accountLink.expires_at,
+    expiresAt,
   };
 };
 
@@ -620,20 +697,62 @@ const getStripeConnectStatus = async (userId: string) => {
     };
   }
 
-  // Fetch real-time account status from Stripe
-  const account = await stripe.accounts.retrieve(profile.stripeConnectAccountId);
-
-  const chargesEnabled = Boolean(account.charges_enabled);
-  const payoutsEnabled = Boolean(account.payouts_enabled);
-  const detailsSubmitted = Boolean(account.details_submitted);
-
+  let chargesEnabled = false;
+  let payoutsEnabled = false;
+  let detailsSubmitted = false;
   let status: "not_connected" | "pending" | "active" | "restricted" = "pending";
-  if (chargesEnabled && payoutsEnabled) {
-    status = "active";
-  } else if (account.requirements?.disabled_reason) {
-    status = "restricted";
-  } else {
-    status = "pending";
+
+  try {
+    // Fetch real-time account status from Stripe (interoperable across v1 and v2)
+    const account = await stripe.accounts.retrieve(
+      profile.stripeConnectAccountId
+    );
+
+    chargesEnabled = Boolean(account.charges_enabled);
+    payoutsEnabled = Boolean(account.payouts_enabled);
+    detailsSubmitted = Boolean(account.details_submitted);
+
+    if (chargesEnabled && payoutsEnabled) {
+      status = "active";
+    } else if (account.requirements?.disabled_reason) {
+      status = "restricted";
+    } else {
+      status = "pending";
+    }
+  } catch (err) {
+    // Fallback: try v2 retrieval if v1 accounts.retrieve fails
+    try {
+      const v2Acc = await stripe.v2.core.accounts.retrieve(
+        profile.stripeConnectAccountId,
+        {
+          include: [
+            "configuration.merchant",
+            "configuration.recipient",
+            "requirements",
+          ],
+        }
+      );
+      const merchantCap =
+        v2Acc.configuration?.merchant?.capabilities?.card_payments?.status;
+      const recipientCap =
+        v2Acc.configuration?.recipient?.capabilities?.stripe_balance
+          ?.stripe_transfers?.status;
+
+      chargesEnabled = merchantCap === "active";
+      payoutsEnabled = recipientCap === "active";
+      detailsSubmitted = Boolean(
+        v2Acc.applied_configurations &&
+          v2Acc.applied_configurations.length > 0
+      );
+
+      if (chargesEnabled && payoutsEnabled) {
+        status = "active";
+      } else {
+        status = "pending";
+      }
+    } catch {
+      throw err;
+    }
   }
 
   profile.stripeChargesEnabled = chargesEnabled;
@@ -670,13 +789,26 @@ const createStripeConnectDashboardLink = async (userId: string) => {
     );
   }
 
-  const loginLink = await stripe.accounts.createLoginLink(
-    profile.stripeConnectAccountId
-  );
+  try {
+    const loginLink = await stripe.accounts.createLoginLink(
+      profile.stripeConnectAccountId
+    );
 
-  return {
-    url: loginLink.url,
-  };
+    return {
+      url: loginLink.url,
+    };
+  } catch (err: any) {
+    if (
+      err?.code === "link_invalid_for_incomplete_account" ||
+      err?.message?.includes("onboarding")
+    ) {
+      throw new AppError(
+        "Please complete your Stripe Connect onboarding before accessing the Express Dashboard.",
+        StatusCodes.BAD_REQUEST
+      );
+    }
+    throw err;
+  }
 };
 
 const submitCourse = async (
