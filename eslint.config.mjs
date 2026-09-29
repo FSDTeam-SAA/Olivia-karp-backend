@@ -3,7 +3,6 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import { defineConfig } from 'eslint/config';
 import { createRequire } from 'module';
-import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 
