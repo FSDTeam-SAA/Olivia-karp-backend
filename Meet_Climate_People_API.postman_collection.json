@@ -2,13 +2,18 @@
   "info": {
     "_postman_id": "8f3b2d10-74a9-4c8e-9d21-9a7c3b2e5f11",
     "name": "Meet Climate People API",
-    "description": "Postman Collection for Meet Climate People directory and Mighty Networks sync endpoints in Act on Climate backend.",
+    "description": "Postman Collection for Meet Climate People directory, member self-service profile management, admin tools, and Mighty Networks sync in Act on Climate backend.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "memberToken",
+      "value": "YOUR_MEMBER_JWT_TOKEN",
       "type": "string"
     },
     {
@@ -28,6 +33,115 @@
     }
   ],
   "item": [
+    {
+      "name": "Member Profile (Self-Service)",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "me"]
+            },
+            "description": "Retrieve the logged-in member's profile for preview or editing."
+          },
+          "response": []
+        },
+        {
+          "name": "Create or Update My Profile (JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sarah Jenkins\",\n  \"professionalTitle\": \"Climate Tech Product Leader\",\n  \"organization\": \"Clean Grid Innovations\",\n  \"about\": \"Working on smart grid integration and decentralized renewable energy solutions. Passionate about helping career changers transition to climate work.\",\n  \"professionalAreas\": [\n    \"Professional\",\n    \"Entrepreneur\"\n  ],\n  \"climateInterests\": [\n    \"Climate Tech\",\n    \"Energy\",\n    \"Sustainability\",\n    \"Climate Careers\"\n  ],\n  \"lookingFor\": [\n    \"Mentorship\",\n    \"Jobs\",\n    \"Collaborators\",\n    \"Networking\"\n  ],\n  \"canHelpWith\": [\n    \"Engineering\",\n    \"Technology\",\n    \"Sustainability\",\n    \"Marketing\"\n  ],\n  \"skills\": [\n    \"Product Management\",\n    \"Grid Optimization\",\n    \"Renewable Tech\"\n  ],\n  \"areasOfExpertise\": [\n    \"Clean Energy Solutions\",\n    \"Decarbonization\"\n  ],\n  \"education\": [\n    {\n      \"school\": \"MIT\",\n      \"degree\": \"B.S. Electrical Engineering\",\n      \"year\": \"2020\"\n    }\n  ],\n  \"experience\": [\n    {\n      \"title\": \"Lead Product Manager\",\n      \"company\": \"Clean Grid Innovations\",\n      \"duration\": \"2022 - Present\"\n    }\n  ],\n  \"linkedin\": \"https://linkedin.com/in/sarahjenkins-climate\",\n  \"website\": \"https://sarahjenkins.io\",\n  \"portfolio\": \"https://sarahjenkins.io/portfolio\",\n  \"profileImage\": \"https://images.unsplash.com/photo-1573496359142-b8d87734a5a2\",\n  \"location\": \"San Francisco, CA, USA\",\n  \"isVisible\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "me"]
+            },
+            "description": "Create or update the member's profile with categories (I am, I'm interested in, I'm looking for, I can help with) and bio information."
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile (Multipart Form Data with Image)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profileImage",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "data",
+                  "value": "{\n  \"professionalTitle\": \"Senior Climate Policy Strategist\",\n  \"organization\": \"Global Net-Zero Initiative\",\n  \"professionalAreas\": [\"Professional\", \"Researcher\"],\n  \"climateInterests\": [\"Policy\", \"Finance\", \"Sustainability\"],\n  \"lookingFor\": [\"Collaborators\", \"Career Advice\", \"Business Connections\"],\n  \"canHelpWith\": [\"Policy\", \"Finance\", \"Research\"]\n}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "me"]
+            },
+            "description": "Upload a custom avatar image along with JSON profile data."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete My Profile",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "me"]
+            },
+            "description": "Permanently remove the logged-in member's profile from the public directory."
+          },
+          "response": []
+        }
+      ]
+    },
     {
       "name": "Public Directory",
       "item": [
@@ -89,17 +203,17 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/meet-climate-people?climateInterest=Climate Action",
+              "raw": "{{baseUrl}}/meet-climate-people?climateInterest=Climate Tech",
               "host": ["{{baseUrl}}"],
               "path": ["meet-climate-people"],
               "query": [
                 {
                   "key": "climateInterest",
-                  "value": "Climate Action"
+                  "value": "Climate Tech"
                 }
               ]
             },
-            "description": "Filter directory profiles by specific climate interest tag."
+            "description": "Filter directory profiles by specific climate interest tag (e.g., Climate Tech, Energy, Policy, Finance, Sustainability)."
           },
           "response": []
         },
@@ -109,21 +223,21 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/meet-climate-people?professionalArea=Climate Impact&lookingFor=Networking",
+              "raw": "{{baseUrl}}/meet-climate-people?professionalArea=Professional&lookingFor=Mentorship",
               "host": ["{{baseUrl}}"],
               "path": ["meet-climate-people"],
               "query": [
                 {
                   "key": "professionalArea",
-                  "value": "Climate Impact"
+                  "value": "Professional"
                 },
                 {
                   "key": "lookingFor",
-                  "value": "Networking"
+                  "value": "Mentorship"
                 }
               ]
             },
-            "description": "Filter directory profiles by career goals and collaboration preferences."
+            "description": "Filter directory profiles by member category (I am) and collaboration goals (I'm looking for)."
           },
           "response": []
         },
@@ -146,6 +260,35 @@
     {
       "name": "Admin Management",
       "item": [
+        {
+          "name": "Admin Create Profile (Manual)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Marcus Vance\",\n  \"email\": \"marcus.vance@actonclimate.net\",\n  \"professionalTitle\": \"Carbon Removal Scientist\",\n  \"organization\": \"Oceanic CDR Institute\",\n  \"about\": \"Specializing in ocean alkalinity enhancement and marine carbon capture.\",\n  \"professionalAreas\": [\"Researcher\", \"Educator\"],\n  \"climateInterests\": [\"Climate Tech\", \"Biodiversity\", \"Sustainability\"],\n  \"lookingFor\": [\"Collaborators\", \"Research Grants\", \"Networking\"],\n  \"canHelpWith\": [\"Research\", \"Technology\", \"Engineering\"],\n  \"skills\": [\"Marine Chemistry\", \"Direct Air Capture\", \"Data Modeling\"],\n  \"location\": \"Vancouver, BC, Canada\",\n  \"isVisible\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/admin/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "admin", "create"]
+            },
+            "description": "Admin endpoint to manually add any member profile to the directory."
+          },
+          "response": []
+        },
         {
           "name": "Get Sync Status & Telemetry",
           "request": {
@@ -238,6 +381,26 @@
               "path": ["meet-climate-people", "{{profileId}}", "visibility"]
             },
             "description": "Toggle profile visibility in the public directory."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Delete Profile",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/meet-climate-people/{{profileId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["meet-climate-people", "{{profileId}}"]
+            },
+            "description": "Admin endpoint to delete a profile by MongoDB ObjectId or Mighty Networks member ID."
           },
           "response": []
         }

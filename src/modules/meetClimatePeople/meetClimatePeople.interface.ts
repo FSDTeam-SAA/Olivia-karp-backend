@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 export interface IEducationItem {
   school: string;
   degree: string;
@@ -11,7 +13,8 @@ export interface IExperienceItem {
 }
 
 export interface IMeetClimateProfile {
-  mightyMemberId: string;
+  userId?: Types.ObjectId | string;
+  mightyMemberId?: string;
   name: string;
   firstName?: string;
   lastName?: string;
