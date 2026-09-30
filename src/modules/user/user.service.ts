@@ -220,6 +220,20 @@ const updateUserProfile = async (payload: any, email: string, file: any) => {
   return result;
 };
 
+const dismissOnboardingModal = async (email: string) => {
+  const result = await User.findOneAndUpdate(
+    { email },
+    { hasSeenOnboardingModal: true },
+    { new: true }
+  ).select("-password -otp -otpExpires -resetPasswordOtp -resetPasswordOtpExpires");
+
+  if (!result) {
+    throw new AppError("User not found", StatusCodes.NOT_FOUND);
+  }
+
+  return result;
+};
+
 const userService = {
   registerUser,
   verifyEmail,
@@ -228,6 +242,8 @@ const userService = {
   getMyProfile,
   updateUserProfile,
   getAdminId,
+  dismissOnboardingModal,
 };
 
 export default userService;
+

@@ -84,10 +84,25 @@ const getSingleSurvey = async (id: string) => {
   return result;
 };
 
+const getMySurvey = async (email: string) => {
+  const user = await User.findOne({ email }).select("_id");
+  if (!user) {
+    throw new Error("No account found with the provided credentials.");
+  }
+
+  const result = await Survey.findOne({ userId: user._id }).populate(
+    "userId",
+    "firstName lastName email image",
+  );
+  return result;
+};
+
 const SurveyService = {
   createNewSurvey,
   getAllSurveys,
   getSingleSurvey,
+  getMySurvey,
 };
 
 export default SurveyService;
+

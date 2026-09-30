@@ -68,6 +68,35 @@ router.post(
 
 /**
  * @swagger
+ * /api/v1/survey/my-survey:
+ *   get:
+ *     summary: Get current logged-in user's survey response
+ *     tags: [Survey]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User survey details retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: No survey found
+ */
+router.get(
+  "/my-survey",
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.MEMBER,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER,
+  ),
+  surveyController.getMySurvey,
+);
+
+/**
+ * @swagger
  * /api/v1/survey:
  *   get:
  *     summary: Retrieve all survey responses (Admin Only)
@@ -111,4 +140,5 @@ router.get("/:id", surveyController.getSingleSurvey);
 
 const surveyRouter = router;
 export default surveyRouter;
+
 

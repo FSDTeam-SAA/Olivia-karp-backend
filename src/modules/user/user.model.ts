@@ -72,6 +72,10 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    hasSeenOnboardingModal: {
+      type: Boolean,
+      default: false,
+    },
     auth: [
       {
         provider: {
