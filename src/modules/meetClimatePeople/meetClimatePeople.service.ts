@@ -6,8 +6,9 @@ import config from "../../config";
 import { User } from "../user/user.model";
 import Survey from "../survey/survey.model";
 import { MeetClimateProfile } from "./meetClimatePeople.model";
-import { IProfileQueryParams } from "./meetClimatePeople.interface";
+import { IMeetClimateProfile, IProfileQueryParams } from "./meetClimatePeople.interface";
 import { mightyNetworksClient, MNMember } from "./mightyNetworks.client";
+import { uploadToCloudinary } from "../../utils/cloudinary";
 
 interface ISyncResult {
   totalFetched: number;
@@ -458,6 +459,206 @@ const handleMightyWebhook = async (payload: any) => {
   return { received: true, action: "profile_synced" };
 };
 
+const createOrUpdateMyProfileInDB = async (
+  userId: string,
+  payload: Partial<IMeetClimateProfile>,
+  file?: Express.Multer.File
+) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User account not found", StatusCodes.NOT_FOUND);
+  }
+
+  let profileImageUrl = payload.profileImage;
+  if (file?.path) {
+    const uploadRes = await uploadToCloudinary(file.path, "meet-climate-people");
+    profileImageUrl = uploadRes.secure_url;
+  } else if (!profileImageUrl && user.image?.url) {
+    profileImageUrl = user.image.url;
+  }
+
+  // Find existing profile by userId, or by user's email or mightyMemberId
+  const query: Record<string, any>[] = [{ userId: user._id }];
+  if (user.email) {
+    query.push({ email: user.email.toLowerCase().trim() });
+  }
+  if (user.mightyMemberId) {
+    query.push({ mightyMemberId: user.mightyMemberId });
+  }
+
+  let profile = await MeetClimateProfile.findOne({ $or: query });
+
+  const resolvedName =
+    payload.name?.trim() ||
+    `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+    "Act on Climate Member";
+
+  const updateData: Partial<IMeetClimateProfile> = {
+    userId: user._id,
+    name: resolvedName,
+    firstName: payload.firstName || user.firstName,
+    lastName: payload.lastName || user.lastName,
+    email: user.email?.toLowerCase().trim(),
+    professionalTitle:
+      payload.professionalTitle ||
+      profile?.professionalTitle ||
+      "Climate Community Member",
+    organization:
+      payload.organization ||
+      profile?.organization ||
+      "Act on Climate Community",
+    about: payload.about !== undefined ? payload.about : profile?.about || "",
+    climateInterests:
+      payload.climateInterests !== undefined
+        ? payload.climateInterests
+        : profile?.climateInterests || [],
+    professionalAreas:
+      payload.professionalAreas !== undefined
+        ? payload.professionalAreas
+        : profile?.professionalAreas || [],
+    education:
+      payload.education !== undefined
+        ? payload.education
+        : profile?.education || [],
+    experience:
+      payload.experience !== undefined
+        ? payload.experience
+        : profile?.experience || [],
+    skills: payload.skills !== undefined ? payload.skills : profile?.skills || [],
+    areasOfExpertise:
+      payload.areasOfExpertise !== undefined
+        ? payload.areasOfExpertise
+        : profile?.areasOfExpertise || [],
+    lookingFor:
+      payload.lookingFor !== undefined
+        ? payload.lookingFor
+        : profile?.lookingFor || [],
+    canHelpWith:
+      payload.canHelpWith !== undefined
+        ? payload.canHelpWith
+        : profile?.canHelpWith || [],
+    linkedin:
+      payload.linkedin !== undefined ? payload.linkedin : profile?.linkedin || "",
+    website:
+      payload.website !== undefined ? payload.website : profile?.website || "",
+    portfolio:
+      payload.portfolio !== undefined
+        ? payload.portfolio
+        : profile?.portfolio || "",
+    location:
+      payload.location !== undefined
+        ? payload.location
+        : profile?.location || user.location || "",
+    isVisible:
+      payload.isVisible !== undefined
+        ? payload.isVisible
+        : profile?.isVisible ?? true,
+    syncStatus: profile?.syncStatus || "manual",
+    lastSyncedAt: new Date(),
+  };
+
+  if (user.mightyMemberId || profile?.mightyMemberId) {
+    updateData.mightyMemberId = user.mightyMemberId || profile?.mightyMemberId;
+  }
+
+  if (profileImageUrl) {
+    updateData.profileImage = profileImageUrl;
+  }
+
+  if (profile) {
+    profile = await MeetClimateProfile.findByIdAndUpdate(
+      profile._id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select("-email -__v");
+  } else {
+    profile = await MeetClimateProfile.create(updateData);
+  }
+
+  return profile;
+};
+
+const getMyProfileFromDB = async (userId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User account not found", StatusCodes.NOT_FOUND);
+  }
+
+  const query: Record<string, any>[] = [{ userId: user._id }];
+  if (user.email) {
+    query.push({ email: user.email.toLowerCase().trim() });
+  }
+  if (user.mightyMemberId) {
+    query.push({ mightyMemberId: user.mightyMemberId });
+  }
+
+  const profile = await MeetClimateProfile.findOne({ $or: query })
+    .select("-email -__v")
+    .lean();
+  return profile;
+};
+
+const deleteMyProfileInDB = async (userId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User account not found", StatusCodes.NOT_FOUND);
+  }
+
+  const query: Record<string, any>[] = [{ userId: user._id }];
+  if (user.email) {
+    query.push({ email: user.email.toLowerCase().trim() });
+  }
+  if (user.mightyMemberId) {
+    query.push({ mightyMemberId: user.mightyMemberId });
+  }
+
+  const profile = await MeetClimateProfile.findOneAndDelete({ $or: query });
+  if (!profile) {
+    throw new AppError("Profile not found to delete", StatusCodes.NOT_FOUND);
+  }
+  return { deleted: true, id: profile._id };
+};
+
+const adminCreateProfileInDB = async (
+  payload: Partial<IMeetClimateProfile>,
+  file?: Express.Multer.File
+) => {
+  let profileImageUrl = payload.profileImage;
+  if (file?.path) {
+    const uploadRes = await uploadToCloudinary(file.path, "meet-climate-people");
+    profileImageUrl = uploadRes.secure_url;
+  }
+
+  const profileData: any = {
+    ...payload,
+    profileImage: profileImageUrl || payload.profileImage || "",
+    syncStatus: payload.syncStatus || "manual",
+    lastSyncedAt: new Date(),
+    isVisible: payload.isVisible !== undefined ? payload.isVisible : true,
+  };
+
+  if (!profileData.mightyMemberId) {
+    delete profileData.mightyMemberId;
+  }
+
+  const profile = await MeetClimateProfile.create(profileData);
+  return profile;
+};
+
+const deleteProfileByIdFromDB = async (id: string) => {
+  let profile = null;
+  if (Types.ObjectId.isValid(id)) {
+    profile = await MeetClimateProfile.findByIdAndDelete(id);
+  }
+  if (!profile) {
+    profile = await MeetClimateProfile.findOneAndDelete({ mightyMemberId: id });
+  }
+  if (!profile) {
+    throw new AppError("Profile not found to delete", StatusCodes.NOT_FOUND);
+  }
+  return { deleted: true, id: profile._id };
+};
+
 export const meetClimatePeopleService = {
   syncMembersFromMighty,
   getAllProfilesFromDB,
@@ -465,4 +666,9 @@ export const meetClimatePeopleService = {
   updateProfileVisibilityInDB,
   getSyncStatusFromDB,
   handleMightyWebhook,
+  createOrUpdateMyProfileInDB,
+  getMyProfileFromDB,
+  deleteMyProfileInDB,
+  adminCreateProfileInDB,
+  deleteProfileByIdFromDB,
 };

@@ -28,6 +28,7 @@ export interface IUser {
   auth: IAuthInterface[];
   isVerified: boolean;
   isSurvey: boolean;
+  hasSeenOnboardingModal?: boolean;
   otp?: string | null;
   otpExpires?: Date | null;
   resetPasswordOtp?: string | null;

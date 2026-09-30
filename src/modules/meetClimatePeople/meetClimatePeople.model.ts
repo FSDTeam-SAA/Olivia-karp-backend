@@ -3,10 +3,14 @@ import { IMeetClimateProfile } from "./meetClimatePeople.interface";
 
 const MeetClimateProfileSchema = new Schema<IMeetClimateProfile>(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
     mightyMemberId: {
       type: String,
-      required: true,
-      unique: true,
+      sparse: true,
       index: true,
     },
     name: {

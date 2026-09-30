@@ -74,6 +74,76 @@ const handleWebhook = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMyProfile = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)?.id || (req.user as any)?._id;
+  const result = await meetClimatePeopleService.getMyProfileFromDB(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result
+      ? "My climate profile retrieved successfully"
+      : "No profile created yet for this account",
+    data: result,
+  });
+});
+
+const createOrUpdateMyProfile = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = (req.user as any)?.id || (req.user as any)?._id;
+    const result = await meetClimatePeopleService.createOrUpdateMyProfileInDB(
+      userId,
+      req.body,
+      req.file
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Climate profile saved successfully",
+      data: result,
+    });
+  }
+);
+
+const deleteMyProfile = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)?.id || (req.user as any)?._id;
+  const result = await meetClimatePeopleService.deleteMyProfileInDB(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Climate profile deleted successfully",
+    data: result,
+  });
+});
+
+const adminCreateProfile = catchAsync(async (req: Request, res: Response) => {
+  const result = await meetClimatePeopleService.adminCreateProfileInDB(
+    req.body,
+    req.file
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "Climate profile created successfully by admin",
+    data: result,
+  });
+});
+
+const deleteProfileById = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await meetClimatePeopleService.deleteProfileByIdFromDB(id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Climate profile deleted successfully",
+    data: result,
+  });
+});
+
 export const meetClimatePeopleController = {
   getAllProfiles,
   getProfileById,
@@ -81,4 +151,9 @@ export const meetClimatePeopleController = {
   updateProfileVisibility,
   getSyncStatus,
   handleWebhook,
+  getMyProfile,
+  createOrUpdateMyProfile,
+  deleteMyProfile,
+  adminCreateProfile,
+  deleteProfileById,
 };

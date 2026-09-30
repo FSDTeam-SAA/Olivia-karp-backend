@@ -226,9 +226,29 @@ router.put(
 router.get(
   "/admin_id",
   auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
-
   userController.getAdminId,
+);
+
+/**
+ * @swagger
+ * /api/v1/user/dismiss-onboarding-modal:
+ *   patch:
+ *     summary: Dismiss the first-time welcome/onboarding pop-up modal
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Onboarding modal marked as dismissed
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
+router.patch(
+  "/dismiss-onboarding-modal",
+  auth(USER_ROLE.ADMIN, USER_ROLE.MEMBER, USER_ROLE.NON_MEMBER),
+  userController.dismissOnboardingModal,
 );
 
 const userRouter = router;
 export default userRouter;
+

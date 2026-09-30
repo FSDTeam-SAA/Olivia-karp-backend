@@ -96,6 +96,18 @@ const updateUserProfile = catchAsync(async (req, res) => {
   });
 });
 
+const dismissOnboardingModal = catchAsync(async (req, res) => {
+  const email = req.user!.email;
+  const result = await userService.dismissOnboardingModal(email);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Onboarding modal marked as dismissed successfully.",
+    data: result,
+  });
+});
+
 const userController = {
   registerUser,
   verifyEmail,
@@ -104,6 +116,8 @@ const userController = {
   getMyProfile,
   updateUserProfile,
   getAdminId,
+  dismissOnboardingModal,
 };
 
 export default userController;
+

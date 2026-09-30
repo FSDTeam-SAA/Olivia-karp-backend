@@ -68,6 +68,7 @@ const login = async (payload: { email: string; password: string }) => {
       postalCode: user.postalCode,
       dateOfBirth: user.dateOfBirth,
       isSurvey: user.isSurvey,
+      hasSeenOnboardingModal: user.hasSeenOnboardingModal ?? false,
     },
   };
 };
