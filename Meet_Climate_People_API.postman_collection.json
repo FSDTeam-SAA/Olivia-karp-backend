@@ -81,7 +81,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["meet-climate-people", "me"]
             },
-            "description": "Create or update the member's profile with categories (I am, I'm interested in, I'm looking for, I can help with) and bio information."
+            "description": "Create or update the member's profile with categories (I am, I'm interested in, I'm looking for, I can help with) and bio information. Requires an active paid membership plan (returns 403 'You need to choose a paid membership plan first' if the user is a free/normal user without a paid plan)."
           },
           "response": []
         },

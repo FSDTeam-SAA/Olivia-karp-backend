@@ -1,9 +1,12 @@
+import fs from "fs";
 import { Types } from "mongoose";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errors/AppError";
 import logger from "../../logger";
 import config from "../../config";
 import { User } from "../user/user.model";
+import { USER_ROLE } from "../user/user.constant";
+import PurchaseSubscription from "../purchaseSubscription/purchaseSubscription.model";
 import Survey from "../survey/survey.model";
 import { MeetClimateProfile } from "./meetClimatePeople.model";
 import { IMeetClimateProfile, IProfileQueryParams } from "./meetClimatePeople.interface";
@@ -467,6 +470,42 @@ const createOrUpdateMyProfileInDB = async (
   const user = await User.findById(userId);
   if (!user) {
     throw new AppError("User account not found", StatusCodes.NOT_FOUND);
+  }
+
+  // ── 1. Require Paid Membership Plan ───────────────────────────────────────
+  const isPaidRole =
+    user.role === USER_ROLE.ADMIN ||
+    user.role === USER_ROLE.MEMBER ||
+    user.role === USER_ROLE.ANNUAL_MEMBER ||
+    user.role === USER_ROLE.MONTHLY_MEMBER ||
+    user.role === USER_ROLE.BEGINNER_MEMBER ||
+    (Boolean(user.role) && user.role !== USER_ROLE.NON_MEMBER);
+
+  const hasMightyMembership = Boolean(user.mightyMemberId);
+
+  let hasActiveSubscription = false;
+  if (!isPaidRole && !hasMightyMembership) {
+    const now = new Date();
+    const activeSub = await PurchaseSubscription.findOne({
+      userId: user._id,
+      status: "active",
+      expirationDate: { $gt: now },
+    });
+    hasActiveSubscription = Boolean(activeSub);
+  }
+
+  if (!isPaidRole && !hasMightyMembership && !hasActiveSubscription) {
+    if (file?.path && fs.existsSync(file.path)) {
+      try {
+        fs.unlinkSync(file.path);
+      } catch {
+        // Ignore file cleanup error
+      }
+    }
+    throw new AppError(
+      "You need to choose a paid membership plan first",
+      StatusCodes.FORBIDDEN
+    );
   }
 
   let profileImageUrl = payload.profileImage;
