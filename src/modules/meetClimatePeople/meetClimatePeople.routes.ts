@@ -147,6 +147,8 @@ router.get("/me", auth(...ALL_MEMBER_ROLES), meetClimatePeopleController.getMyPr
  *         description: Validation error
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - You need to choose a paid membership plan first
  */
 router.post(
   "/me",
@@ -182,6 +184,12 @@ router.post(
  *     responses:
  *       200:
  *         description: Profile updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - You need to choose a paid membership plan first
  */
 router.put(
   "/me",
