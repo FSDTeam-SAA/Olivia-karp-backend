@@ -340,6 +340,32 @@ router.post(
 
 /**
  * @swagger
+ * /api/v1/education-partner/membership/verify-session:
+ *   post:
+ *     summary: Verify completed Stripe checkout session and immediately activate membership
+ *     tags: [Education Partner Program]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sessionId
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Partner membership verified and activated
+ */
+router.post(
+  "/membership/verify-session",
+  educationPartnerController.verifyMembershipSession
+);
+
+/**
+ * @swagger
  * /api/v1/education-partner/stripe-connect/onboard:
  *   post:
  *     summary: Generate Stripe Connect onboarding link for education partner payout setup

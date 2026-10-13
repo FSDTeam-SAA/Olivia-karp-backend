@@ -7,6 +7,7 @@ import sendEmail from "../../utils/sendEmail";
 import { createToken, verifyToken } from "../../utils/tokenGenerate";
 import verificationCodeTemplate from "../../utils/verificationCodeTemplate";
 import { User } from "../user/user.model";
+import { educationPartnerService } from "../educationPartner/educationPartner.service";
 
 const login = async (payload: { email: string; password: string }) => {
   const { email, password } = payload;
@@ -24,6 +25,9 @@ const login = async (payload: { email: string; password: string }) => {
   const isPasswordValid = await User.isPasswordMatch(password, user.password);
   if (!isPasswordValid)
     throw new AppError("Invalid password", StatusCodes.UNAUTHORIZED);
+
+  // Sync partner role if user has an active membership or completed payment
+  await educationPartnerService.syncPartnerUserRole(user);
 
   const tokenPayload = {
     id: user._id,
@@ -83,6 +87,9 @@ const refreshToken = async (token: string) => {
   if (!userData) {
     throw new Error("No account found with the provided credentials.");
   }
+
+  // Sync partner role if user has an active membership or completed payment
+  await educationPartnerService.syncPartnerUserRole(userData);
 
   const JwtPayload = {
     userId: userData._id,
