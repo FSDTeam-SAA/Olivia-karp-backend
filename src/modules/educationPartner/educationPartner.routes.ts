@@ -338,6 +338,19 @@ router.post(
   educationPartnerController.createMembershipCheckout
 );
 
+router.post(
+  "/membership/confirm-payment",
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER
+  ),
+  educationPartnerController.confirmMembershipPayment
+);
+
 /**
  * @swagger
  * /api/v1/education-partner/membership/verify-session:
@@ -450,6 +463,19 @@ router.get(
   educationPartnerController.createStripeConnectDashboardLink
 );
 
+router.post(
+  "/stripe-connect/dev-skip",
+  auth(
+    USER_ROLE.ADMIN,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER
+  ),
+  educationPartnerController.devSkipStripeVerification
+);
+
 /**
  * @swagger
  * /api/v1/education-partner/courses:
@@ -488,7 +514,11 @@ router.post(
     USER_ROLE.MONTHLY_MEMBER,
     USER_ROLE.BEGINNER_MEMBER
   ),
-  upload.single("coverImage"),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
+    { name: "instructorImage", maxCount: 1 },
+  ]),
   parseData,
   validateRequest(EducationPartnerValidations.createPartnerCourseSchema),
   educationPartnerController.submitCourse
@@ -578,7 +608,11 @@ router.put(
     USER_ROLE.MONTHLY_MEMBER,
     USER_ROLE.BEGINNER_MEMBER
   ),
-  upload.single("coverImage"),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
+    { name: "instructorImage", maxCount: 1 },
+  ]),
   parseData,
   validateRequest(EducationPartnerValidations.updatePartnerCourseSchema),
   educationPartnerController.updateCourse
@@ -724,6 +758,12 @@ router.get(
  *         description: Partner status updated
  */
 router.patch(
+  "/admin/partners/:id/status",
+  auth(USER_ROLE.ADMIN),
+  educationPartnerController.adminUpdatePartnerStatus
+);
+
+router.put(
   "/admin/partners/:id/status",
   auth(USER_ROLE.ADMIN),
   educationPartnerController.adminUpdatePartnerStatus

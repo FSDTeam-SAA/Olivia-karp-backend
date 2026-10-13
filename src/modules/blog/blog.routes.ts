@@ -32,7 +32,7 @@ const router = express.Router();
  *         name: category
  *         schema:
  *           type: string
- *           enum: ['Expert Insights', 'Climate Careers', 'Research', 'Toolkit', 'Renewable Energy']
+ *           enum: ['Expert Insights', 'Climate Careers', 'Research', 'Toolkit', 'Community']
  *         description: Filter by category
  *       - in: query
  *         name: isFeatured

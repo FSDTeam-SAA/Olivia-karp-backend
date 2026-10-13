@@ -1,4 +1,5 @@
 import fs from "fs";
+import { skillsSchema } from "./meetClimatePeople.validation";
 import { Types } from "mongoose";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errors/AppError";
@@ -563,7 +564,7 @@ const createOrUpdateMyProfileInDB = async (
       payload.experience !== undefined
         ? payload.experience
         : profile?.experience || [],
-    skills: payload.skills !== undefined ? payload.skills : profile?.skills || [],
+    skills: payload.skills !== undefined ? skillsSchema.parse(payload.skills) : profile?.skills || [],
     areasOfExpertise:
       payload.areasOfExpertise !== undefined
         ? payload.areasOfExpertise
@@ -670,6 +671,7 @@ const adminCreateProfileInDB = async (
 
   const profileData: any = {
     ...payload,
+    skills: skillsSchema.parse(payload.skills ?? []),
     profileImage: profileImageUrl || payload.profileImage || "",
     syncStatus: payload.syncStatus || "manual",
     lastSyncedAt: new Date(),

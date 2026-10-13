@@ -5,7 +5,7 @@ export type TBlogCategory =
   | "Climate Careers"
   | "Research"
   | "Toolkit"
-  | "Renewable Energy";
+  | "Community";
 
 export interface IBlogAuthor {
   name: string;

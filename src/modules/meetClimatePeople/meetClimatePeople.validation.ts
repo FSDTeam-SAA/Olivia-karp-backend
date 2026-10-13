@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+// Accept a single input, comma-separated input, or an array; persist clean tags.
+export const skillsSchema = z.union([z.string(), z.array(z.string())]).transform((value) => {
+  const result: string[] = [];
+  for (const item of (Array.isArray(value) ? value : [value]).flatMap((entry) => entry.split(","))) {
+    const skill = item.trim();
+    if (skill && !result.some((existing) => existing.toLowerCase() === skill.toLowerCase())) result.push(skill);
+  }
+  return result;
+});
+
 const educationItemSchema = z.union([
   z.object({
     school: z.string().optional().default(""),
@@ -30,7 +40,7 @@ const createOrUpdateMyProfileSchema = z.object({
     professionalAreas: z.array(z.string()).optional(),
     education: z.array(educationItemSchema).optional(),
     experience: z.array(experienceItemSchema).optional(),
-    skills: z.array(z.string()).optional(),
+    skills: skillsSchema.optional(),
     areasOfExpertise: z.array(z.string()).optional(),
     lookingFor: z.array(z.string()).optional(),
     canHelpWith: z.array(z.string()).optional(),
@@ -57,7 +67,7 @@ const adminCreateProfileSchema = z.object({
     professionalAreas: z.array(z.string()).optional(),
     education: z.array(educationItemSchema).optional(),
     experience: z.array(experienceItemSchema).optional(),
-    skills: z.array(z.string()).optional(),
+    skills: skillsSchema.optional(),
     areasOfExpertise: z.array(z.string()).optional(),
     lookingFor: z.array(z.string()).optional(),
     canHelpWith: z.array(z.string()).optional(),
