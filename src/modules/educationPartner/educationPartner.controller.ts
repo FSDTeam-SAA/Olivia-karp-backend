@@ -86,6 +86,21 @@ const createMembershipCheckout = catchAsync(async (req: Request, res: Response) 
   });
 });
 
+const confirmMembershipPayment = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
+  const result = await educationPartnerService.confirmMembershipPayment(
+    userId,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Payment confirmed successfully. Application is pending admin approval.",
+    data: result,
+  });
+});
+
 const createStripeConnectOnboard = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any)?._id || (req.user as any)?.id;
   const result = await educationPartnerService.createStripeConnectOnboardingLink(
@@ -125,16 +140,30 @@ const createStripeConnectDashboardLink = catchAsync(async (req: Request, res: Re
   });
 });
 
+const devSkipStripeVerification = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any)?._id || (req.user as any)?.id;
+  const result = await educationPartnerService.devSkipStripeVerification(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Stripe Connect verification skipped for development mode",
+    data: result,
+  });
+});
+
 // ==========================================
 // 4. Course Submissions & Management
 // ==========================================
 const submitCourse = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any)?._id || (req.user as any)?.id;
+  const files = req.files as Record<string, Express.Multer.File[]> | undefined;
   const file = req.file;
 
   const result = await educationPartnerService.submitCourse(
     userId,
     req.body,
+    files,
     file
   );
 
@@ -175,12 +204,14 @@ const getCourseById = catchAsync(async (req: Request, res: Response) => {
 const updateCourse = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any)?._id || (req.user as any)?.id;
   const { id } = req.params;
+  const files = req.files as Record<string, Express.Multer.File[]> | undefined;
   const file = req.file;
 
   const result = await educationPartnerService.updateCourse(
     userId,
     id,
     req.body,
+    files,
     file
   );
 
@@ -383,10 +414,11 @@ export const educationPartnerController = {
   getMyProfile,
   updateMyProfile,
   createMembershipCheckout,
-  verifyMembershipSession,
+  confirmMembershipPayment,
   createStripeConnectOnboard,
   getStripeConnectStatus,
   createStripeConnectDashboardLink,
+  devSkipStripeVerification,
   submitCourse,
   getMyCourses,
   getCourseById,

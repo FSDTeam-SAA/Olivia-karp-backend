@@ -5,7 +5,7 @@ const blogCategories = [
     'Climate Careers',
     'Research',
     'Toolkit',
-    'Renewable Energy',
+    'Community',
 ] as const;
 
 // FormData serializes booleans as strings; JSON requests retain real booleans.

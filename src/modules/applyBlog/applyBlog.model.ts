@@ -20,7 +20,7 @@ const applyBlogSchema = new Schema<IApplyBlog>(
                 'Climate Careers',
                 'Research',
                 'Toolkit',
-                'Renewable Energy',
+                'Community',
             ],
             required: [true, 'Category is required'],
         },

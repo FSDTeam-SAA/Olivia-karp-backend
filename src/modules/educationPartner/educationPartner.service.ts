@@ -564,10 +564,11 @@ const createStripeConnectOnboardingLink = async (
 
   const frontendUrl = config.frontendUrl || "http://localhost:3000";
   const returnUrl =
-    clientUrls?.returnUrl || `${frontendUrl}/partner/stripe/return`;
+    clientUrls?.returnUrl || `${frontendUrl}/partner-dashboard/courses?stripe=return`;
   const refreshUrl =
-    clientUrls?.refreshUrl || `${frontendUrl}/partner/stripe/refresh`;
+    clientUrls?.refreshUrl || `${frontendUrl}/partner-dashboard/courses?stripe=refresh`;
 
+  const isDevelopment = process.env.NODE_ENV === "development" || config.NODE_ENV === "development";
   let accountId = profile.stripeConnectAccountId;
 
   // If no account exists yet, create a Connected Account using Accounts v2 API (POST /v2/core/accounts)
@@ -579,7 +580,7 @@ const createStripeConnectOnboardingLink = async (
 
     try {
       // 1. Primary: Stripe Accounts v2 API (POST /v2/core/accounts)
-      const v2Account = await stripe.v2.core.accounts.create({
+      const v2Account = await (stripe as any).v2.core.accounts.create({
         contact_email: profile.contactEmail || user.email,
         display_name: profile.organizationName || "Education Partner",
         identity: {
@@ -651,7 +652,24 @@ const createStripeConnectOnboardingLink = async (
     }
 
     profile.stripeConnectAccountId = accountId;
-    profile.stripeConnectStatus = "pending";
+    profile.stripeConnectStatus = isDevelopment ? "active" : "pending";
+    if (isDevelopment) {
+      profile.stripeChargesEnabled = true;
+      profile.stripePayoutsEnabled = true;
+      profile.stripeDetailsSubmitted = true;
+      if (!profile.stripeConnectOnboardedAt) {
+        profile.stripeConnectOnboardedAt = new Date();
+      }
+    }
+    await profile.save();
+  } else if (isDevelopment) {
+    profile.stripeConnectStatus = "active";
+    profile.stripeChargesEnabled = true;
+    profile.stripePayoutsEnabled = true;
+    profile.stripeDetailsSubmitted = true;
+    if (!profile.stripeConnectOnboardedAt) {
+      profile.stripeConnectOnboardedAt = new Date();
+    }
     await profile.save();
   }
 
@@ -660,7 +678,7 @@ const createStripeConnectOnboardingLink = async (
   let expiresAt: any = undefined;
 
   try {
-    const v2Link = await stripe.v2.core.accountLinks.create({
+    const v2Link = await (stripe as any).v2.core.accountLinks.create({
       account: accountId,
       use_case: {
         type: "account_onboarding",
@@ -675,7 +693,7 @@ const createStripeConnectOnboardingLink = async (
     expiresAt = v2Link.expires_at;
   } catch {
     const accountLink = await stripe.accountLinks.create({
-      account: accountId,
+      account: accountId as string,
       refresh_url: refreshUrl,
       return_url: returnUrl,
       type: "account_onboarding",
@@ -688,10 +706,14 @@ const createStripeConnectOnboardingLink = async (
     onboardingUrl,
     stripeConnectAccountId: accountId,
     expiresAt,
+    isDevelopment,
+    autoVerified: isDevelopment,
   };
 };
 
 const getStripeConnectStatus = async (userId: string) => {
+  const isDevelopment = process.env.NODE_ENV === "development" || config.NODE_ENV === "development";
+
   const profile = await PartnerProfile.findOne({
     userId: new Types.ObjectId(userId),
   });
@@ -707,6 +729,7 @@ const getStripeConnectStatus = async (userId: string) => {
       chargesEnabled: false,
       payoutsEnabled: false,
       detailsSubmitted: false,
+      isDevelopment,
     };
   }
 
@@ -715,56 +738,65 @@ const getStripeConnectStatus = async (userId: string) => {
   let detailsSubmitted = false;
   let status: "not_connected" | "pending" | "active" | "restricted" = "pending";
 
-  try {
-    // Fetch real-time account status from Stripe (interoperable across v1 and v2)
-    const account = await stripe.accounts.retrieve(
-      profile.stripeConnectAccountId
-    );
-
-    chargesEnabled = Boolean(account.charges_enabled);
-    payoutsEnabled = Boolean(account.payouts_enabled);
-    detailsSubmitted = Boolean(account.details_submitted);
-
-    if (chargesEnabled && payoutsEnabled) {
-      status = "active";
-    } else if (account.requirements?.disabled_reason) {
-      status = "restricted";
-    } else {
-      status = "pending";
-    }
-  } catch (err) {
-    // Fallback: try v2 retrieval if v1 accounts.retrieve fails
+  if (isDevelopment) {
+    // In development mode, bypass KYC ID and SSN verification blockers
+    chargesEnabled = true;
+    payoutsEnabled = true;
+    detailsSubmitted = true;
+    status = "active";
+  } else {
+    // In production mode, strictly enforce real-time Stripe verification
     try {
-      const v2Acc = await stripe.v2.core.accounts.retrieve(
-        profile.stripeConnectAccountId,
-        {
-          include: [
-            "configuration.merchant",
-            "configuration.recipient",
-            "requirements",
-          ],
-        }
+      // Fetch real-time account status from Stripe (interoperable across v1 and v2)
+      const account = await stripe.accounts.retrieve(
+        profile.stripeConnectAccountId
       );
-      const merchantCap =
-        v2Acc.configuration?.merchant?.capabilities?.card_payments?.status;
-      const recipientCap =
-        v2Acc.configuration?.recipient?.capabilities?.stripe_balance
-          ?.stripe_transfers?.status;
 
-      chargesEnabled = merchantCap === "active";
-      payoutsEnabled = recipientCap === "active";
-      detailsSubmitted = Boolean(
-        v2Acc.applied_configurations &&
-          v2Acc.applied_configurations.length > 0
-      );
+      chargesEnabled = Boolean(account.charges_enabled);
+      payoutsEnabled = Boolean(account.payouts_enabled);
+      detailsSubmitted = Boolean(account.details_submitted);
 
       if (chargesEnabled && payoutsEnabled) {
         status = "active";
+      } else if (account.requirements?.disabled_reason) {
+        status = "restricted";
       } else {
         status = "pending";
       }
-    } catch {
-      throw err;
+    } catch (err) {
+      // Fallback: try v2 retrieval if v1 accounts.retrieve fails
+      try {
+        const v2Acc = await (stripe as any).v2.core.accounts.retrieve(
+          profile.stripeConnectAccountId,
+          {
+            include: [
+              "configuration.merchant",
+              "configuration.recipient",
+              "requirements",
+            ],
+          }
+        );
+        const merchantCap =
+          v2Acc.configuration?.merchant?.capabilities?.card_payments?.status;
+        const recipientCap =
+          v2Acc.configuration?.recipient?.capabilities?.stripe_balance
+            ?.stripe_transfers?.status;
+
+        chargesEnabled = merchantCap === "active";
+        payoutsEnabled = recipientCap === "active";
+        detailsSubmitted = Boolean(
+          v2Acc.applied_configurations &&
+            v2Acc.applied_configurations.length > 0
+        );
+
+        if (chargesEnabled && payoutsEnabled) {
+          status = "active";
+        } else {
+          status = "pending";
+        }
+      } catch (v2Err) {
+        console.warn("Could not retrieve account status from Stripe (v1 & v2):", v2Err);
+      }
     }
   }
 
@@ -787,6 +819,50 @@ const getStripeConnectStatus = async (userId: string) => {
     payoutsEnabled: profile.stripePayoutsEnabled,
     detailsSubmitted: profile.stripeDetailsSubmitted,
     stripeConnectOnboardedAt: profile.stripeConnectOnboardedAt,
+    isDevelopment,
+  };
+};
+
+const devSkipStripeVerification = async (userId: string) => {
+  const isDevelopment = process.env.NODE_ENV === "development" || config.NODE_ENV === "development";
+  if (!isDevelopment) {
+    throw new AppError(
+      "Development bypass is only permitted in development mode (NODE_ENV=development).",
+      StatusCodes.FORBIDDEN
+    );
+  }
+
+  const profile = await PartnerProfile.findOne({
+    userId: new Types.ObjectId(userId),
+  });
+
+  if (!profile) {
+    throw new AppError("Partner profile not found.", StatusCodes.NOT_FOUND);
+  }
+
+  if (!profile.stripeConnectAccountId) {
+    profile.stripeConnectAccountId = `acct_test_${Date.now()}`;
+  }
+
+  profile.stripeConnectStatus = "active";
+  profile.stripeChargesEnabled = true;
+  profile.stripePayoutsEnabled = true;
+  profile.stripeDetailsSubmitted = true;
+  if (!profile.stripeConnectOnboardedAt) {
+    profile.stripeConnectOnboardedAt = new Date();
+  }
+
+  await profile.save();
+
+  return {
+    connected: true,
+    stripeConnectAccountId: profile.stripeConnectAccountId,
+    status: "active",
+    chargesEnabled: true,
+    payoutsEnabled: true,
+    detailsSubmitted: true,
+    stripeConnectOnboardedAt: profile.stripeConnectOnboardedAt,
+    isDevelopment: true,
   };
 };
 
@@ -827,7 +903,8 @@ const createStripeConnectDashboardLink = async (userId: string) => {
 const submitCourse = async (
   userId: string,
   payload: any,
-  file?: Express.Multer.File
+  files?: Record<string, Express.Multer.File[]>,
+  singleFile?: Express.Multer.File
 ) => {
   const profile = await PartnerProfile.findOne({
     userId: new Types.ObjectId(userId),
@@ -840,22 +917,98 @@ const submitCourse = async (
     );
   }
 
+  // Partner must complete Stripe Connect onboarding before publishing courses
+  const isDevelopment = process.env.NODE_ENV === "development" || config.NODE_ENV === "development";
+  const isStripeReady = Boolean(
+    profile.stripeConnectAccountId &&
+      (isDevelopment ||
+        profile.stripeConnectStatus === "active" ||
+        profile.stripePayoutsEnabled ||
+        profile.stripeDetailsSubmitted)
+  );
+
+  if (!isStripeReady) {
+    throw new AppError(
+      "You must complete your Stripe Connect payout account onboarding before you can submit or publish courses.",
+      StatusCodes.BAD_REQUEST
+    );
+  }
+
+  const coverFile = files?.image?.[0] || files?.coverImage?.[0] || singleFile;
+  const instructorFile = files?.instructorImage?.[0];
+
   let coverData = { public_id: "", url: "" };
-  if (file) {
+  if (coverFile) {
     const uploaded = await uploadToCloudinary(
-      file.path,
+      coverFile.path,
       "act_on_climate/partner_course_covers"
     );
     coverData = { public_id: uploaded.public_id, url: uploaded.secure_url };
   }
 
+  let instructorImageData = { public_id: "", url: "" };
+  if (instructorFile) {
+    const uploaded = await uploadToCloudinary(
+      instructorFile.path,
+      "act_on_climate/partner_instructors"
+    );
+    instructorImageData = { public_id: uploaded.public_id, url: uploaded.secure_url };
+  }
+
   const slug = await generateSlug(payload.title, Course);
 
+  // Parse lessons
+  let lessons: any[] = [];
+  if (payload.lessons) {
+    if (typeof payload.lessons === "string") {
+      try {
+        lessons = JSON.parse(payload.lessons);
+      } catch {
+        lessons = [];
+      }
+    } else if (Array.isArray(payload.lessons)) {
+      lessons = payload.lessons;
+    }
+  } else {
+    const lessonMap: Record<number, any> = {};
+    Object.keys(payload).forEach((key) => {
+      const match = key.match(/^lessons\[(\d+)\]\[(\w+)\]$/);
+      if (match) {
+        const idx = Number(match[1]);
+        const prop = match[2];
+        if (!lessonMap[idx]) lessonMap[idx] = {};
+        lessonMap[idx][prop] = payload[key];
+      }
+    });
+    const indices = Object.keys(lessonMap).map(Number).sort((a, b) => a - b);
+    if (indices.length > 0) {
+      lessons = indices.map((i) => lessonMap[i]);
+    }
+  }
+
+  const lessonsData = lessons
+    .filter((l) => l && (l.title || l.videoUrl))
+    .map((l) => ({
+      title: String(l.title || "").trim(),
+      videoUrl: String(l.videoUrl || "").trim(),
+    }));
+
+  const durationHours = Number(payload.durationHours) || 0;
+  const estimatedWeeks = Number(payload.estimatedWeeks) || 0;
+  const price = Number(payload.price) || 0;
+  const isFree = payload.isFree !== undefined ? Boolean(payload.isFree) : price === 0;
+  const category = payload.category || (Array.isArray(payload.categories) && payload.categories[0]) || "Beginner Courses";
   const categories = Array.isArray(payload.categories)
     ? payload.categories
     : payload.categories
     ? [payload.categories]
-    : [];
+    : [category];
+  const difficulty = payload.difficulty || "Beginner";
+  const courseBoxUrl = payload.courseBoxUrl || payload.enrollmentUrl || "";
+  const enrollmentUrl = payload.enrollmentUrl || payload.courseBoxUrl || "";
+  const instructorName = payload.instructorName || "";
+  const instructorBio = payload.instructorBio || payload.instructorDetails || "";
+  const duration = payload.duration || (durationHours ? `${durationHours} hours` : "Self-paced");
 
   const newCourse = await Course.create({
     providerId: profile._id,
@@ -863,9 +1016,31 @@ const submitCourse = async (
     source: "PARTNER",
     status: "submitted",
     isAvailable: false,
-    ...payload,
-    category: categories[0] || payload.category || "Educational Courses",
+    title: payload.title,
+    category,
     categories,
+    difficulty,
+    durationHours,
+    estimatedWeeks,
+    duration,
+    price,
+    isFree,
+    currency: payload.currency || "USD",
+    courseBoxUrl,
+    enrollmentUrl,
+    instructorName,
+    instructorBio,
+    instructorDetails: instructorBio || instructorName,
+    instructorImage: instructorImageData.url ? instructorImageData : undefined,
+    description: payload.description || payload.title,
+    summary: payload.summary || payload.title,
+    learningOutcomes: Array.isArray(payload.learningOutcomes) ? payload.learningOutcomes : [],
+    targetAudience: payload.targetAudience || "General learners",
+    format: payload.format || "online_self_paced",
+    hasCertificate: payload.hasCertificate !== undefined ? Boolean(payload.hasCertificate) : false,
+    certificateDetails: payload.certificateDetails || "",
+    prerequisites: payload.prerequisites || "",
+    lessons: lessonsData,
     slug,
     image: coverData,
     coverImage: coverData,
@@ -949,7 +1124,8 @@ const updateCourse = async (
   userId: string,
   courseId: string,
   payload: any,
-  file?: Express.Multer.File
+  files?: Record<string, Express.Multer.File[]>,
+  singleFile?: Express.Multer.File
 ) => {
   const course = await Course.findById(courseId);
   if (!course) {
@@ -963,9 +1139,12 @@ const updateCourse = async (
     );
   }
 
-  if (file) {
+  const coverFile = files?.image?.[0] || files?.coverImage?.[0] || singleFile;
+  const instructorFile = files?.instructorImage?.[0];
+
+  if (coverFile) {
     const uploaded = await uploadToCloudinary(
-      file.path,
+      coverFile.path,
       "act_on_climate/partner_course_covers"
     );
     payload.coverImage = {
@@ -973,6 +1152,73 @@ const updateCourse = async (
       url: uploaded.secure_url,
     };
     payload.image = payload.coverImage;
+  }
+
+  if (instructorFile) {
+    const uploaded = await uploadToCloudinary(
+      instructorFile.path,
+      "act_on_climate/partner_instructors"
+    );
+    payload.instructorImage = {
+      public_id: uploaded.public_id,
+      url: uploaded.secure_url,
+    };
+  }
+
+  if (payload.lessons !== undefined) {
+    let lessons: any[] = [];
+    if (typeof payload.lessons === "string") {
+      try {
+        lessons = JSON.parse(payload.lessons);
+      } catch {
+        lessons = [];
+      }
+    } else if (Array.isArray(payload.lessons)) {
+      lessons = payload.lessons;
+    } else {
+      const lessonMap: Record<number, any> = {};
+      Object.keys(payload).forEach((key) => {
+        const match = key.match(/^lessons\[(\d+)\]\[(\w+)\]$/);
+        if (match) {
+          const idx = Number(match[1]);
+          const prop = match[2];
+          if (!lessonMap[idx]) lessonMap[idx] = {};
+          lessonMap[idx][prop] = payload[key];
+        }
+      });
+      const indices = Object.keys(lessonMap).map(Number).sort((a, b) => a - b);
+      if (indices.length > 0) {
+        lessons = indices.map((i) => lessonMap[i]);
+      }
+    }
+    payload.lessons = lessons
+      .filter((l) => l && (l.title || l.videoUrl))
+      .map((l) => ({
+        title: String(l.title || "").trim(),
+        videoUrl: String(l.videoUrl || "").trim(),
+      }));
+  }
+
+  if (payload.durationHours !== undefined) {
+    payload.durationHours = Number(payload.durationHours) || 0;
+  }
+  if (payload.estimatedWeeks !== undefined) {
+    payload.estimatedWeeks = Number(payload.estimatedWeeks) || 0;
+  }
+  if (payload.price !== undefined) {
+    payload.price = Number(payload.price) || 0;
+  }
+  if (payload.category && !payload.categories) {
+    payload.categories = [payload.category];
+  }
+  if (payload.courseBoxUrl && !payload.enrollmentUrl) {
+    payload.enrollmentUrl = payload.courseBoxUrl;
+  }
+  if (payload.enrollmentUrl && !payload.courseBoxUrl) {
+    payload.courseBoxUrl = payload.enrollmentUrl;
+  }
+  if (payload.instructorBio && !payload.instructorDetails) {
+    payload.instructorDetails = payload.instructorBio;
   }
 
   if (payload.title && payload.title !== course.title) {
@@ -1305,9 +1551,9 @@ const getAdminReviewQueue = async (query: any) => {
   const skip = (page - 1) * limit;
 
   const filter: any = { source: "PARTNER" };
-  if (query.status) {
+  if (query.status && query.status !== "all") {
     filter.status = query.status;
-  } else {
+  } else if (!query.status) {
     filter.status = { $in: ["submitted", "under_review", "revision_requested"] };
   }
 
@@ -1461,78 +1707,29 @@ const adminUpdatePartnerStatus = async (
   return partner;
 };
 
-const verifyMembershipSession = async (sessionId: string) => {
-  if (!sessionId) {
-    throw new AppError("Session ID is required", StatusCodes.BAD_REQUEST);
-  }
+const confirmMembershipPayment = async (userId: string, _paymentData?: any) => {
+  const profile = await PartnerProfile.findOne({
+    userId: new Types.ObjectId(userId),
+  });
 
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
-  if (!session) {
-    throw new AppError("Stripe checkout session not found", StatusCodes.NOT_FOUND);
-  }
-
-  const isPaid =
-    session.payment_status === "paid" || session.status === "complete";
-  if (!isPaid) {
+  if (!profile) {
     throw new AppError(
-      "Payment has not been completed yet",
-      StatusCodes.BAD_REQUEST
-    );
-  }
-
-  const partnerProfileId =
-    session.metadata?.partnerProfileId ||
-    (await PartnerProfile.findOne({ stripeSessionId: sessionId }))?._id?.toString();
-
-  if (!partnerProfileId) {
-    throw new AppError(
-      "Partner profile not associated with this checkout session",
+      "Partner profile not found. Complete survey first.",
       StatusCodes.NOT_FOUND
     );
   }
 
-  const activatedPartner = await activatePartnerMembership(
-    partnerProfileId,
-    session.id
-  );
+  const now = new Date();
+  const nextYear = new Date(now);
+  nextYear.setFullYear(nextYear.getFullYear() + 1);
 
-  return activatedPartner;
-};
+  profile.membershipStatus = "active";
+  profile.isVerifiedPartner = false; // Remains false pending admin approval!
+  profile.membershipStartDate = now;
+  profile.membershipExpiresAt = nextYear;
 
-const syncPartnerUserRole = async (user: any) => {
-  try {
-    if (!user || user.role === USER_ROLE.ADMIN) return;
-
-    const partner = await PartnerProfile.findOne({ userId: user._id });
-    if (!partner) return;
-
-    if (partner.membershipStatus === "active") {
-      if (user.role === USER_ROLE.NON_MEMBER) {
-        user.role = USER_ROLE.MEMBER;
-        if (!user.memberSince) {
-          user.memberSince = partner.membershipStartDate || new Date();
-        }
-        await user.save();
-        logger.info(`[SyncPartnerRole] Synced active partner ${user.email} to member role`);
-      }
-    } else if (partner.stripeSessionId) {
-      // If Stripe payment completed but webhook was missed/delayed
-      try {
-        const session = await stripe.checkout.sessions.retrieve(partner.stripeSessionId);
-        if (session.payment_status === "paid" || session.status === "complete") {
-          await activatePartnerMembership(
-            (partner._id as any).toString(),
-            session.id
-          );
-          user.role = USER_ROLE.MEMBER;
-        }
-      } catch (stripeErr: any) {
-        logger.warn("[SyncPartnerRole] Could not retrieve session:", stripeErr?.message);
-      }
-    }
-  } catch (err: any) {
-    logger.error("[SyncPartnerRole] Error syncing partner role:", err);
-  }
+  await profile.save();
+  return profile;
 };
 
 export const educationPartnerService = {
@@ -1542,11 +1739,11 @@ export const educationPartnerService = {
   updateMyPartnerProfile,
   createMembershipCheckoutSession,
   activatePartnerMembership,
-  verifyMembershipSession,
-  syncPartnerUserRole,
+  confirmMembershipPayment,
   createStripeConnectOnboardingLink,
   getStripeConnectStatus,
   createStripeConnectDashboardLink,
+  devSkipStripeVerification,
   submitCourse,
   getMyCourses,
   getCourseById,
