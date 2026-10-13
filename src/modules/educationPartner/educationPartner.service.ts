@@ -1724,12 +1724,98 @@ const confirmMembershipPayment = async (userId: string, _paymentData?: any) => {
   nextYear.setFullYear(nextYear.getFullYear() + 1);
 
   profile.membershipStatus = "active";
-  profile.isVerifiedPartner = false; // Remains false pending admin approval!
   profile.membershipStartDate = now;
   profile.membershipExpiresAt = nextYear;
 
   await profile.save();
+
+  // Upgrade user role upon confirmed payment
+  const user = await User.findById(profile.userId);
+  if (user) {
+    if (user.role === USER_ROLE.NON_MEMBER) {
+      user.role = USER_ROLE.MEMBER;
+    }
+    if (!user.memberSince) {
+      user.memberSince = now;
+    }
+    await user.save();
+  }
+
   return profile;
+};
+
+const verifyMembershipSession = async (sessionId: string) => {
+  if (!sessionId) {
+    throw new AppError("Session ID is required", StatusCodes.BAD_REQUEST);
+  }
+
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  if (!session) {
+    throw new AppError("Stripe checkout session not found", StatusCodes.NOT_FOUND);
+  }
+
+  const isPaid =
+    session.payment_status === "paid" || session.status === "complete";
+  if (!isPaid) {
+    throw new AppError(
+      "Payment has not been completed yet",
+      StatusCodes.BAD_REQUEST
+    );
+  }
+
+  const partnerProfileId =
+    session.metadata?.partnerProfileId ||
+    (await PartnerProfile.findOne({ stripeSessionId: sessionId }))?._id?.toString();
+
+  if (!partnerProfileId) {
+    throw new AppError(
+      "Partner profile not associated with this checkout session",
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  const activatedPartner = await activatePartnerMembership(
+    partnerProfileId,
+    session.id
+  );
+
+  return activatedPartner;
+};
+
+const syncPartnerUserRole = async (user: any) => {
+  try {
+    if (!user || user.role === USER_ROLE.ADMIN) return;
+
+    const partner = await PartnerProfile.findOne({ userId: user._id });
+    if (!partner) return;
+
+    if (partner.membershipStatus === "active") {
+      if (user.role === USER_ROLE.NON_MEMBER) {
+        user.role = USER_ROLE.MEMBER;
+        if (!user.memberSince) {
+          user.memberSince = partner.membershipStartDate || new Date();
+        }
+        await user.save();
+        logger.info(`[SyncPartnerRole] Synced active partner ${user.email} to member role`);
+      }
+    } else if (partner.stripeSessionId) {
+      // If Stripe payment completed but webhook was missed/delayed
+      try {
+        const session = await stripe.checkout.sessions.retrieve(partner.stripeSessionId);
+        if (session.payment_status === "paid" || session.status === "complete") {
+          await activatePartnerMembership(
+            (partner._id as any).toString(),
+            session.id
+          );
+          user.role = USER_ROLE.MEMBER;
+        }
+      } catch (stripeErr: any) {
+        logger.warn("[SyncPartnerRole] Could not retrieve session:", stripeErr?.message);
+      }
+    }
+  } catch (err: any) {
+    logger.error("[SyncPartnerRole] Error syncing partner role:", err);
+  }
 };
 
 export const educationPartnerService = {
@@ -1740,6 +1826,8 @@ export const educationPartnerService = {
   createMembershipCheckoutSession,
   activatePartnerMembership,
   confirmMembershipPayment,
+  verifyMembershipSession,
+  syncPartnerUserRole,
   createStripeConnectOnboardingLink,
   getStripeConnectStatus,
   createStripeConnectDashboardLink,

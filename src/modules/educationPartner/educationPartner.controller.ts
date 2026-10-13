@@ -415,6 +415,7 @@ export const educationPartnerController = {
   updateMyProfile,
   createMembershipCheckout,
   confirmMembershipPayment,
+  verifyMembershipSession,
   createStripeConnectOnboard,
   getStripeConnectStatus,
   createStripeConnectDashboardLink,

@@ -8,6 +8,7 @@ import { createToken, verifyToken } from "../../utils/tokenGenerate";
 import verificationCodeTemplate from "../../utils/verificationCodeTemplate";
 import { User } from "../user/user.model";
 import { PartnerProfile } from "../educationPartner/educationPartner.model";
+import { educationPartnerService } from "../educationPartner/educationPartner.service";
 
 const login = async (payload: { email: string; password: string }) => {
   const { email, password } = payload;
@@ -33,6 +34,9 @@ const login = async (payload: { email: string; password: string }) => {
       StatusCodes.FORBIDDEN,
     );
   }
+
+  // Sync partner role if payment completed / active partner
+  await educationPartnerService.syncPartnerUserRole(user);
 
   const tokenPayload = {
     id: user._id,
