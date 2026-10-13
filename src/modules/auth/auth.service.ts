@@ -93,6 +93,9 @@ const refreshToken = async (token: string) => {
     throw new Error("No account found with the provided credentials.");
   }
 
+  // Sync partner role if user has an active membership or completed payment
+  await educationPartnerService.syncPartnerUserRole(userData);
+
   const JwtPayload = {
     userId: userData._id,
     role: userData.role,

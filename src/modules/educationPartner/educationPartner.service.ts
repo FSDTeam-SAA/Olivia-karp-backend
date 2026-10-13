@@ -7,6 +7,7 @@ import logger from "../../logger";
 import { uploadToCloudinary } from "../../utils/cloudinary";
 import sendEmail from "../../utils/sendEmail";
 import Course from "../course/course.model";
+import { USER_ROLE } from "../user/user.constant";
 import { User } from "../user/user.model";
 import {
   CourseClick,
@@ -506,7 +507,7 @@ const activatePartnerMembership = async (
 
   profile.membershipStatus = "active";
   profile.isVerifiedPartner = true;
-  profile.membershipStartDate = now;
+  profile.membershipStartDate = profile.membershipStartDate || now;
   profile.membershipExpiresAt = nextYear;
   if (stripeSessionId) {
     profile.stripeSessionId = stripeSessionId;
@@ -515,6 +516,18 @@ const activatePartnerMembership = async (
   const user = await User.findById(profile.userId);
   const userEmail = user?.email || profile.contactEmail;
   const userName = user ? `${user.firstName} ${user.lastName}`.trim() : profile.organizationName;
+
+  // Upgrade the user's role to member upon verified payment
+  if (user) {
+    if (user.role === USER_ROLE.NON_MEMBER) {
+      user.role = USER_ROLE.MEMBER;
+    }
+    if (!user.memberSince) {
+      user.memberSince = now;
+    }
+    await user.save();
+    logger.info(`[EducationPartner] User ${user.email} upgraded to member role`);
+  }
 
   if (!profile.activationEmailSent) {
     try {
@@ -1683,6 +1696,14 @@ const adminUpdatePartnerStatus = async (
 
   Object.assign(partner, payload);
   await partner.save();
+
+  if (payload.membershipStatus === "active" && partner.userId) {
+    await User.findByIdAndUpdate(partner.userId, {
+      role: USER_ROLE.MEMBER,
+      $setOnInsert: { memberSince: new Date() },
+    });
+  }
+
   return partner;
 };
 

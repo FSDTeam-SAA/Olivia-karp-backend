@@ -396,6 +396,18 @@ const adminActivateMembership = catchAsync(async (req: Request, res: Response) =
   });
 });
 
+const verifyMembershipSession = catchAsync(async (req: Request, res: Response) => {
+  const { sessionId } = req.body;
+  const result = await educationPartnerService.verifyMembershipSession(sessionId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Partner membership verified and activated successfully",
+    data: result,
+  });
+});
+
 export const educationPartnerController = {
   getProgramInfo,
   submitSurvey,
