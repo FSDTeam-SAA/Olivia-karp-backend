@@ -12,6 +12,15 @@ import { opportunityController } from "./opportunity.controller";
 
 const router = express.Router();
 
+const partnerPortalRoles = [
+    USER_ROLE.ADMIN,
+    USER_ROLE.NON_MEMBER,
+    USER_ROLE.MEMBER,
+    USER_ROLE.ANNUAL_MEMBER,
+    USER_ROLE.MONTHLY_MEMBER,
+    USER_ROLE.BEGINNER_MEMBER,
+];
+
 /**
  * @swagger
  * /api/v1/opportunity/submit:
@@ -61,6 +70,18 @@ router.post(
     opportunityController.submitOpportunity
 );
 
+router.post(
+    "/partner/submit",
+    auth(...partnerPortalRoles),
+    opportunityController.submitPartnerOpportunity
+);
+
+router.get(
+    "/partner/my-submissions",
+    auth(...partnerPortalRoles),
+    opportunityController.getMyPartnerOpportunities
+);
+
 /**
  * @swagger
  * /api/v1/opportunity/all:
@@ -90,6 +111,40 @@ router.get(
     "/all",
     auth(USER_ROLE.ADMIN),
     opportunityController.getOpportunities
+);
+
+/**
+ * @swagger
+ * /api/v1/opportunity/published:
+ *   get:
+ *     summary: Retrieve approved opportunities for the public website
+ *     tags: [Opportunity]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: opportunityType
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Published opportunities retrieved successfully
+ */
+router.get(
+    "/published",
+    opportunityController.getPublishedOpportunities
 );
 
 /**

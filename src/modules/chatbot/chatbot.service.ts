@@ -2,7 +2,15 @@ import { StatusCodes } from 'http-status-codes';
 import AppError from '../../errors/AppError';
 import { IChatbotRequest } from './chatbot.interface';
 
-const CHATBOT_API_URL = 'https://bot.actonclimate.co/api/chat';
+// Keep the website's existing `/chatbot` flow intact while allowing each
+// environment to choose its own FastAPI chatbot service.
+// Local development uses 127.0.0.1:8000; VPS/production uses CHATBOT_API_URL or defaults to live bot.
+const getChatbotApiUrl = (): string => {
+  return (
+    process.env.CHATBOT_API_URL ||
+    'http://127.0.0.1:8000/api/chat/'
+  );
+};
 
 const sendMessageToChatbot = async (
   payload: {
@@ -11,13 +19,14 @@ const sendMessageToChatbot = async (
   userId: string,
 ) => {
   try {
+    const apiUrl = getChatbotApiUrl();
     const formData = new URLSearchParams();
 
     formData.append('user_id', userId);
 
     formData.append('query', payload.message);
 
-    const response = await fetch(CHATBOT_API_URL, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
 
       headers: {

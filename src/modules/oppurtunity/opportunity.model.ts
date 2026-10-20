@@ -11,6 +11,8 @@ const opportunitySchema = new Schema<IOpportunity>(
         officialLink: { type: String, required: true },
         shortDescription: { type: String, required: true, maxlength: 300 },
         submittedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+        partnerId: { type: Schema.Types.ObjectId, ref: "PartnerProfile", default: null },
+        isPartnerOpportunity: { type: Boolean, default: false },
         status: {
             type: String,
             enum: ["pending", "reviewed", "rejected"],

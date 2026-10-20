@@ -8,5 +8,7 @@ export interface IOpportunity {
   officialLink: string;
   shortDescription: string;
   submittedBy?: Types.ObjectId; // Link to the user who submitted
+  partnerId?: Types.ObjectId;
+  isPartnerOpportunity?: boolean;
   status: "pending" | "reviewed" | "rejected";
 }

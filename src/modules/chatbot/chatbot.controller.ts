@@ -48,12 +48,29 @@ const chat = catchAsync(async (req, res): Promise<void> => {
     throw new AppError('Chatbot request failed', result.statusCode);
   }
 
+  const textData =
+    typeof result.data?.text === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(result.data.text);
+          } catch {
+            return { answer: result.data.text };
+          }
+        })()
+      : result.data?.text || result.data || {};
+
+  const answer = textData.answer ?? result.data?.answer ?? '';
+  const partnerOpportunities = textData.partner_opportunities ?? [];
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: 'Chatbot response generated successfully.',
     data: {
-      answer: result.data.text.answer,
+      answer,
+      // Optional structured listings are returned only for approved partner
+      // opportunities. Existing chatbot answers retain the same shape.
+      partnerOpportunities,
     },
   });
 });
