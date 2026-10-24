@@ -43,6 +43,7 @@ const joinMentorCoachSchema = new Schema<IJoinMentorsAndCoach>(
     goal: { type: String },
     isApproved: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
+    isEmailPublic: { type: Boolean, default: false },
     totalSessions: { type: Number, default: 0 },
   },
   { timestamps: true, versionKey: false },

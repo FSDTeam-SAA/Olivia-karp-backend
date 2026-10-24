@@ -184,6 +184,19 @@ router.put(
   "/approved/:joinMentorsAndCoachId",
   JoinMentorsAndCoachController.approvedJoinMentorsAndCoach,
 );
+router.patch(
+  "/approved/:joinMentorsAndCoachId",
+  JoinMentorsAndCoachController.approvedJoinMentorsAndCoach,
+);
+
+router.patch(
+  "/email-visibility/:joinMentorsAndCoachId",
+  JoinMentorsAndCoachController.toggleMentorEmailVisibility,
+);
+router.put(
+  "/email-visibility/:joinMentorsAndCoachId",
+  JoinMentorsAndCoachController.toggleMentorEmailVisibility,
+);
 
 /**
  * @swagger

@@ -66,6 +66,10 @@ const getAllJoinMentorsAndCoaches = async (query: any) => {
 
   const filter: any = {};
 
+  if (query.isApproved !== undefined && query.isApproved !== null && query.isApproved !== '') {
+    filter.isApproved = query.isApproved === 'true' || query.isApproved === true;
+  }
+
   // filter mentor / coach
   if (type) {
     filter.type = type;
@@ -165,16 +169,54 @@ const getSingleJoinMentorsAndCoach = async (id: string) => {
     throw new AppError('Join mentors and coaches not found', StatusCodes.NOT_FOUND);
   }
 
-  return result;
+  const mentorObj = result.toObject();
+  if (!mentorObj.isEmailPublic) {
+    delete (mentorObj as any).email;
+  }
+
+  return mentorObj;
 };
 
-const approvedJoinMentorsAndCoach = async (id: string) => {
+const approvedJoinMentorsAndCoach = async (
+  id: string,
+  payload?: { isEmailPublic?: boolean },
+) => {
   const result = await JoinMentorCoach.findById(id);
   if (!result) {
     throw new AppError('Join mentors and coaches not found', StatusCodes.NOT_FOUND);
   }
 
-  await JoinMentorCoach.findByIdAndUpdate({ _id: id }, { isApproved: true }, { new: true });
+  const updateData: Record<string, any> = { isApproved: true };
+  if (payload && typeof payload.isEmailPublic === 'boolean') {
+    updateData.isEmailPublic = payload.isEmailPublic;
+  }
+
+  return await JoinMentorCoach.findByIdAndUpdate(
+    { _id: id },
+    updateData,
+    { new: true },
+  );
+};
+
+const toggleMentorEmailVisibility = async (
+  id: string,
+  isEmailPublic?: boolean,
+) => {
+  const result = await JoinMentorCoach.findById(id);
+  if (!result) {
+    throw new AppError('Join mentors and coaches not found', StatusCodes.NOT_FOUND);
+  }
+
+  const newStatus =
+    typeof isEmailPublic === 'boolean'
+      ? isEmailPublic
+      : !result.isEmailPublic;
+
+  return await JoinMentorCoach.findByIdAndUpdate(
+    { _id: id },
+    { isEmailPublic: newStatus },
+    { new: true },
+  );
 };
 
 const toggleMentorAndCoachActive = async (id: string) => {
@@ -745,6 +787,7 @@ const JoinMentorsAndCoachService = {
   getSingleJoinMentorsAndCoach,
   approvedJoinMentorsAndCoach,
   toggleMentorAndCoachActive,
+  toggleMentorEmailVisibility,
   getApprovedJoinMentorsAndCoaches,
   bulkUploadMentorsAndCoaches,
   getFilterOptions,

@@ -19,12 +19,33 @@ const buildOpportunityFilter = (
     filter.status = status;
   }
 
-  if (typeof query.opportunityType === "string" && query.opportunityType) {
-    filter.opportunityType = query.opportunityType;
+  if (
+    typeof query.opportunityType === "string" &&
+    query.opportunityType &&
+    query.opportunityType !== "All"
+  ) {
+    const types = query.opportunityType
+      .split(",")
+      .map((t: string) => t.trim())
+      .filter(Boolean);
+
+    if (types.length === 1) {
+      filter.opportunityType = { $regex: new RegExp(`^${types[0]}$`, "i") };
+    } else if (types.length > 1) {
+      filter.opportunityType = {
+        $in: types.map((t: string) => new RegExp(`^${t}$`, "i")),
+      };
+    }
   }
 
-  if (query.partnerOnly === "true" || query.partnerOnly === true) {
+  if (
+    query.partnerOnly === "true" ||
+    query.partnerOnly === true ||
+    query.source === "partner"
+  ) {
     filter.isPartnerOpportunity = true;
+  } else if (query.source === "curated") {
+    filter.isPartnerOpportunity = { $ne: true };
   }
 
   if (search) {
@@ -116,7 +137,7 @@ const getAllOpportunitiesForAdmin = async (query: Record<string, any>) => {
 };
 
 const getPublishedOpportunities = async (query: Record<string, any>) => {
-  const { page = 1, limit = 10 } = query;
+  const { page = 1, limit = 9 } = query;
   const pageNumber = Math.max(Number(page), 1);
   const limitNumber = Math.max(Number(limit), 1);
   const skip = (pageNumber - 1) * limitNumber;
@@ -124,6 +145,10 @@ const getPublishedOpportunities = async (query: Record<string, any>) => {
 
   const [data, total] = await Promise.all([
     Opportunity.find(filter)
+      .populate({
+        path: "partnerId",
+        select: "organizationName membershipStatus isVerifiedPartner organizationType slug",
+      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNumber)

@@ -37,6 +37,7 @@ export interface IJoinMentorsAndCoach {
   goal: string;
   isApproved: boolean;
   isActive: boolean;
+  isEmailPublic?: boolean;
   totalSessions?: number;
   createdAt?: Date;
   updatedAt?: Date;

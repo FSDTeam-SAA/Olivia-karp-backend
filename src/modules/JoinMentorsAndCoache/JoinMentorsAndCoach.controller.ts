@@ -68,15 +68,32 @@ const getSingleJoinMentorsAndCoach = catchAsync(async (req, res) => {
 
 const approvedJoinMentorsAndCoach = catchAsync(async (req, res) => {
   const { joinMentorsAndCoachId } = req.params;
-  await JoinMentorsAndCoachService.approvedJoinMentorsAndCoach(
+  const result = await JoinMentorsAndCoachService.approvedJoinMentorsAndCoach(
     joinMentorsAndCoachId,
+    req.body,
   );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: "Join mentors and coaches approved successfully",
-    // data: result,
+    data: result,
+  });
+});
+
+const toggleMentorEmailVisibility = catchAsync(async (req, res) => {
+  const { joinMentorsAndCoachId } = req.params;
+  const { isEmailPublic } = req.body || {};
+  const result = await JoinMentorsAndCoachService.toggleMentorEmailVisibility(
+    joinMentorsAndCoachId,
+    typeof isEmailPublic === "boolean" ? isEmailPublic : undefined,
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Mentor email visibility updated successfully",
+    data: result,
   });
 });
 
@@ -128,6 +145,7 @@ const JoinMentorsAndCoachController = {
   getSingleJoinMentorsAndCoach,
   approvedJoinMentorsAndCoach,
   toggleMentorAndCoachActive,
+  toggleMentorEmailVisibility,
   getApprovedJoinMentorsAndCoaches,
   bulkUploadMentorsAndCoaches,
   getFilterOptions,
