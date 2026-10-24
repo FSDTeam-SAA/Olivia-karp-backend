@@ -36,6 +36,8 @@ export interface IMeetClimateProfile {
   profileImage?: string;
   location?: string;
   mightyPermalink?: string;
+  excitingProjects?: string[];
+  howToConnect?: string;
   isVisible: boolean;
   syncStatus: "synced" | "manual" | "pending";
   lastSyncedAt: Date;

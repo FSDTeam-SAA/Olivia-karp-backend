@@ -11,4 +11,6 @@ export interface IOpportunity {
   partnerId?: Types.ObjectId;
   isPartnerOpportunity?: boolean;
   status: "pending" | "reviewed" | "rejected";
+  createdAt?: Date;
+  updatedAt?: Date;
 }

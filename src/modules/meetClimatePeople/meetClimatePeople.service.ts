@@ -282,6 +282,161 @@ const syncMembersFromMighty = async (): Promise<ISyncResult> => {
   return result;
 };
 
+export const SAMPLE_DUMMY_PROFILES = [
+  {
+    name: "Dr. Maya Patel",
+    professionalTitle: "Renewable Energy & Grid Integration Strategist",
+    organization: "CleanPower Analytics",
+    location: "London, UK",
+    about: "Over 10 years working on microgrid decentralization, solar PV forecasting, and green hydrogen supply chains.",
+    climateInterests: ["Renewable Energy", "CleanTech", "Energy Transition"],
+    professionalAreas: ["Engineering", "Research"],
+    skills: ["Grid Modeling", "Python", "Solar PV", "Policy Advisory"],
+    areasOfExpertise: ["Microgrids", "Energy Storage", "Decarbonization"],
+    education: [{ school: "Imperial College London", degree: "Ph.D. in Electrical & Energy Engineering", year: "2018" }],
+    experience: [{ title: "Lead Grid Strategist", company: "CleanPower Analytics", duration: "2021 - Present" }],
+    excitingProjects: ["Western European Zero-Carbon Microgrid Pilot 2026", "Open-Source Solar Yield Analytics Engine"],
+    howToConnect: "Open for clean-tech startup advisory, podcast interviews, and university guest lectures.",
+    profileImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80",
+    isVisible: true,
+    syncStatus: "manual" as const,
+    lastSyncedAt: new Date(),
+  },
+  {
+    name: "Marcus Vance",
+    professionalTitle: "ESG Reporting & Carbon Accounting Lead",
+    organization: "Verde Carbon Solutions",
+    location: "Berlin, Germany",
+    about: "Helping corporate enterprises navigate CSRD, Scope 1-3 GHG protocols, and Science-Based Targets (SBTi).",
+    climateInterests: ["Carbon Accounting", "ESG", "Sustainable Finance"],
+    professionalAreas: ["Finance", "Corporate Strategy"],
+    skills: ["GHG Protocol", "CSRD", "Life Cycle Assessment", "Financial Modeling"],
+    areasOfExpertise: ["Carbon Auditing", "Corporate Sustainability", "Supply Chain Decarbonization"],
+    education: [{ school: "Mannheim Business School", degree: "M.Sc. in Sustainable Management", year: "2019" }],
+    experience: [{ title: "Head of ESG Assurance", company: "Verde Carbon Solutions", duration: "2022 - Present" }],
+    excitingProjects: ["Supply Chain Scope 3 Carbon Tracker", "Circular Packaging Transition Playbook"],
+    howToConnect: "Open to connect with ESG leaders, carbon accounting software founders, and corporate sustainability heads.",
+    profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+    isVisible: true,
+    syncStatus: "manual" as const,
+    lastSyncedAt: new Date(),
+  },
+  {
+    name: "Elena Rostova",
+    professionalTitle: "Circular Economy & Sustainable Product Designer",
+    organization: "Loop Systems Collective",
+    location: "Amsterdam, Netherlands",
+    about: "Passionate about zero-waste materials, bio-composites, and extended producer responsibility (EPR).",
+    climateInterests: ["Circular Economy", "Zero Waste", "Sustainable Materials"],
+    professionalAreas: ["Design", "Sustainability"],
+    skills: ["Material Flow Analysis", "CAD", "Bio-plastics", "Lifecycle Assessment"],
+    areasOfExpertise: ["Cradle to Cradle Design", "Post-Consumer Recycling", "Ecodesign"],
+    education: [{ school: "TU Delft", degree: "M.Sc. in Industrial Design Engineering", year: "2020" }],
+    experience: [{ title: "Principal Circular Designer", company: "Loop Systems Collective", duration: "2021 - Present" }],
+    excitingProjects: ["Closed-Loop Textile Recycling Consortium", "Biodegradable Consumer Packaging Sprint"],
+    howToConnect: "Happy to collaborate on circular product designs, bio-materials research, and startup advisory.",
+    profileImage: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&auto=format&fit=crop&q=80",
+    isVisible: true,
+    syncStatus: "manual" as const,
+    lastSyncedAt: new Date(),
+  },
+  {
+    name: "David Chen",
+    professionalTitle: "Climate Tech Venture Associate & Investor",
+    organization: "Terra Capital",
+    location: "San Francisco, CA",
+    about: "Investing in early-stage pre-seed & seed climate software, carbon removal technologies, and fusion energy.",
+    climateInterests: ["Climate Tech", "Venture Capital", "Carbon Removal"],
+    professionalAreas: ["Venture Capital", "Tech"],
+    skills: ["Due Diligence", "Financial Modeling", "Market Analysis", "Valuation"],
+    areasOfExpertise: ["Direct Air Capture", "Early-Stage Funding", "Climate Fintech"],
+    education: [{ school: "UC Berkeley", degree: "B.S. in Environmental Economics", year: "2019" }],
+    experience: [{ title: "Investment Associate", company: "Terra Capital", duration: "2022 - Present" }],
+    excitingProjects: ["Annual Climate Tech Early-Stage Map", "Venture Fellowship for Climate Founders"],
+    howToConnect: "Always excited to meet climate tech founders raising pre-seed and seed rounds.",
+    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80",
+    isVisible: true,
+    syncStatus: "manual" as const,
+    lastSyncedAt: new Date(),
+  },
+  {
+    name: "Amara Okafor",
+    professionalTitle: "Nature-Based Solutions & Agroforestry Specialist",
+    organization: "Regen Earth Initiative",
+    location: "Nairobi, Kenya",
+    about: "Dedicated to regenerative agriculture, soil carbon sequestration, and community-led reforestation.",
+    climateInterests: ["Biodiversity", "Agroforestry", "Nature-Based Solutions"],
+    professionalAreas: ["Agriculture", "Conservation"],
+    skills: ["GIS Mapping", "Soil Carbon Monitoring", "Community Organizing", "Reforestation"],
+    areasOfExpertise: ["Carbon Credits", "Agroecology", "Indigenous Land Stewardship"],
+    education: [{ school: "University of Nairobi", degree: "M.Sc. in Agroforestry & Rural Development", year: "2018" }],
+    experience: [{ title: "Senior Project Lead", company: "Regen Earth Initiative", duration: "2020 - Present" }],
+    excitingProjects: ["Sub-Saharan Agroforestry Carbon Credit Initiative", "Community Seed Vaults Network"],
+    howToConnect: "Open for research partnerships, nature-based project advisory, and fellowship mentoring.",
+    profileImage: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&auto=format&fit=crop&q=80",
+    isVisible: true,
+    syncStatus: "manual" as const,
+    lastSyncedAt: new Date(),
+  },
+  {
+    name: "Liam O'Connor",
+    professionalTitle: "Clean Mobility & EV Infrastructure Lead",
+    organization: "VoltTransit Solutions",
+    location: "Dublin, Ireland",
+    about: "Specializing in municipal fleet electrification, heavy-duty EV charging hubs, and smart grid orchestration.",
+    climateInterests: ["Clean Mobility", "EVs", "Smart Cities"],
+    professionalAreas: ["Transportation", "Clean Energy"],
+    skills: ["Fleet Modeling", "Grid Interconnection", "Urban Planning", "IoT"],
+    areasOfExpertise: ["EV Charging Stations", "Public Transit Decarbonization", "Vehicle-to-Grid (V2G)"],
+    education: [{ school: "Trinity College Dublin", degree: "B.A.I. Mechanical & Energy Engineering", year: "2017" }],
+    experience: [{ title: "Technical Director", company: "VoltTransit Solutions", duration: "2021 - Present" }],
+    excitingProjects: ["Zero-Emission Municipal Bus Fleet Roadmap", "Smart V2G Depot Optimization"],
+    howToConnect: "Connect for fleet electrification advisory, transit summit panels, and clean mobility consulting.",
+    profileImage: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80",
+    isVisible: true,
+    syncStatus: "manual" as const,
+    lastSyncedAt: new Date(),
+  },
+  {
+    name: "Aisha Al-Mansoor",
+    professionalTitle: "Climate Policy Analyst & International Negotiator",
+    organization: "Global Climate Action Council",
+    location: "Geneva, Switzerland",
+    about: "Working at the intersection of COP climate treaties, Article 6 carbon markets, and just transition frameworks.",
+    climateInterests: ["Climate Policy", "Carbon Markets", "Just Transition"],
+    professionalAreas: ["Policy", "International Relations"],
+    skills: ["Policy Drafting", "Diplomacy", "International Law", "Article 6 Carbon"],
+    areasOfExpertise: ["UNFCCC Processes", "Loss and Damage Finance", "Nationally Determined Contributions (NDCs)"],
+    education: [{ school: "Geneva Graduate Institute", degree: "M.A. in International Affairs & Environmental Policy", year: "2019" }],
+    experience: [{ title: "Senior Policy Advisor", company: "Global Climate Action Council", duration: "2021 - Present" }],
+    excitingProjects: ["Bilateral Carbon Trading Agreement Framework", "Youth Climate Diplomacy Fellowship"],
+    howToConnect: "Open to policy consultations, multilateral negotiations training, and youth mentorship.",
+    profileImage: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80",
+    isVisible: true,
+    syncStatus: "manual" as const,
+    lastSyncedAt: new Date(),
+  },
+  {
+    name: "Carlos Mendoza",
+    professionalTitle: "Industrial Decarbonization & Green Hydrogen Engineer",
+    organization: "H2 Synergy Labs",
+    location: "Santiago, Chile",
+    about: "Developing green hydrogen electrolysis systems for mining and steel manufacturing in South America.",
+    climateInterests: ["Green Hydrogen", "Heavy Industry", "Clean Energy"],
+    professionalAreas: ["Engineering", "Energy"],
+    skills: ["Electrolyzer Systems", "Thermodynamics", "Process Engineering", "Safety Compliance"],
+    areasOfExpertise: ["Green Ammonia", "Mining Decarbonization", "Renewable Fuel Synthesis"],
+    education: [{ school: "Pontificia Universidad Católica de Chile", degree: "B.Sc. in Chemical Engineering", year: "2018" }],
+    experience: [{ title: "Lead Process Engineer", company: "H2 Synergy Labs", duration: "2021 - Present" }],
+    excitingProjects: ["Solar-Powered Green Hydrogen Pilot in Atacama", "Zero-Emission Mining Haulage Feasibility"],
+    howToConnect: "Connect for green hydrogen technical advisory, engineering collaborations, and keynote speaking.",
+    profileImage: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=400&auto=format&fit=crop&q=80",
+    isVisible: true,
+    syncStatus: "manual" as const,
+    lastSyncedAt: new Date(),
+  },
+];
+
 const getAllProfilesFromDB = async (query: IProfileQueryParams) => {
   const page = Math.max(1, Number(query.page) || 1);
   const limit = Math.max(1, Math.min(100, Number(query.limit) || 12));
@@ -332,7 +487,7 @@ const getAllProfilesFromDB = async (query: IProfileQueryParams) => {
   const sortOrder = query.sortOrder === "asc" ? 1 : -1;
   const sortCriteria: Record<string, 1 | -1> = { [sortBy]: sortOrder };
 
-  const [profiles, total] = await Promise.all([
+  let [profiles, total] = await Promise.all([
     MeetClimateProfile.find(filter)
       .select("-email -__v")
       .sort(sortCriteria)
@@ -341,6 +496,30 @@ const getAllProfilesFromDB = async (query: IProfileQueryParams) => {
       .lean(),
     MeetClimateProfile.countDocuments(filter),
   ]);
+
+  // If no profiles exist in the database, automatically seed privacy-compliant dummy profiles
+  if (
+    total === 0 &&
+    !query.search &&
+    !query.climateInterest &&
+    !query.professionalArea &&
+    !query.lookingFor
+  ) {
+    try {
+      await MeetClimateProfile.insertMany(SAMPLE_DUMMY_PROFILES);
+      [profiles, total] = await Promise.all([
+        MeetClimateProfile.find(filter)
+          .select("-email -__v")
+          .sort(sortCriteria)
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        MeetClimateProfile.countDocuments(filter),
+      ]);
+    } catch {
+      // Ignore seeding race conditions
+    }
+  }
 
   const totalPage = Math.ceil(total / limit);
 
@@ -589,6 +768,14 @@ const createOrUpdateMyProfileInDB = async (
       payload.location !== undefined
         ? payload.location
         : profile?.location || user.location || "",
+    excitingProjects:
+      payload.excitingProjects !== undefined
+        ? payload.excitingProjects
+        : profile?.excitingProjects || [],
+    howToConnect:
+      payload.howToConnect !== undefined
+        ? payload.howToConnect
+        : profile?.howToConnect || "",
     isVisible:
       payload.isVisible !== undefined
         ? payload.isVisible

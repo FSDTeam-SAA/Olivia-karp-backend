@@ -87,6 +87,23 @@ const CreateNewCourse = async (
     videoUrl: lesson.videoUrl,
   }));
 
+  /* ---------------- Parse Learning Outcomes ---------------- */
+  let learningOutcomes: string[] = [];
+  if (payload.learningOutcomes) {
+    if (Array.isArray(payload.learningOutcomes)) {
+      learningOutcomes = payload.learningOutcomes.map((s: string) => String(s).trim()).filter(Boolean);
+    } else if (typeof payload.learningOutcomes === 'string') {
+      try {
+        const parsed = JSON.parse(payload.learningOutcomes);
+        learningOutcomes = Array.isArray(parsed)
+          ? parsed.map((s: string) => String(s).trim()).filter(Boolean)
+          : [payload.learningOutcomes.trim()];
+      } catch {
+        learningOutcomes = payload.learningOutcomes.split(',').map((s: string) => s.trim()).filter(Boolean);
+      }
+    }
+  }
+
   /* ---------------- Final Course Payload ---------------- */
   const courseData: Partial<ICourse> = {
     title: payload.title,
@@ -96,6 +113,8 @@ const CreateNewCourse = async (
     instructorBio: payload.instructorBio,
     instructorImage,
     description: payload.description,
+    summary: payload.summary || payload.title,
+    learningOutcomes,
     durationHours: Number(payload.durationHours) || 0,
     estimatedWeeks: Number(payload.estimatedWeeks) || 0,
     lessons: lessonsData,
@@ -461,11 +480,29 @@ const updateCourse = async (
     };
   }
 
+  /* ---------------- Parse Learning Outcomes Update ---------------- */
+  let learningOutcomesData: string[] = course.learningOutcomes ?? [];
+  if (payload.learningOutcomes !== undefined) {
+    if (Array.isArray(payload.learningOutcomes)) {
+      learningOutcomesData = payload.learningOutcomes.map((s: string) => String(s).trim()).filter(Boolean);
+    } else if (typeof payload.learningOutcomes === 'string') {
+      try {
+        const parsed = JSON.parse(payload.learningOutcomes);
+        learningOutcomesData = Array.isArray(parsed)
+          ? parsed.map((s: string) => String(s).trim()).filter(Boolean)
+          : [payload.learningOutcomes.trim()];
+      } catch {
+        learningOutcomesData = payload.learningOutcomes.split(',').map((s: string) => s.trim()).filter(Boolean);
+      }
+    }
+  }
+
   /* ---------------- Final Payload ---------------- */
   const updatedData: Partial<ICourse> = {
     ...payload,
 
     lessons: lessonsData,
+    learningOutcomes: learningOutcomesData,
 
     image,
     instructorImage,

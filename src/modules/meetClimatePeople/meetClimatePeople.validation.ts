@@ -49,6 +49,8 @@ const createOrUpdateMyProfileSchema = z.object({
     portfolio: z.string().optional(),
     profileImage: z.string().optional(),
     location: z.string().optional(),
+    excitingProjects: z.array(z.string()).optional(),
+    howToConnect: z.string().optional(),
     isVisible: z.boolean().optional(),
   }),
 });
@@ -76,6 +78,8 @@ const adminCreateProfileSchema = z.object({
     portfolio: z.string().optional(),
     profileImage: z.string().optional(),
     location: z.string().optional(),
+    excitingProjects: z.array(z.string()).optional(),
+    howToConnect: z.string().optional(),
     isVisible: z.boolean().optional(),
   }),
 });

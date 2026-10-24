@@ -30,6 +30,7 @@ import teamRoutes from "../modules/team/team.routes";
 import { mightyRoutes } from "../modules/mighty/mighty.route";
 import { meetClimatePeopleRoutes } from "../modules/meetClimatePeople/meetClimatePeople.routes";
 import { EducationPartnerRoutes } from "../modules/educationPartner/educationPartner.routes";
+import { RecommendationRoutes } from "../modules/recommendation/recommendation.router";
 
 
 const router = Router();
@@ -154,6 +155,10 @@ const moduleRoutes = [
   {
     path: "/education-partner",
     route: EducationPartnerRoutes,
+  },
+  {
+    path: "/recommendations",
+    route: RecommendationRoutes,
   }
 ];
 

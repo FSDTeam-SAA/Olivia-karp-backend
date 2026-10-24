@@ -109,6 +109,15 @@ const MeetClimateProfileSchema = new Schema<IMeetClimateProfile>(
       type: String,
       default: "",
     },
+    excitingProjects: {
+      type: [String],
+      default: [],
+    },
+    howToConnect: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     isVisible: {
       type: Boolean,
       default: true,
