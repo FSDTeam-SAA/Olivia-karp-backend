@@ -61,7 +61,7 @@ export interface IPartnerProfile extends Document {
   contactEmail: string;
   contactPhone?: string;
 
-  // Membership & Subscription details ($50/year)
+  // Membership & Subscription details ($150/year)
   membershipStatus: TMembershipStatus;
   membershipTier: string;
   membershipFee: number;

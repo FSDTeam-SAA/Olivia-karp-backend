@@ -55,4 +55,5 @@ export interface IProfileQueryParams {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   all?: string | boolean;
+  isVisible?: string | boolean;
 }

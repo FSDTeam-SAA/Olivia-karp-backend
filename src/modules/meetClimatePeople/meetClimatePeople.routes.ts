@@ -316,6 +316,33 @@ router.post(
 
 /**
  * @swagger
+ * /api/v1/meet-climate-people/admin/{id}:
+ *   put:
+ *     summary: Update a climate profile by ID (Admin Only)
+ *     tags: [Meet Climate People]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully by admin
+ */
+router.put(
+  "/admin/:id",
+  auth(USER_ROLE.ADMIN),
+  upload.single("profileImage"),
+  parseData,
+  validateRequest(MeetClimatePeopleValidation.adminUpdateProfileSchema),
+  meetClimatePeopleController.adminUpdateProfile
+);
+
+/**
+ * @swagger
  * /api/v1/meet-climate-people/sync/status:
  *   get:
  *     summary: Get directory sync telemetry and profile counts (Admin Only)

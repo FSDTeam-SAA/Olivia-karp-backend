@@ -132,6 +132,22 @@ const adminCreateProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const adminUpdateProfile = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await meetClimatePeopleService.adminUpdateProfileInDB(
+    id,
+    req.body,
+    req.file
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Climate profile updated successfully by admin",
+    data: result,
+  });
+});
+
 const deleteProfileById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const result = await meetClimatePeopleService.deleteProfileByIdFromDB(id);
@@ -155,5 +171,6 @@ export const meetClimatePeopleController = {
   createOrUpdateMyProfile,
   deleteMyProfile,
   adminCreateProfile,
+  adminUpdateProfile,
   deleteProfileById,
 };

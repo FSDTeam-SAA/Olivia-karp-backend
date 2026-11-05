@@ -371,7 +371,7 @@ const stripeWebhookHandler = async (sig: any, payload: Buffer) => {
       return record;
     }
 
-    // Handle Education Partner annual membership ($50/year) checkouts
+    // Handle Education Partner annual membership ($150/year) checkouts
     if (session.metadata?.isEducationPartnerMembership === "true") {
       const partnerProfileId = session.metadata?.partnerProfileId;
       if (partnerProfileId) {

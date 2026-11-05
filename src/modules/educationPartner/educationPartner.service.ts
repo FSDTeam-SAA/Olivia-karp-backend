@@ -58,7 +58,7 @@ const getProgramInfo = async () => {
     summary:
       "Join the Act on Climate Education Partnership Program and showcase your courses, certificates, workshops and training programs to people looking to build their climate and sustainability knowledge.",
     pricing: {
-      annualFee: 50,
+      annualFee: 150,
       currency: "USD",
       commissionRate: "0%",
       revenueShare: "100% yours",
@@ -157,7 +157,7 @@ const getProgramInfo = async () => {
         step: 3,
         title: "Join the Education Partner Program",
         description:
-          "Complete your $50/year membership with 0% commission on course sales.",
+          "Complete your $150/year membership with 0% commission on course sales.",
       },
       {
         step: 4,
@@ -192,8 +192,8 @@ const getProgramInfo = async () => {
     ],
     faqs: [
       {
-        question: "Is the $50 fee a one-time payment?",
-        answer: "No. Education Partner membership is $50 per year.",
+        question: "Is the $150 fee a one-time payment?",
+        answer: "No. Education Partner membership is $150 per year.",
       },
       {
         question: "Does Act on Climate take a percentage of my course sales?",
@@ -204,7 +204,7 @@ const getProgramInfo = async () => {
         answer: "No. Learners are directed to your website, registration page or enrollment platform to register and pay.",
       },
       {
-        question: "Does paying the $50 guarantee that my course will be published?",
+        question: "Does paying the $150 guarantee that my course will be published?",
         answer: "No. Education Partners must submit their courses for review. Membership does not guarantee publication of every course.",
       },
       {
@@ -382,7 +382,7 @@ const updateMyPartnerProfile = async (
 };
 
 // ==========================================
-// 4. Membership Checkout & Activation ($50/year)
+// 4. Membership Checkout & Activation ($150/year)
 // ==========================================
 const createMembershipCheckoutSession = async (
   userId: string,
@@ -419,9 +419,9 @@ const createMembershipCheckoutSession = async (
           product_data: {
             name: "Act on Climate — Education Partner Membership",
             description:
-              "Annual Education Partner membership ($50/year). 0% commission, keep 100% course revenue.",
+              "Annual Education Partner membership ($150/year). 0% commission, keep 100% course revenue.",
           },
-          unit_amount: 50 * 100, // $50.00
+          unit_amount: 150 * 100, // $150.00
         },
         quantity: 1,
       },
@@ -465,7 +465,7 @@ const sendActivationEmail = async (
         
         <div style="background-color: #f7faf8; border-left: 4px solid #0d5c3a; padding: 16px; margin: 20px 0; border-radius: 4px;">
           <p style="margin: 0 0 8px;"><strong>Organization:</strong> ${partner.organizationName}</p>
-          <p style="margin: 0 0 8px;"><strong>Annual Membership:</strong> $50.00 / year (Active)</p>
+          <p style="margin: 0 0 8px;"><strong>Annual Membership:</strong> $150.00 / year (Active)</p>
           <p style="margin: 0;"><strong>Commission:</strong> 0% (Keep 100% of your course revenue)</p>
         </div>
 
