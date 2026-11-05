@@ -84,7 +84,7 @@ const PartnerProfileSchema = new Schema<IPartnerProfile, IPartnerProfileModel>(
       trim: true,
     },
 
-    // Membership & Subscription ($50/year)
+    // Membership & Subscription ($150/year)
     membershipStatus: {
       type: String,
       enum: ["pending_payment", "active", "past_due", "canceled", "expired"],

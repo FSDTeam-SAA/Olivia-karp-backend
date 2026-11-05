@@ -306,7 +306,7 @@ router.put(
  * @swagger
  * /api/v1/education-partner/membership/checkout:
  *   post:
- *     summary: Initiate Stripe checkout for $50/year annual Education Partner membership
+ *     summary: Initiate Stripe checkout for $150/year annual Education Partner membership
  *     tags: [Education Partner Program]
  *     security:
  *       - bearerAuth: []

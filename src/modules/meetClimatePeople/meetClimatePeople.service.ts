@@ -447,6 +447,12 @@ const getAllProfilesFromDB = async (query: IProfileQueryParams) => {
   // By default, only show visible profiles unless requested with all=true (for admin)
   if (query.all !== "true" && query.all !== true) {
     filter.isVisible = true;
+  } else if (
+    query.isVisible !== undefined &&
+    query.isVisible !== "" &&
+    query.isVisible !== "all"
+  ) {
+    filter.isVisible = query.isVisible === "true" || query.isVisible === true;
   }
 
   // Multi-field text / keyword search
@@ -873,6 +879,43 @@ const adminCreateProfileInDB = async (
   return profile;
 };
 
+const adminUpdateProfileInDB = async (
+  id: string,
+  payload: Partial<IMeetClimateProfile>,
+  file?: Express.Multer.File
+) => {
+  let profile = null;
+  if (Types.ObjectId.isValid(id)) {
+    profile = await MeetClimateProfile.findById(id);
+  }
+  if (!profile) {
+    profile = await MeetClimateProfile.findOne({ mightyMemberId: id });
+  }
+  if (!profile) {
+    throw new AppError("Profile not found", StatusCodes.NOT_FOUND);
+  }
+
+  let profileImageUrl = profile.profileImage;
+  if (file?.path) {
+    const uploadRes = await uploadToCloudinary(file.path, "meet-climate-people");
+    profileImageUrl = uploadRes.secure_url;
+  } else if (payload.profileImage !== undefined) {
+    profileImageUrl = payload.profileImage;
+  }
+
+  const updateData: any = {
+    ...payload,
+    ...(payload.skills !== undefined && { skills: skillsSchema.parse(payload.skills ?? []) }),
+    ...(profileImageUrl !== undefined && { profileImage: profileImageUrl }),
+  };
+
+  const updated = await MeetClimateProfile.findByIdAndUpdate(profile._id, updateData, {
+    new: true,
+    runValidators: true,
+  });
+  return updated;
+};
+
 const deleteProfileByIdFromDB = async (id: string) => {
   let profile = null;
   if (Types.ObjectId.isValid(id)) {
@@ -898,5 +941,6 @@ export const meetClimatePeopleService = {
   getMyProfileFromDB,
   deleteMyProfileInDB,
   adminCreateProfileInDB,
+  adminUpdateProfileInDB,
   deleteProfileByIdFromDB,
 };

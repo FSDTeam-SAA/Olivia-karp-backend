@@ -69,7 +69,7 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 // ==========================================
-// 3. Membership Checkout ($50/year)
+// 3. Membership Checkout ($150/year)
 // ==========================================
 const createMembershipCheckout = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any)?._id || (req.user as any)?.id;
