@@ -139,6 +139,21 @@ const getFilterOptions = catchAsync(async (req, res) => {
   });
 });
 
+const deleteJoinMentorsAndCoach = catchAsync(async (req, res) => {
+  const { joinMentorsAndCoachId } = req.params;
+  const result =
+    await JoinMentorsAndCoachService.deleteJoinMentorsAndCoachFromDB(
+      joinMentorsAndCoachId,
+    );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Mentor or Coach deleted successfully",
+    data: result,
+  });
+});
+
 const JoinMentorsAndCoachController = {
   createJoinMentorsAndCoachIntoDB,
   getAllJoinMentorsAndCoaches,
@@ -149,6 +164,7 @@ const JoinMentorsAndCoachController = {
   getApprovedJoinMentorsAndCoaches,
   bulkUploadMentorsAndCoaches,
   getFilterOptions,
+  deleteJoinMentorsAndCoach,
 };
 
 export default JoinMentorsAndCoachController;
