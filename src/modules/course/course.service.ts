@@ -542,6 +542,16 @@ const updateCourseAvailability = async (id: string) => {
   return await Course.findByIdAndUpdate(id, { isAvailable: !course.isAvailable }, { new: true });
 };
 
+const deleteCourse = async (id: string) => {
+  const course = await Course.findById(id);
+  if (!course) {
+    throw new AppError('Course not found', httpStatus.NOT_FOUND);
+  }
+
+  await Course.findByIdAndDelete(id);
+  return { message: 'Course deleted successfully' };
+};
+
 const courseService = {
   CreateNewCourse,
   getAllCourses,
@@ -549,5 +559,6 @@ const courseService = {
   updateCourse,
   updateCourseAvailability,
   getAllCoursesAdmin,
+  deleteCourse,
 };
 export default courseService;

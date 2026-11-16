@@ -72,6 +72,16 @@ const updateCourseAvailability = catchAsync(async (req: Request, res: Response) 
   });
 });
 
+const deleteCourse = catchAsync(async (req: Request, res: Response) => {
+  const result = await courseService.deleteCourse(req.params.courseId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Course deleted successfully',
+    data: result,
+  });
+});
+
 const courseController = {
   CreateNewCourse,
   getAllCourses,
@@ -79,5 +89,6 @@ const courseController = {
   updateCourse,
   updateCourseAvailability,
   getAllCoursesAdmin,
+  deleteCourse,
 };
 export default courseController;

@@ -232,6 +232,16 @@ const toggleMentorAndCoachActive = async (id: string) => {
   );
 };
 
+const deleteJoinMentorsAndCoachFromDB = async (id: string) => {
+  const isExist = await JoinMentorCoach.findById(id);
+  if (!isExist) {
+    throw new AppError('Join mentors and coaches not found', StatusCodes.NOT_FOUND);
+  }
+
+  const result = await JoinMentorCoach.findByIdAndDelete(id);
+  return result;
+};
+
 // ---------------------------------------------------------------------------
 // Minimal RFC-4180-compliant CSV parser (handles quoted fields with commas
 // and embedded newlines, which Airtable exports heavily use).
@@ -791,6 +801,7 @@ const JoinMentorsAndCoachService = {
   getApprovedJoinMentorsAndCoaches,
   bulkUploadMentorsAndCoaches,
   getFilterOptions,
+  deleteJoinMentorsAndCoachFromDB,
 };
 
 export default JoinMentorsAndCoachService;

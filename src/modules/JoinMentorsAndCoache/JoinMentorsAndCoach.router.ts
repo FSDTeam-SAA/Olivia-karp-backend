@@ -223,6 +223,30 @@ router.put(
 
 /**
  * @swagger
+ * /api/v1/mentors-coaches/{joinMentorsAndCoachId}:
+ *   delete:
+ *     summary: Delete a Mentor or Coach (Admin Only)
+ *     tags: [JoinMentorsAndCoache]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: joinMentorsAndCoachId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Mentor or Coach deleted successfully
+ */
+router.delete(
+  "/:joinMentorsAndCoachId",
+  auth(USER_ROLE.ADMIN),
+  JoinMentorsAndCoachController.deleteJoinMentorsAndCoach,
+);
+
+/**
+ * @swagger
  * /api/v1/mentors-coaches/bulk-upload:
  *   post:
  *     summary: Bulk upload Mentors and Coaches via CSV (Admin Only)

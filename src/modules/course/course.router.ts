@@ -202,5 +202,25 @@ router.put(
  */
 router.put('/availability/:courseId', courseController.updateCourseAvailability);
 
+/**
+ * @swagger
+ * /api/v1/course/{courseId}:
+ *   delete:
+ *     summary: Delete an existing course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Course deleted successfully
+ */
+router.delete('/:courseId', auth(USER_ROLE.ADMIN), courseController.deleteCourse);
+
 const courseRouter = router;
 export default courseRouter;
